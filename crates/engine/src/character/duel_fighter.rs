@@ -1,5 +1,5 @@
 use super::{
-    BalanceConfig, BodyPart, CharacterDefinition, CharacterError, LocomotionConfig, MotorConfig,
+    BalanceConfig, CharacterDefinition, CharacterError, LocomotionConfig, MotorConfig,
     balance::{BalanceController, BalanceState},
     fighter_control::MotorPresets,
     implicit_motor,
@@ -14,6 +14,7 @@ pub(super) struct Fighter {
     pub bodies: [RigidBodyHandle; 15],
     joints: [ImpulseJointHandle; 14],
     pub hands: Hands,
+    pub last_hit: [u64; 2],
     pub walking: WalkingController,
     motors: MotorConfig,
     balance: BalanceController,
@@ -31,6 +32,7 @@ impl Fighter {
             bodies,
             joints,
             hands: Hands::new()?,
+            last_hit: [0; 2],
             walking: WalkingController::new(LocomotionConfig::bundled()?),
             motors: MotorConfig::standing()?,
             balance: BalanceController {
@@ -81,10 +83,6 @@ impl Fighter {
         );
     }
     pub fn hand_collider(&self, world: &PhysicsWorld, side: Hand) -> ColliderHandle {
-        let part = match side {
-            Hand::Left => BodyPart::LeftHand,
-            Hand::Right => BodyPart::RightHand,
-        };
-        world.bodies[self.bodies[part.index()]].colliders()[0]
+        world.bodies[self.bodies[side.body().index()]].colliders()[0]
     }
 }

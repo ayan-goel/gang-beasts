@@ -1,0 +1,9 @@
+# Punch impact resolution
+
+On each strike tick the duel snapshots both fighters’ limb poses, centers of mass and velocities after controller commands and before Rapier integrates. After the solve it examines active hand contacts with an opposing body. A positive normal impulse establishes physical contact. The attack-facing normal and pre-solve point velocities give the approaching speed, including limb rotation.
+
+The calculation uses reduced mass and the squared approaching speed. The bundled cutoffs are 0.5 m/s and 0.2 J. Each joule above threshold earns five points before the hit-region multiplier. The maximum is 35 points. This is a gameplay approximation with versioned tuning. Solver impulse magnitude verifies contact and contributes no additional damage term.
+
+The highest-damage contact in the first qualifying tick wins, with anatomical order resolving equal damage across regions. The duel records one result per hand attack against its single opposing fighter. Each result includes the completed tick, both fighter IDs, attack ID, hand, body region, speed, energy and points. Both fighters may hit on the same tick, even with the same local attack ID. The event list describes the last completed tick and clears on reset. A multi-opponent arena will need one consumed-target set per attack.
+
+The integration suite checks both attacking directions, a held hand, no-input and out-of-range controls, and simultaneous attacks. The analytic unit fixture verifies angular contact velocity, rejection of separating and low-energy contacts, region weighting and the damage cap. Run `cargo test --release --locked -p brawler-engine --test duel_hits` and `cargo test --release --locked -p brawler-engine --lib angular_point_motion`. Health, consciousness and environmental damage are separate lifecycle rules.

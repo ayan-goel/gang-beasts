@@ -9,6 +9,13 @@ pub enum Hand {
 }
 
 impl Hand {
+    pub(crate) fn body(self) -> BodyPart {
+        match self {
+            Self::Left => BodyPart::LeftHand,
+            Self::Right => BodyPart::RightHand,
+        }
+    }
+
     pub fn parts(self) -> [BodyPart; 2] {
         match self {
             Self::Left => [BodyPart::LeftUpperArm, BodyPart::LeftForearm],

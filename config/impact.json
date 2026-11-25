@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "minimum_closing_speed_m_s": 0.5,
+  "threshold_j": 0.2,
+  "points_per_joule": 5.0,
+  "maximum_damage": 35.0
+}

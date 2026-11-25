@@ -1,4 +1,6 @@
 mod hands;
+mod impact;
+pub(crate) use impact::{BodyMotion, ImpactTuning};
 mod tuning;
 
 pub(crate) use hands::Hands;

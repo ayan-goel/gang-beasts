@@ -600,6 +600,8 @@ Use pre-solve point velocities, including `ω × r`, and clamp the normal compon
 
 Tune `k`, threshold and cap using standardized impact fixtures; no values are represented as known Gang Beasts internals. Resting contacts, solver support impulses and self-contact must not repeatedly damage a character. Aggregate substep contacts, use minimum closing speed and per-attack/per-target registration, and apply cooldowns to environmental impacts. Separate hazard damage-over-time from impact damage. Props can hurt through actual collisions without needing an attack animation.
 
+The native duel samples all limb velocities before the solve on active strike ticks. A positive solver contact impulse and a normal facing into the punch qualify a contact for evaluation. The local tuning requires at least 0.5 m/s closing speed and energy over 0.2 J. It awards five damage points per joule above threshold, applies the region multiplier and caps a single hit at 35 points. Within a tick, the strongest eligible region wins, with ties resolved in anatomical order. The first accepted hit consumes that punch for the opposing fighter. These fixture settings live in `config/impact.json`.
+
 ### 13.5 Knockouts
 
 | Parameter | Proposed initial value |

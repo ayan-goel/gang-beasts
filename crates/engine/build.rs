@@ -27,6 +27,7 @@ fn main() {
         root.join("config/balance.json"),
         root.join("config/locomotion.json"),
         root.join("config/hands.json"),
+        root.join("config/impact.json"),
         root.join("config/locomotion-motors.json"),
         root.join("config/standing-motors.json"),
         manifest.join("Cargo.toml"),

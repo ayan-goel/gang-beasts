@@ -27,6 +27,8 @@ pub struct Duel {
     fighters: [Fighter; 2],
     definition: CharacterDefinition,
     presets: MotorPresets,
+    impact: crate::combat::ImpactTuning,
+    hits: Vec<super::StrikeHit>,
     physics: PhysicsConfig,
     tick: u64,
 }
@@ -52,9 +54,14 @@ impl Duel {
             fighters: [first, second],
             definition,
             presets: MotorPresets::bundled()?,
+            impact: crate::combat::ImpactTuning::bundled()?,
+            hits: Vec::with_capacity(4),
             physics,
             tick: 0,
         })
+    }
+    pub fn hits(&self) -> &[super::StrikeHit] {
+        &self.hits
     }
     pub fn tick(&self) -> u64 {
         self.tick
@@ -71,8 +78,19 @@ impl Duel {
                 &self.presets,
             );
         }
+        let contacts = super::duel_contacts::ContactFrame::capture(&self.world, &self.fighters);
         self.world.step();
         self.tick += 1;
+        self.hits.clear();
+        if let Some(frame) = contacts {
+            frame.resolve(
+                &self.world,
+                &mut self.fighters,
+                &self.impact,
+                self.tick,
+                &mut self.hits,
+            );
+        }
     }
     pub fn set_input(
         &mut self,
