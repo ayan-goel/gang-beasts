@@ -23,6 +23,7 @@ impl Match {
             .iter()
             .position(|p| p.session == session)
             .map(|i| FighterId::ALL[i])
+            .filter(|&id| !self.client.forfeited(id))
     }
 
     pub fn welcome(&self, session: SessionId) -> Vec<u8> {

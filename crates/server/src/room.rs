@@ -9,6 +9,8 @@ pub struct Room {
     tick: u64,
     inboxes: Vec<Inbox>,
     attached: Vec<bool>,
+    forfeits: u8,
+    finished: bool,
 }
 
 impl Room {
@@ -21,6 +23,8 @@ impl Room {
             tick: 0,
             inboxes: (0..count).map(|_| Inbox::default()).collect(),
             attached: vec![true; count],
+            forfeits: 0,
+            finished: false,
         })
     }
 
@@ -39,7 +43,8 @@ impl Room {
 
     /// The transport supplies the authenticated fighter and synchronized round.
     pub fn submit(&mut self, id: FighterId, round: u64, bytes: &[u8]) -> Result<(), SubmitError> {
-        if self.attached.get(id as usize) != Some(&true) {
+        if self.attached.get(id as usize) != Some(&true) || self.forfeits & (1 << id as usize) != 0
+        {
             return Err(SubmitError::Detached);
         }
         if self.melee().round_id != round {
@@ -77,7 +82,31 @@ impl Room {
         }
     }
 
+    pub fn finished_for_lack_of_players(&self) -> bool {
+        self.finished
+    }
     pub fn step(&mut self) {
+        self.step_with_forfeits(0);
+    }
+    pub fn step_with_forfeits(&mut self, mask: u8) {
+        if self.finished {
+            return;
+        }
+        for &id in self.game.fighter_ids() {
+            let bit = 1 << id as usize;
+            if mask & bit != 0 && self.forfeits & bit == 0 {
+                self.detach(id);
+                self.forfeits |= bit;
+            }
+        }
+        // Give players the full results interval before releasing an uncontested room.
+        let results_over = self.melee().phase == MeleePhase::MatchResults
+            || (self.melee().phase == MeleePhase::RoundResults
+                && self.melee().remaining_ticks == 1);
+        if results_over && self.attached.len() - (self.forfeits.count_ones() as usize) < 2 {
+            self.finished = true;
+            return;
+        }
         let round = self.melee().round_id;
         let playing = self.melee().phase == MeleePhase::Playing;
         if playing {
@@ -96,7 +125,7 @@ impl Room {
                 }
             }
         }
-        self.game.step();
+        self.game.step_with_forfeits(self.forfeits);
         self.tick += 1;
         if playing && self.melee().phase != MeleePhase::Playing {
             for &id in self.game.fighter_ids() {

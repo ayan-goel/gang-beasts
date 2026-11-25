@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
+import { verifyDisconnectGrace } from './support/disconnectScenario';
 import { observeMatch } from './support/onlineTrace';
 
 test('only the host can start and both ready browsers see the live rooftop and round', async ({page, browser}) => {
@@ -29,7 +30,6 @@ test('only the host can start and both ready browsers see the live rooftop and r
       await expect(player.getByLabel('Gold score')).toHaveText('0');
     }
     await guest.reload();
-    await guest.getByRole('button',{name:'Ready up'}).click();
     await expect(guest.getByLabel('Online Skyline arena').locator('canvas')).toBeVisible();
     await expect(guest.getByLabel('Round phase')).toHaveText('Playing');
     for (const [player, key, winner, round] of [[guest, 'KeyD', 'Mint', 2], [page, 'KeyS', 'Gold', 3]] as const) {
@@ -152,3 +152,5 @@ test('eight ready browsers share the rooftop and the eighth player can run off i
     for (const player of pages.slice().reverse()) await player.getByRole('button',{name:'Leave room'}).click();
   } finally { await Promise.all(contexts.map(context => context.close())); }
 });
+
+test('an online seat reconnects before grace and spectates after expiry, then survivors return to the lobby', verifyDisconnectGrace);

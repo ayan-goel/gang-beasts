@@ -2,6 +2,7 @@ mod connection;
 mod content;
 mod directory;
 mod lobby;
+mod maintenance;
 mod matches;
 mod sessions;
 mod socket;
@@ -29,6 +30,7 @@ use types::{Create, Empty, Fault, Join, PublicRoom, Seat};
 #[derive(Clone)]
 struct Admission {
     pool: Arc<crate::WorkerPool>,
+    maintenance: Arc<std::sync::Once>,
     directory: Arc<Mutex<Directory>>,
     origin: HeaderValue,
     sockets: Arc<tokio::sync::Semaphore>,
@@ -50,6 +52,7 @@ pub(crate) fn routes(origin: &str, pool: Arc<crate::WorkerPool>) -> Result<Route
         ));
     }
     let state = Admission {
+        maintenance: Arc::new(std::sync::Once::new()),
         pool,
         directory: Arc::default(),
         sockets: Arc::new(tokio::sync::Semaphore::new(512)),
@@ -75,6 +78,9 @@ async fn guard(
     req: Request,
     next: Next,
 ) -> Response {
+    state
+        .maintenance
+        .call_once(|| maintenance::start(&state.directory));
     // Browser credentials are ambient. Reject foreign or missing Origins before state changes.
     let mut response = if (req.method() == axum::http::Method::POST || req.uri().path() == "/ws")
         && req.headers().get(header::ORIGIN) != Some(&state.origin)
@@ -196,3 +202,6 @@ async fn leave(
     d.leave(id, &code(&raw)?, now)?;
     Ok(StatusCode::NO_CONTENT)
 }
+
+#[cfg(test)]
+mod grace_tests;

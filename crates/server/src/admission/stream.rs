@@ -109,7 +109,7 @@ pub(super) async fn play(
                 continue;
             }
         }
-        if !eligible(state, code, owner, &game, false) {
+        if game.client.returning_to_lobby() || !eligible(state, code, owner, &game, false) {
             return;
         }
         let Some(frame) = game.client.latest() else {

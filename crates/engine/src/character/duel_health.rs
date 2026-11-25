@@ -17,7 +17,6 @@ impl Duel {
         for hit in &self.hits {
             damage[hit.defender as usize] += hit.damage;
         }
-        self.changes.clear();
         for &id in self.fighter_ids() {
             let i = id as usize;
             if let Some(next) = self.vitals[i].advance(self.tick, damage[i], &self.health_rules) {

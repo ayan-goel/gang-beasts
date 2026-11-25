@@ -4,7 +4,7 @@ use brawler_protocol::{INPUT_BYTES, InputFrame};
 use std::{
     sync::{
         Arc, Mutex,
-        atomic::{AtomicBool, AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering},
         mpsc::{Receiver, SyncSender, TrySendError, sync_channel},
     },
     time::Instant,
@@ -34,6 +34,8 @@ pub(super) struct Shared {
     pub latest: Mutex<Option<Arc<RoomFrame>>>,
     pub closed: AtomicBool,
     pub rejected: AtomicU64,
+    pub forfeits: AtomicU8,
+    pub return_to_lobby: AtomicBool,
     pub owners: [AtomicU64; FighterId::ALL.len()],
     pub delayed: AtomicU64,
 }
@@ -50,6 +52,8 @@ impl RoomClient {
             latest: Mutex::default(),
             closed: AtomicBool::new(false),
             owners: Default::default(),
+            forfeits: AtomicU8::new(0),
+            return_to_lobby: AtomicBool::new(false),
             rejected: AtomicU64::new(0),
             delayed: AtomicU64::new(0),
         });
@@ -69,6 +73,18 @@ impl RoomClient {
 
     pub fn input(&self, id: FighterId, round: u64, bytes: &[u8]) -> Result<(), DispatchError> {
         self.input_for(id, 0, round, bytes)
+    }
+
+    pub(crate) fn forfeit(&self, mask: u8) {
+        self.shared.forfeits.fetch_or(mask, Ordering::AcqRel);
+    }
+
+    pub(crate) fn forfeited(&self, id: FighterId) -> bool {
+        self.shared.forfeits.load(Ordering::Acquire) & (1 << id as u8) != 0
+    }
+
+    pub(crate) fn returning_to_lobby(&self) -> bool {
+        self.shared.return_to_lobby.load(Ordering::Acquire)
     }
 
     pub(crate) fn bind(&self, id: FighterId, generation: u64) {

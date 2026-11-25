@@ -1,12 +1,13 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useLiveRoom } from './liveRoom';
-import { colors, errorText, leave, roster, type Roster } from './api';
+import { colors, errorText, leave, roster, RoomRequestError, type Roster } from './api';
 
 const OnlineMatch = lazy(() => import('../online/OnlineMatch'));
 
 export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => void }) {
   const [fallback, setFallback] = useState<Roster | null>(null);
   const [error, setError] = useState('');
+  const [lostAccess, setLostAccess] = useState<'seat' | 'room' | null>(null);
   const {connection, disconnected, game, start, startError, load, setReady, reconnect} = useLiveRoom(code);
   const state = connection ?? (disconnected ? fallback : null);
   const mySlot = connection?.slot ?? fallback?.you;
@@ -15,14 +16,22 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
   const [leaving, setLeaving] = useState(false);
   const url = new URL('/rooms/', location.origin); url.searchParams.set('code', code);
   useEffect(() => {
-    if (!disconnected) return;
+    if (!disconnected) { setLostAccess(null); return; }
     const controller = new AbortController();
     let timer: number;
     async function refresh() {
       try {
         const next = await roster(code, controller.signal);
         if (!controller.signal.aborted) { setFallback(next); setError(''); }
-      } catch (err) { if (!controller.signal.aborted) setError(errorText(err)); }
+      } catch (err) {
+        if (controller.signal.aborted) return;
+        setError(errorText(err));
+        if (err instanceof RoomRequestError && ['not_a_member', 'session_required', 'room_not_found'].includes(err.code)) {
+          setFallback(null);
+          setLostAccess(err.code === 'room_not_found' ? 'room' : 'seat');
+          return;
+        }
+      }
       if (!controller.signal.aborted) timer = window.setTimeout(refresh, 6000);
     }
     void refresh();
@@ -33,6 +42,11 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
     try { await leave(code); onLeave(); } catch (err) { setError(errorText(err)); setLeaving(false); }
   }
   if (game) return <Suspense fallback={<p role="status">Opening Skyline…</p>}><OnlineMatch feed={game} exit={exit}/>{error && <p role="alert">{error}</p>}</Suspense>;
+  if (lostAccess && disconnected) return <section className="room-panel">
+    <h1>{lostAccess === 'room' ? 'Room closed' : 'Seat expired'}</h1>
+    <p role="status">{lostAccess === 'room' ? 'This room is no longer available.' : 'Your seat was released while you were disconnected.'}</p>
+    <a className="room-primary" href={lostAccess === 'room' ? '/rooms/' : url.href}>{lostAccess === 'room' ? 'Find another room' : 'Rejoin room'}</a>
+  </section>;
   const canStart = connection && connection.players.length >= 2 && connection.occupied === connection.ready;
   return <section className="room-panel">
     <h1>Room lobby</h1>

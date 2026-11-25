@@ -37,6 +37,14 @@ export function useLiveRoom(code: string) {
     socket.onmessage = event => {
       try {
         const bytes = new Uint8Array(event.data);
+        if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 28 && last && !feed) {
+          void content.ready();
+          return;
+        }
+        if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 27 && feed) {
+          setAttempt(n => n + 1);
+          return;
+        }
         if ((bytes[0] === 23 || bytes[0] === 26) && last && !feed) { feed = new MatchFeed(bytes, packet => {
           if (socket.readyState !== WebSocket.OPEN) return;
           if (socket.bufferedAmount > 16384) { socket.close(4008, 'Input queue stalled'); return; }

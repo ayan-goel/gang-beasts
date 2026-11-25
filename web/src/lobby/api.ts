@@ -13,13 +13,17 @@ const messages: Record<string, string> = {
   not_a_member: 'Your seat is no longer in this room. Reload to join again.',
 };
 
+export class RoomRequestError extends Error {
+  constructor(readonly code: string) { super(messages[code] ?? 'Room service unavailable. Try again.'); }
+}
+
 async function request(path: string, data?: object, signal?: AbortSignal): Promise<unknown> {
   const response = await fetch('/api/' + path, { method: data ? 'POST' : 'GET', signal,
     credentials: 'same-origin', headers: data ? { 'Content-Type': 'application/json' } : undefined,
     body: data ? JSON.stringify(data) : undefined });
   if (response.status === 204) return null;
   const value = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(messages[value?.error?.code] ?? 'Room service unavailable. Try again.');
+  if (!response.ok) throw new RoomRequestError(value?.error?.code ?? 'unavailable');
   return value;
 }
 

@@ -31,6 +31,15 @@ impl Lobby {
 
 impl Directory {
     pub fn connect(&mut self, code: &str, session: SessionId) -> Option<Connection> {
+        self.connect_at(code, session, Instant::now())
+    }
+    pub fn connect_at(
+        &mut self,
+        code: &str,
+        session: SessionId,
+        now: Instant,
+    ) -> Option<Connection> {
+        self.prune(now);
         let room = self.rooms.get_mut(code)?;
         let slot = room.slot(session)?;
         self.next_connection = self.next_connection.checked_add(1)?;
@@ -41,6 +50,7 @@ impl Directory {
                 game.client.unbind(id, previous);
             }
         }
+        member.disconnected_at = None;
         member.generation = Some(generation);
         member.ready = false;
         Some(Connection {
@@ -74,6 +84,9 @@ impl Directory {
     }
 
     pub fn disconnect(&mut self, code: &str, owner: Connection) {
+        self.disconnect_at(code, owner, Instant::now());
+    }
+    pub fn disconnect_at(&mut self, code: &str, owner: Connection, now: Instant) {
         let Some(member) = self
             .rooms
             .get_mut(code)
@@ -85,6 +98,7 @@ impl Directory {
         if member.session == owner.session && member.generation == Some(owner.generation) {
             member.ready = false;
             member.generation = None;
+            member.disconnected_at = Some(now);
         }
     }
 }

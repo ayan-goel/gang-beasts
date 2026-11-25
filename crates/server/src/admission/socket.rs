@@ -106,11 +106,24 @@ async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: 
                 dir.rooms.get(code).and_then(|r| r.game.clone())
             };
             if let Some(game) = game {
-                super::stream::play(socket, state, code, owner, game).await;
+                super::stream::play(socket, state, code, owner, game.clone()).await;
+                let returned = {
+                    let mut dir = state.directory.lock().unwrap();
+                    dir.prune(Instant::now());
+                    dir.live_state(code, owner, None).is_some()
+                        && dir.rooms.get(code).is_some_and(|r| {
+                            r.game
+                                .as_ref()
+                                .is_none_or(|g| !std::sync::Arc::ptr_eq(g, &game))
+                        })
+                };
+                if returned {
+                    send(socket, vec![27, 1]).await;
+                }
                 return;
             }
         }
-        let (current, bytes) = {
+        let (current, bytes, running_match) = {
             let mut directory = state.directory.lock().unwrap();
             let Some(current) = directory.live_state(code, owner, ready) else {
                 return;
@@ -129,10 +142,21 @@ async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: 
                     bytes.extend(seat.name.as_bytes());
                 }
             }
-            (current, bytes)
+            (
+                current,
+                bytes,
+                previous.is_none()
+                    && directory
+                        .rooms
+                        .get(code)
+                        .is_some_and(|room| room.game.is_some()),
+            )
         };
         // A stalled recipient must release its bounded socket slot and ready flag.
         if !send(socket, bytes).await {
+            return;
+        }
+        if running_match && !send(socket, vec![28, 1]).await {
             return;
         }
         previous = Some(current);

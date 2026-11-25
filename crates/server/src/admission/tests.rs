@@ -134,6 +134,7 @@ async fn only_a_ready_host_can_allocate_one_worker_for_the_current_roster() {
     use std::sync::Arc;
     let pool = Arc::new(crate::WorkerPool::new(1).unwrap());
     let state = super::Admission {
+        maintenance: Arc::new(std::sync::Once::new()),
         pool: pool.clone(),
         directory: Arc::default(),
         origin: "http://localhost".parse().unwrap(),

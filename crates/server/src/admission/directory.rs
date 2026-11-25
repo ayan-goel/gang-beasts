@@ -41,21 +41,23 @@ impl Directory {
         bucket.1 += 1;
         Ok(())
     }
-    fn prune(&mut self, now: Instant) {
+    pub(super) fn prune(&mut self, now: Instant) {
         self.traffic
             .retain(|_, (t, _)| now.duration_since(*t) < Duration::from_secs(60));
         self.sessions.0.retain(|_, t| now.duration_since(*t) < IDLE);
         self.rooms.retain(|_, r| {
-            for seat in &mut r.members {
-                if seat
-                    .as_ref()
-                    .is_some_and(|m| !self.sessions.0.contains_key(&m.session))
-                {
-                    *seat = None;
-                    r.revision = r.revision.wrapping_add(1);
+            let mut released = 0;
+            for (slot, member) in r.members.iter().enumerate() {
+                if member.as_ref().is_some_and(|m| {
+                    !self.sessions.0.contains_key(&m.session)
+                        || m.disconnected_at.is_some_and(|since| {
+                            now.saturating_duration_since(since) >= super::maintenance::GRACE
+                        })
+                }) {
+                    released |= 1 << slot;
                 }
             }
-            r.update_host(now);
+            r.release_seats(released, now);
             r.empty_since
                 .is_none_or(|t| now.duration_since(t) < Duration::from_secs(60))
         });
@@ -112,6 +114,7 @@ impl Directory {
         Err(Fault::SERVICE)
     }
     pub fn join(&mut self, session: SessionId, code: &str, req: Join) -> Result<Seat, Fault> {
+        self.prune(Instant::now());
         let name = player(&req.name, req.color)?;
         if self
             .rooms
@@ -154,16 +157,7 @@ impl Directory {
     pub fn leave(&mut self, session: SessionId, code: &str, now: Instant) -> Result<(), Fault> {
         let r = self.rooms.get_mut(code).ok_or(Fault::MISSING)?;
         if let Some(slot) = r.slot(session) {
-            if let (Some(game), Some(generation)) =
-                (&r.game, r.members[slot].as_ref().and_then(|m| m.generation))
-            {
-                if let Some(id) = game.fighter(session) {
-                    game.client.unbind(id, generation);
-                }
-            }
-            r.members[slot] = None;
-            r.revision = r.revision.wrapping_add(1);
-            r.update_host(now);
+            r.release_seats(1 << slot, now);
         }
         Ok(())
     }

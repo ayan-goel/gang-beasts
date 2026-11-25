@@ -42,3 +42,26 @@ test('reopening the same seat replaces its connection and the earlier tab can ex
   await expect(page.getByRole('button', {name: 'Ready up'})).toBeEnabled();
   await expect(other.getByRole('button', {name: 'Reconnect'})).toBeVisible();
 });
+
+for (const [failure, action] of [['not_a_member','Rejoin room'], ['room_not_found','Find another room']] as const) {
+  test('closed socket gives a recovery link for ' + failure, async ({page}) => {
+    let disconnect = () => {};
+    await page.routeWebSocket(url => url.pathname === '/ws', socket => {
+      const server = socket.connectToServer();
+      disconnect = () => { server.close(); socket.close(); };
+    });
+    await page.goto('/rooms/');
+    await page.getByLabel('Player name').fill('Coral');
+    await page.getByRole('button',{name:'Create room',exact:true}).click();
+    await expect(page.getByLabel('Players',{exact:true}).getByRole('listitem')).toHaveCount(1);
+    const invite = await page.getByLabel('Invite link').inputValue();
+    await page.route('**/api/rooms/*/lobby', route => route.fulfill({
+      status:failure === 'not_a_member' ? 403 : 404, json:{error:{code:failure}},
+    }));
+    disconnect();
+    const link = page.getByRole('link',{name:action});
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute('href',failure === 'not_a_member' ? invite : '/rooms/');
+    await expect(page.getByRole('button',{name:'Reconnect'})).toHaveCount(0);
+  });
+}

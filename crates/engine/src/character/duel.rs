@@ -132,9 +132,20 @@ impl Duel {
         self.tick
     }
     pub fn step(&mut self) {
-        if !self.playing_tick() {
+        self.step_with_forfeits(0);
+    }
+    pub fn step_with_forfeits(&mut self, forfeits: u8) {
+        self.changes.clear();
+        let playing = self.playing_tick();
+        if forfeits != 0 {
+            for &id in self.fighter_ids() {
+                if forfeits & (1 << id as u8) != 0 {
+                    self.eliminate(id);
+                }
+            }
+        }
+        if !playing {
             self.hits.clear();
-            self.changes.clear();
             if let Some(a) = &mut self.arena {
                 a.events.clear();
             }

@@ -65,7 +65,11 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
                     generation,
                 );
             }
-            room.step();
+            room.step_with_forfeits(job.shared.forfeits.load(Ordering::Acquire));
+            if room.finished_for_lack_of_players() {
+                job.shared.return_to_lobby.store(true, Ordering::Release);
+                return Ok(());
+            }
             if room.snapshot_due() {
                 publish(&room)?;
             }

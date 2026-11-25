@@ -9,6 +9,7 @@ pub(super) struct Member {
     pub session: SessionId,
     pub ready: bool,
     pub generation: Option<u64>,
+    pub disconnected_at: Option<Instant>,
     name: String,
     color: u8,
 }
@@ -40,6 +41,7 @@ impl Lobby {
             session,
             ready: false,
             generation: None,
+            disconnected_at: None,
             name: name.to_owned(),
             color: color.unwrap_or(0),
         });
@@ -72,22 +74,53 @@ impl Lobby {
             players: self.members.iter().flatten().count(),
         }
     }
-    pub fn update_host(&mut self, now: Instant) {
-        if self.game.as_ref().is_some_and(|g| {
-            !self
-                .members
-                .iter()
-                .flatten()
-                .any(|p| g.fighter(p.session).is_some())
-        }) {
-            self.game = None;
+    pub fn release_seats(&mut self, slots: u8, now: Instant) {
+        let mut forfeits = 0;
+        for (slot, seat) in self.members.iter_mut().enumerate() {
+            if slots & (1 << slot) == 0 {
+                continue;
+            }
+            let Some(member) = seat.take() else { continue };
+            if let Some((game, id)) = self
+                .game
+                .as_ref()
+                .and_then(|g| g.fighter(member.session).map(|id| (g, id)))
+            {
+                forfeits |= 1 << id as u8;
+                if let Some(generation) = member.generation {
+                    game.client.unbind(id, generation);
+                }
+            }
+            self.revision = self.revision.wrapping_add(1);
         }
+        // The worker samples all expirations from this sweep together before resolving the winner.
+        if let Some(game) = &self.game {
+            if forfeits != 0 {
+                game.client.forfeit(forfeits);
+            }
+            if game.client.returning_to_lobby() {
+                self.game = None;
+                for member in self.members.iter_mut().flatten() {
+                    member.ready = false;
+                }
+            }
+        }
+        self.update_host(now);
+    }
+
+    fn update_host(&mut self, now: Instant) {
         if self.members[self.host].is_some() {
             return;
         }
-        if let Some(next) = self.members.iter().position(Option::is_some) {
+        let next = self
+            .members
+            .iter()
+            .position(|seat| seat.as_ref().is_some_and(|m| m.generation.is_some()))
+            .or_else(|| self.members.iter().position(Option::is_some));
+        if let Some(next) = next {
             self.host = next;
         } else {
+            self.game = None;
             self.empty_since.get_or_insert(now);
         }
     }
@@ -142,6 +175,7 @@ impl Lobby {
             session,
             ready: false,
             generation: None,
+            disconnected_at: None,
             name: name.to_owned(),
             color,
         });
