@@ -19,7 +19,7 @@ The engine has no network, rendering, or wall-clock dependency. `config/physics.
 
 The passive character uses `config/character.json`. Run `cargo test --locked -p brawler-engine --test ragdoll -- --nocapture` for its mass, anchor, drop and reset fixtures. The same rig is available in the browser's **Test scene → Passive ragdoll**. See [native rig evidence](docs/slices/04a-native-passive-ragdoll.md) and [browser inspection](docs/slices/04b2-ragdoll-browser-inspector.md).
 
-The native `PoseRagdoll` diagnostic adds bounded bind-pose motors using `config/motors.json`. Run `cargo test --locked -p brawler-engine --test pose_motors -- --nocapture`; see [motor contracts and evidence](docs/slices/05a-bounded-pose-motors.md). The separate `config/standing-motors.json` and `config/balance.json` presets enable support-aware standing. Run `cargo test --locked --release -p brawler-engine --test standing -- --nocapture`; see [standing evidence](docs/slices/05b1-native-standing.md). Driven browser controls remain in development.
+The native `PoseRagdoll` diagnostic adds bounded bind-pose motors using `config/motors.json`. Run `cargo test --locked -p brawler-engine --test pose_motors -- --nocapture`; see [motor contracts and evidence](docs/slices/05a-bounded-pose-motors.md). The separate `config/standing-motors.json` and `config/balance.json` presets enable support-aware standing. Run `cargo test --locked --release -p brawler-engine --test standing -- --nocapture`; see [standing evidence](docs/slices/05b1-native-standing.md). The same preset is available under **Test scene → Standing ragdoll**; see [browser standing and inspection](docs/slices/05b2-standing-browser.md).
 
 ## Browser playground
 
@@ -47,7 +47,7 @@ Browser integration tests start their own local server if needed. They compare a
 
 ## Playground controls
 
-Choose **Passive ragdoll** to inspect the fifteen-body rig paused at tick zero. Select a limb for readings and impulses, enable joint frames/colliders, then resume to observe its unpowered fall. Joint limits and anchor separation are available in the inspector. Scene switching starts a fresh world with default tuning. Ragdoll recording and active motors are not implemented yet; the recording controls below apply to the cuboid scene.
+Choose **Passive ragdoll** to inspect the fifteen-body rig paused at tick zero. Select a limb for readings and impulses, enable joint frames/colliders, then resume to observe its unpowered fall. Joint limits and anchor separation are available in the inspector. Scene switching starts a fresh world with default tuning. Choose **Standing ragdoll** for the supported standing preset. Toggle character control, inspect support and per-joint effort/velocity targets, or shove the selected body with a 10 N·s +X impulse. Pale parent joint axes show the bind-pose target; saturated child axes show actual orientation. Reset and physics tuning preserve the control toggle. Scene changes discard unsubmitted tuning drafts. Ragdoll recording is not implemented; recording controls apply to the cuboid scene.
 
 Pause to enable exact single-step. Reset reconstructs the fixture and preserves the paused/running mode. Slow motion changes playback cadence without changing physics dt. The upward impulse is queued once for the next tick. Enable **Show colliders** to inspect Rapier geometry.
 

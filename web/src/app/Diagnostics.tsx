@@ -13,6 +13,6 @@ export function Diagnostics({ state }: { state: PlaygroundSnapshot }) {
       {state.showColliders && <div><dt>Collider segments</dt><dd id="debug-segments">{state.debugSegments}</dd></div>}
     </dl>
     <p className="note">Rust / Rapier · WebAssembly<br />Fixed physics step: 1/60 second.<br />
-      A diagnostic fixture; character controls and combat are still in development.</p>
+      A diagnostic fixture; movement and combat are still in development.</p>
   </section>;
 }

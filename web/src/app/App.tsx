@@ -7,6 +7,7 @@ import { Recordings } from './Recordings';
 import { Tuning } from './Tuning';
 import type { InspectorProps } from './types';
 import { RagdollInspector } from './RagdollInspector';
+import { MotorInspector } from './MotorInspector';
 
 export function App() {
   const viewport = useRef<HTMLDivElement>(null);
@@ -33,26 +34,28 @@ export function App() {
   return <>
     <header>
       <div><p className="eyebrow">Physics Brawler</p><h1>Development playground</h1></div>
-      <span className="badge">PHYSICS LAB / 04</span>
+      <span className="badge">PHYSICS LAB / 05</span>
     </header>
     <div className="workspace">
       <section className="viewport" ref={viewport} aria-label="Physics scene">
         <div className="scene-label"><p className="eyebrow">Test environment</p>
-          <h2>{scenario === 'ragdoll' ? 'Passive ragdoll' : 'Floating platform'}</h2>
-          <p>{scenario === 'ragdoll' ? 'Fifteen bodies. Physical joints. No motors.' : 'One body. Real contact. Fixed timestep.'}</p></div>
+          <h2>{scenario === 'standing' ? 'Standing ragdoll' : scenario === 'ragdoll' ? 'Passive ragdoll' : 'Floating platform'}</h2>
+          <p>{scenario === 'standing' ? 'Bounded motors. Foot support. Physical balance.' : scenario === 'ragdoll' ? 'Fifteen bodies. Physical joints. No motors.' : 'One body. Real contact. Fixed timestep.'}</p></div>
       </section>
       <aside aria-label="Playground tools">
         {error ? <p role="alert">{error}</p> : <p role="status">{state ? 'Simulation ready' : 'Loading simulation…'}</p>}
         <label className="field">Test scene
           <select value={scenario} onChange={event => setScenario(event.target.value as Scenario)}>
             <option value="cube">Cuboid fixture</option><option value="ragdoll">Passive ragdoll</option>
+            <option value="standing">Standing ragdoll</option>
           </select>
         </label>
         {state && <>
           <RagdollInspector state={state} act={act} />
           <Controls state={state} act={act} />
+          <MotorInspector state={state} act={act} />
           <Diagnostics state={state} />
-          <Tuning key={state.configuration} state={state} act={act} />
+          <Tuning key={`${scenario}:${state.configuration}`} state={state} act={act} />
           {state.supportsRecording && <Recordings state={state} act={act} reportError={setError}
             sessionRevision={() => `${generation.current}:${runtime.current?.playground.sessionRevision ?? -1}`} />}
         </>}

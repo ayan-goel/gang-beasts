@@ -1,3 +1,5 @@
+import { inspectController, type RigControl } from './motorInspection';
+
 export type BodyShape =
   | { kind: 'sphere'; radius: number }
   | { kind: 'capsule'; radius: number; half_height: number }
@@ -10,6 +12,7 @@ export interface RigDefinition {
 }
 
 export interface RigInspection {
+  readonly controller?: RigControl;
   definition: RigDefinition;
   selectedBody: number;
   selectBody(index: number): void;
@@ -25,6 +28,7 @@ export function inspectRig(rig: RigInspection) {
   for (let i = 13; i < bodies.length; i += 14) mass += bodies[i]!;
   for (let i = 16; i < joints.length; i += 17) maxAnchorError = Math.max(maxAnchorError, joints[i]!);
   return {
+    controller: rig.controller ? inspectController(rig.controller, rig.definition, rig.selectedBody) : undefined,
     selectedBody: rig.selectedBody, bodyCount: bodies.length / 14, jointCount: joints.length / 17,
     mass, maxAnchorError, bodyNames: rig.definition.bodies.map(body => body.part.replaceAll('_', ' ')),
     limits: rig.definition.joints.find(joint => joint.child === rig.definition.bodies[rig.selectedBody]!.part)?.angular_limits,

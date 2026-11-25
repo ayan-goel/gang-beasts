@@ -73,3 +73,24 @@ fn toggling_control_twice_while_paused_does_not_restore_stale_effort() {
     assert_eq!(rig.solver_motor_efforts().unwrap(), [[0.0; 3]; 14]);
     assert_eq!(rig.motor_torques(), &[[0.0; 3]; 14]);
 }
+
+#[test]
+fn solver_velocity_targets_are_current_and_clear_on_toggle_and_reset() {
+    let mut rig = fixture();
+    assert_eq!(rig.solver_motor_targets().unwrap(), [[0.0; 3]; 14]);
+    rig.step();
+    assert!(rig.solver_motor_targets().unwrap()[0][0] < 0.0);
+    rig.set_enabled(false);
+    rig.set_enabled(true);
+    assert_eq!(rig.solver_motor_targets().unwrap(), [[0.0; 3]; 14]);
+    rig.step();
+    assert!(
+        rig.solver_motor_targets()
+            .unwrap()
+            .iter()
+            .flatten()
+            .any(|value| value.abs() > 0.01)
+    );
+    rig.reset();
+    assert_eq!(rig.solver_motor_targets().unwrap(), [[0.0; 3]; 14]);
+}

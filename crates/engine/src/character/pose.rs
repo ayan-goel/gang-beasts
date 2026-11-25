@@ -41,6 +41,16 @@ impl PoseRagdoll {
     pub fn rig(&self) -> &PassiveRagdoll {
         &self.rig
     }
+
+    pub fn enabled(&self) -> bool {
+        self.enabled
+    }
+    pub fn motor_configuration(&self) -> &MotorConfig {
+        &self.motors
+    }
+    pub fn collider_lines(&mut self) -> Vec<f32> {
+        self.rig.collider_lines()
+    }
     /// World-aligned effort display: explicit tick commands, or implicit local
     /// solver effort rotated onto completed joint frames (not solve-time world torque).
     pub fn motor_torques(&self) -> &[[f32; 3]; 14] {
@@ -52,6 +62,16 @@ impl PoseRagdoll {
         (self.motors.model == "implicit_velocity_pd").then(|| {
             if self.enabled {
                 super::implicit_motor::local_efforts(&self.rig)
+            } else {
+                [[0.0; 3]; 14]
+            }
+        })
+    }
+
+    pub fn solver_motor_targets(&self) -> Option<[[f32; 3]; 14]> {
+        (self.motors.model == "implicit_velocity_pd").then(|| {
+            if self.enabled {
+                super::implicit_motor::targets(&self.rig)
             } else {
                 [[0.0; 3]; 14]
             }
@@ -74,6 +94,7 @@ impl PoseRagdoll {
         for (_, joint) in self.rig.world.impulse_joints.iter_mut() {
             for motor in &mut joint.data.motors {
                 motor.impulse = 0.0;
+                motor.target_vel = 0.0;
             }
         }
         self.torques = [[0.0; 3]; 14];

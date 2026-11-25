@@ -1,16 +1,26 @@
 import { LocalRagdoll } from '../generated/wasm/brawler_wasm';
 import type { SimulationPort } from './SimulationPort';
 import type { RigDefinition, RigInspection } from './rigDefinition';
+import type { MotorConfiguration, RigControl } from './motorInspection';
 
 export class RagdollSimulation implements SimulationPort, RigInspection {
   private readonly native: LocalRagdoll;
   readonly definition: RigDefinition;
   readonly rig = this;
+  readonly controller?: RigControl;
   selectedBody = 2;
 
-  constructor(configuration: string) {
-    this.native = new LocalRagdoll(configuration);
-    try { this.definition = JSON.parse(this.native.definition_json()) as RigDefinition; }
+  constructor(configuration: string, standing = false) {
+    this.native = standing ? LocalRagdoll.standing(configuration) : new LocalRagdoll(configuration);
+    try {
+      this.definition = JSON.parse(this.native.definition_json()) as RigDefinition;
+      const motorJson = this.native.motor_configuration_json();
+      if (motorJson) this.controller = {
+        configuration: JSON.parse(motorJson) as MotorConfiguration,
+        state: () => this.native.controller_state(), efforts: () => this.native.motor_efforts(),
+        targets: () => this.native.motor_targets(), setEnabled: enabled => this.native.set_enabled(enabled),
+      };
+    }
     catch (error) { this.native.free(); throw error; }
   }
 

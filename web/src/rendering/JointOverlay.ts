@@ -15,7 +15,7 @@ export class JointOverlay {
     this.anchors = new Float32Array(count * 6);
     const colors = new Float32Array(this.positions.length);
     for (let joint = 0; joint < count; joint++) {
-      const palette = [0xffffff, 0xff7777, 0x80ff9c, 0x78baff, 0xff7777, 0x80ff9c, 0x78baff];
+      const palette = [0xffffff, 0xffcccc, 0xcfffd8, 0xc4ddff, 0xff5555, 0x55ff7b, 0x559fff];
       palette.forEach((hex, segment) => {
         const color = new THREE.Color(hex);
         color.toArray(colors, joint * 42 + segment * 6);

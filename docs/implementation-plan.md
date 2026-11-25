@@ -15,7 +15,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 04b2 — verified | Passive rig in browser playground | Scenario selection, visible collider geometry and joint frames, reset/impulse controls |
 | 05a — verified | Native bounded relative pose motors | Quaternion/frame correctness, conserved actuation momentum, per-joint torque caps, finite driven drop |
 | 05b1 — verified | Native support-aware standing | 60-second stand, valid foot support, bounded effort, external pushes, reset/disable |
-| 05b2 | Driven WASM rig and motor inspection | Native/WASM standing trace; visible motor targets, support/effort readings and browser controls |
+| 05b2 — verified | Driven WASM rig and motor inspection | Native/WASM standing trace; visible motor targets, support/effort readings and browser controls |
 | 06 | Walking/running and support | Direction/speed/wall/slope/moving-support fixtures and browser inspection |
 | 07 | Jump, fall and recovery | Buffered edge consumed once; total impulse bounded; physical get-up |
 | 08 | Independent strikes and contact damage | Real contact, attack deduplication, no resting damage |

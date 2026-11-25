@@ -5,10 +5,10 @@ import { Playground, type PlaygroundSnapshot } from './Playground';
 import { RagdollSimulation } from './RagdollSimulation';
 import type { SimulationPort } from './SimulationPort';
 
-export type Scenario = 'cube' | 'ragdoll';
+export type Scenario = 'cube' | 'ragdoll' | 'standing';
 
 export function startPlayground(container: HTMLElement, publish: (state: PlaygroundSnapshot) => void, scenario: Scenario = 'cube') {
-  const simulation: SimulationPort = scenario === 'ragdoll' ? new RagdollSimulation(configuration) : new LocalSimulation(configuration);
+  const simulation: SimulationPort = scenario === 'cube' ? new LocalSimulation(configuration) : new RagdollSimulation(configuration, scenario === 'standing');
   let scene: FixtureScene | undefined;
   let frame = 0;
   let disposed = false;
@@ -19,7 +19,7 @@ export function startPlayground(container: HTMLElement, publish: (state: Playgro
     try { scene?.dispose(); } finally { simulation.free(); }
   };
   try {
-    scene = new FixtureScene(container, simulation.rig?.definition);
+    scene = new FixtureScene(container, simulation.rig?.definition, scenario === 'standing' ? 0.85 : 1.7);
     const liveScene = scene;
     const playground = new Playground(simulation);
     if (simulation.rig) playground.setPaused(true);

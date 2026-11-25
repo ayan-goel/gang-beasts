@@ -19,7 +19,7 @@ export class FixtureScene {
   private readonly rig?: RagdollView;
   private readonly joints?: JointOverlay;
 
-  constructor(private readonly container: HTMLElement, definition?: RigDefinition) {
+  constructor(private readonly container: HTMLElement, definition?: RigDefinition, rigFocusHeight = 1.7) {
     try {
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       this.renderer.shadowMap.enabled = true;
@@ -35,7 +35,7 @@ export class FixtureScene {
         this.scene.add(this.rig.root, this.joints.root);
         this.cube.visible = false;
         this.camera.position.set(4, 3.8, 6);
-        this.camera.lookAt(0, 1.7, 0);
+        this.camera.lookAt(0, rigFocusHeight, 0);
         this.renderer.domElement.setAttribute('aria-label', 'Live fifteen-body physical ragdoll on a platform');
       }
 

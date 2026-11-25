@@ -75,6 +75,15 @@ pub(super) fn local_efforts(rig: &PassiveRagdoll) -> [[f32; 3]; 14] {
     output
 }
 
+pub(super) fn targets(rig: &PassiveRagdoll) -> [[f32; 3]; 14] {
+    let mut output = [[0.0; 3]; 14];
+    for (index, (_, joint)) in rig.world.impulse_joints.iter().enumerate() {
+        output[index] =
+            AXES.map(|axis| joint.data.motor(axis).map_or(0.0, |motor| motor.target_vel));
+    }
+    output
+}
+
 pub(super) fn torques(rig: &PassiveRagdoll) -> [[f32; 3]; 14] {
     let mut output = local_efforts(rig);
     for (index, (_, joint)) in rig.world.impulse_joints.iter().enumerate() {
