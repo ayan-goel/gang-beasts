@@ -64,6 +64,7 @@ async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: 
     let mut previous = None;
     let mut window = Instant::now();
     let mut received = 0;
+    let mut loaded = false;
     loop {
         let ready = tokio::select! {
             _ = timer.tick() => None,
@@ -73,6 +74,15 @@ async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: 
                 if received > 32 { return; }
                 match message {
                     Some(Ok(Message::Binary(bytes))) => match Command::decode(&bytes) {
+                        Some(Command::MapLoaded(hashes)) => {
+                            loaded = super::content::compatible(hashes);
+                            if !send(socket, vec![21, 1, u8::from(!loaded)]).await { return; }
+                            if loaded { None } else { Some(false) }
+                        }
+                        Some(Command::SetReady(true)) if !loaded => {
+                            if !send(socket, vec![21, 1, 2]).await { return; }
+                            Some(false)
+                        }
                         Some(Command::SetReady(value)) => Some(value),
                         _ => return,
                     },
@@ -103,16 +113,20 @@ async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: 
             (current, bytes)
         };
         // A stalled recipient must release its bounded socket slot and ready flag.
-        if !matches!(
-            timeout(
-                Duration::from_secs(2),
-                socket.send(Message::Binary(bytes.into()))
-            )
-            .await,
-            Ok(Ok(()))
-        ) {
+        if !send(socket, bytes).await {
             return;
         }
         previous = Some(current);
     }
+}
+
+async fn send(socket: &mut WebSocket, bytes: Vec<u8>) -> bool {
+    matches!(
+        timeout(
+            Duration::from_secs(2),
+            socket.send(Message::Binary(bytes.into()))
+        )
+        .await,
+        Ok(Ok(()))
+    )
 }

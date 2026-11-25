@@ -1053,7 +1053,7 @@ Browsers use a Secure, HttpOnly, SameSite=Strict session cookie and explicit Ori
 | RequestResync | FullSnapshot |
 | SnapshotAppliedAck | GameEvent / Error |
 
-The [lobby control contract](docs/protocol.md#lobby-controls) defines Connect, Welcome, SetReady and RoomState on the authenticated socket. Readiness resets on connection replacement or disconnect. A roster revision binds the ready mask to its player identities.
+The [lobby control contract](docs/protocol.md#lobby-controls) defines Connect, Welcome, SetReady and RoomState on the authenticated socket. Readiness requires a [map and engine compatibility acknowledgement](docs/slices/16d-map-loading.md) for the current connection. Readiness resets on connection replacement or disconnect. A roster revision binds the ready mask to its player identities.
 
 Prefer HTTP room creation/join followed by authenticated attachment; do not implement two conflicting join authorities. Every control message has type/version, exact length rules, authorization, allowed room states and a size cap. Input frames are exactly 18 bytes. Proposed other caps: 4 KiB control payload, 256 KiB snapshot/resync payload with bounded/chunked loading if necessary. Validate entity counts and lengths before allocating.
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { decodeLobbyState } from './liveRoom';
+import { decodeLobbyState } from './lobbyState';
 
 describe('lobby control protocol v1', () => {
   const welcome = Uint8Array.of(17, 1, 7, 129, 128, 0, 120, 86, 52, 18, 8, 0, 1, 65, 7, 1, 66);

@@ -1,3 +1,4 @@
+mod content;
 use brawler_engine::{FixtureSession, PhysicsConfig};
 use wasm_bindgen::prelude::*;
 mod duel;

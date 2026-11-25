@@ -5,7 +5,7 @@ import { colors, errorText, leave, roster, type Roster } from './api';
 export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => void }) {
   const [fallback, setFallback] = useState<Roster | null>(null);
   const [error, setError] = useState('');
-  const {connection, disconnected, setReady, reconnect} = useLiveRoom(code);
+  const {connection, disconnected, load, setReady, reconnect} = useLiveRoom(code);
   const state = connection ?? (disconnected ? fallback : null);
   const mySlot = connection?.slot ?? fallback?.you;
   const myReady = !!(connection && (connection.ready & (1 << connection.slot)));
@@ -45,10 +45,10 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
       {connection && <small>{connection.ready & (1 << p.slot) ? 'Ready' : 'Waiting'}</small>}
     </li>)}</ul> : <p role="status">Loading players…</p>}
     {disconnected ? <div><p role="status">Ready connection closed.</p><button className="room-secondary" onClick={reconnect}>Reconnect</button></div>
-      : <button className="room-primary" disabled={!connection} onClick={() => setReady(!myReady)}>
-        {myReady ? 'Cancel ready' : 'Ready up'}
+      : <button className="room-primary" disabled={!connection || load.loading} onClick={() => setReady(!myReady)}>
+        {load.loading ? 'Loading Skyline…' : myReady ? 'Cancel ready' : 'Ready up'}
       </button>}
-    {error && <p role="alert">{error}</p>}
+    {(error || load.error) && <p role="alert">{error || load.error}</p>}
     <button className="room-secondary" onClick={exit} disabled={leaving}>{leaving ? 'Leaving…' : 'Leave room'}</button>
   </section>;
 }

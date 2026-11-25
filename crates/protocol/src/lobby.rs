@@ -5,12 +5,14 @@ use crate::VERSION;
 pub enum Command<'a> {
     Connect(&'a [u8; 6]),
     SetReady(bool),
+    MapLoaded(&'a [u8; 128]),
 }
 
 impl<'a> Command<'a> {
     pub fn decode(bytes: &'a [u8]) -> Option<Self> {
         match bytes {
             [16, VERSION, code @ ..] => Some(Self::Connect(code.try_into().ok()?)),
+            [20, VERSION, hashes @ ..] => Some(Self::MapLoaded(hashes.try_into().ok()?)),
             [18, VERSION, value @ 0..=1] => Some(Self::SetReady(*value == 1)),
             _ => None,
         }

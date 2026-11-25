@@ -60,6 +60,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 16a — verified private admission | Anonymous secure cookies, create/join and room metadata | Scoped retry, eight distinct seats, ninth rejected, real Chromium cookie isolation |
 | 16b — browser lobby | Create, join, copy invite, reload and leave | Separate browser sessions, host transfer, narrow viewport and switching rooms from an invite |
 | 16c — authenticated ready controls | Connect, welcome, roster changes and per-seat readiness | Toggle, cancel, disconnect, socket replacement, explicit reconnect and stale-seat fencing |
+| 16d — map loading | Validate loaded engine and map before ready | Failed WASM download, successful retry, mismatched hashes and new socket checks |
 | 16 | Private sessions and lobby | Link/code, ready/start, auth, reconnect, host transfer, late joining |
 | 17 | Original presentation and audio | Original skinned characters, effects, warnings, licensed asset manifest |
 | 18 | Settings, accessibility and product flows | Input isolation, keyboard navigation, loading/errors, quality/audio settings |

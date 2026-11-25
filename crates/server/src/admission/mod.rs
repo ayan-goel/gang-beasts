@@ -1,4 +1,5 @@
 mod connection;
+mod content;
 mod directory;
 mod lobby;
 mod sessions;
