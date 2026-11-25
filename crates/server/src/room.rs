@@ -4,22 +4,23 @@ use crate::{
 };
 use brawler_engine::{CharacterError, Duel, FighterId, MeleePhase, MeleeState, PhysicsConfig};
 
-const FIGHTERS: [FighterId; 2] = [FighterId::First, FighterId::Second];
-
 pub struct Room {
     game: Duel,
     tick: u64,
-    inboxes: [Inbox; 2],
-    attached: [bool; 2],
+    inboxes: Vec<Inbox>,
+    attached: Vec<bool>,
 }
 
 impl Room {
     pub fn skyline() -> Result<Self, CharacterError> {
+        Self::skyline_with_players(2)
+    }
+    pub fn skyline_with_players(count: usize) -> Result<Self, CharacterError> {
         Ok(Self {
-            game: Duel::skyline_match(PhysicsConfig::default())?,
+            game: Duel::skyline_match_with_players(PhysicsConfig::default(), count)?,
             tick: 0,
-            inboxes: Default::default(),
-            attached: [true; 2],
+            inboxes: (0..count).map(|_| Inbox::default()).collect(),
+            attached: vec![true; count],
         })
     }
 
@@ -33,12 +34,12 @@ impl Room {
         self.game.match_state().expect("Skyline room owns a match")
     }
     pub fn applied(&self, id: FighterId) -> Option<u32> {
-        self.inboxes[id as usize].applied
+        self.inboxes.get(id as usize)?.applied
     }
 
     /// The transport supplies the authenticated fighter and synchronized round.
     pub fn submit(&mut self, id: FighterId, round: u64, bytes: &[u8]) -> Result<(), SubmitError> {
-        if !self.attached[id as usize] {
+        if self.attached.get(id as usize) != Some(&true) {
             return Err(SubmitError::Detached);
         }
         if self.melee().round_id != round {
@@ -51,7 +52,10 @@ impl Room {
     }
 
     pub fn detach(&mut self, id: FighterId) {
-        self.attached[id as usize] = false;
+        let Some(attached) = self.attached.get_mut(id as usize) else {
+            return;
+        };
+        *attached = false;
         self.expire(id);
     }
 
@@ -68,14 +72,16 @@ impl Room {
     }
 
     pub fn attach(&mut self, id: FighterId) {
-        self.attached[id as usize] = true;
+        if let Some(attached) = self.attached.get_mut(id as usize) {
+            *attached = true;
+        }
     }
 
     pub fn step(&mut self) {
         let round = self.melee().round_id;
         let playing = self.melee().phase == MeleePhase::Playing;
         if playing {
-            for id in FIGHTERS {
+            for &id in self.game.fighter_ids() {
                 let inbox = &mut self.inboxes[id as usize];
                 if inbox
                     .last_received
@@ -93,7 +99,7 @@ impl Room {
         self.game.step();
         self.tick += 1;
         if playing && self.melee().phase != MeleePhase::Playing {
-            for id in FIGHTERS {
+            for &id in self.game.fighter_ids() {
                 self.inboxes[id as usize].cancel();
                 controls::neutralize(&mut self.game, id);
             }
@@ -101,7 +107,7 @@ impl Room {
         // A rebuilt round has its own acknowledgement namespace. Only transport
         // sessions synchronized to this epoch may introduce a new first sequence.
         if self.melee().round_id != round {
-            self.inboxes = Default::default();
+            self.inboxes.fill_with(Inbox::default);
         }
     }
 }

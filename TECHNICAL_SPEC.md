@@ -950,7 +950,7 @@ Initial proposed limits: two unsent snapshot slots, a bounded reliable queue, an
 
 A room contains its ID, players/sessions, one `Simulation`, match state, bounded input buffers, tick counter, seed and settings. Exactly one simulation owner mutates the physics world. Network handlers validate/decode and enqueue messages; they do not reach into Rapier bodies.
 
-The headless two-fighter Skyline room accepts up to eight pending input records per fighter and forward sequence gaps of up to 120. The worker consumes pending records in slot and sequence order before stepping once. Input expires after 15 completed room ticks. Round reconstruction clears the input sequence and acknowledgement namespace. The transport must bind each sender to its fighter and synchronized round and fence old connections. [Room input and verification](docs/slices/14a-room-input.md).
+The [headless Skyline room](docs/slices/15e-worker-roster.md) accepts two through eight fighters and up to eight pending input records per fighter and forward sequence gaps of up to 120. The worker consumes pending records in slot and sequence order before stepping once. Input expires after 15 completed room ticks. Round reconstruction clears the input sequence and acknowledgement namespace. The transport must bind each sender to its fighter and synchronized round and fence old connections. [Room input and verification](docs/slices/14a-room-input.md).
 
 Use stable player/session IDs distinct from connection IDs. A reconnect attaches a new connection to the same eligible session without creating a second authoritative character.
 

@@ -61,3 +61,45 @@ fn two_workers_advance_independently_when_one_room_is_released() {
     wait_for(|| pool.available() == 1 && second.latest().unwrap().tick() > tick);
     assert!(WorkerPool::new(0).is_err());
 }
+
+#[test]
+fn eight_worker_inputs_are_acknowledged_only_to_their_owners_in_one_shared_world() {
+    let pool = WorkerPool::new(1).unwrap();
+    for invalid in [0, 1, 9, usize::MAX] {
+        assert!(pool.open_with_players(invalid).is_err());
+        assert_eq!(pool.available(), 1);
+    }
+    let room = pool.open_with_players(8).unwrap();
+    wait_for(|| room.latest().unwrap().tick() >= 180);
+    for id in FighterId::ALL {
+        let bytes = InputFrame {
+            sequence: 101 + id as u32,
+            ..Default::default()
+        }
+        .encode()
+        .unwrap();
+        room.input(id, 1, &bytes).unwrap();
+    }
+    wait_for(|| {
+        let frame = room.latest().unwrap();
+        FighterId::ALL
+            .iter()
+            .all(|&id| frame.for_recipient(id)[8..12] == (101 + id as u32).to_le_bytes())
+    });
+    let frame = room.latest().unwrap();
+    let shared = frame.for_spectator();
+    let count = u16::from_le_bytes(shared[16..18].try_into().unwrap()) as usize;
+    assert_eq!(count, 8 * 15 + 9);
+    assert_eq!(shared[20 + count * 32 + 3], 8);
+    for id in FighterId::ALL {
+        assert_eq!(frame.for_recipient(id)[12..], shared[12..]);
+        for limb in 0..15 {
+            let offset = 20 + (id as usize * 15 + limb) * 32;
+            assert_eq!(
+                shared[offset..offset + 4],
+                (1 + id as u32 * 16 + limb as u32).to_le_bytes()
+            );
+        }
+    }
+    assert_eq!(shared[2], 1);
+}

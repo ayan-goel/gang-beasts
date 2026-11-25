@@ -34,18 +34,18 @@ pub(super) struct Shared {
     pub latest: Mutex<Option<Arc<RoomFrame>>>,
     pub closed: AtomicBool,
     pub rejected: AtomicU64,
-    pub owners: [AtomicU64; 2],
+    pub owners: [AtomicU64; FighterId::ALL.len()],
     pub delayed: AtomicU64,
 }
 
 pub struct RoomClient {
-    senders: [SyncSender<Command>; 2],
+    senders: Vec<SyncSender<Command>>,
     pub(super) shared: Arc<Shared>,
 }
 
 impl RoomClient {
-    pub(super) fn channel() -> (Self, [Receiver<Command>; 2]) {
-        let [(a, ra), (b, rb)] = std::array::from_fn(|_| sync_channel(8));
+    pub(super) fn channel(count: usize) -> (Self, Vec<Receiver<Command>>) {
+        let (senders, incoming) = (0..count).map(|_| sync_channel(8)).unzip();
         let shared = Arc::new(Shared {
             latest: Mutex::default(),
             closed: AtomicBool::new(false),
@@ -53,13 +53,7 @@ impl RoomClient {
             rejected: AtomicU64::new(0),
             delayed: AtomicU64::new(0),
         });
-        (
-            Self {
-                senders: [a, b],
-                shared,
-            },
-            [ra, rb],
-        )
+        (Self { senders, shared }, incoming)
     }
 
     pub fn latest(&self) -> Option<Arc<RoomFrame>> {
@@ -119,7 +113,9 @@ impl RoomClient {
         if self.shared.closed.load(Ordering::Acquire) {
             return Err(DispatchError::Closed);
         }
-        self.senders[id as usize]
+        self.senders
+            .get(id as usize)
+            .ok_or(DispatchError::Invalid(SubmitError::Detached))?
             .try_send(command)
             .map_err(|e| match e {
                 TrySendError::Full(_) => DispatchError::Busy,

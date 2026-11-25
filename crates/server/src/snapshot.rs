@@ -4,13 +4,11 @@ use brawler_protocol::snapshot::{
     ARENA_BASE, BodyPose, FighterState, SharedSnapshot, Snapshot, SnapshotError, limb_id,
 };
 
-const SLOTS: [FighterId; 2] = [FighterId::First, FighterId::Second];
-
 pub struct RoomFrame {
     tick: u64,
     pub(crate) round: u64,
     world: SharedSnapshot,
-    applied: [Option<u32>; 2],
+    applied: [Option<u32>; FighterId::ALL.len()],
 }
 
 impl RoomFrame {
@@ -34,7 +32,7 @@ impl Room {
         let game = self.game();
         let m = game.match_state().expect("Skyline room owns a match");
         let mut bodies = Vec::new();
-        for id in SLOTS {
+        for &id in game.fighter_ids() {
             bodies.extend(game.body_states(id).into_iter().map(|b| BodyPose {
                 id: limb_id(id as usize, b.part.index()),
                 position: b.state.position,
@@ -66,8 +64,10 @@ impl Room {
                 MeleePhase::MatchResults => 3,
             },
             bodies,
-            fighters: SLOTS
-                .into_iter()
+            fighters: game
+                .fighter_ids()
+                .iter()
+                .copied()
                 .map(|id| fighter(game, id, m.scores()[id as usize]))
                 .collect(),
         };
@@ -75,7 +75,7 @@ impl Room {
             tick: self.tick(),
             round: m.round_id,
             world: snapshot.encode_shared()?,
-            applied: SLOTS.map(|id| self.applied(id)),
+            applied: FighterId::ALL.map(|id| self.applied(id)),
         })
     }
 }

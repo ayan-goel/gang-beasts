@@ -21,12 +21,13 @@ use std::{
 
 struct Job {
     shared: Arc<Shared>,
-    incoming: [Receiver<Command>; 2],
+    incoming: Vec<Receiver<Command>>,
     ready: SyncSender<Result<(), DispatchError>>,
 }
 
 fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), DispatchError> {
-    let mut room = Room::skyline().map_err(|_| DispatchError::Initialization)?;
+    let mut room = Room::skyline_with_players(job.incoming.len())
+        .map_err(|_| DispatchError::Initialization)?;
     let publish = |r: &Room| {
         let frame = r.capture().map_err(|_| DispatchError::Initialization)?;
         job.shared.latest.lock().unwrap().replace(Arc::new(frame));
@@ -36,8 +37,8 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
     job.ready.send(Ok(())).map_err(|_| DispatchError::Closed)?;
     let origin = Instant::now();
     let mut clock = Cadence::default();
-    let mut accepted = [None; 2];
-    let mut owners = [0u64; 2];
+    let mut accepted = [None; FighterId::ALL.len()];
+    let mut owners = [0u64; FighterId::ALL.len()];
     while !stop.load(Ordering::Acquire) && !job.shared.closed.load(Ordering::Acquire) {
         let elapsed = origin.elapsed();
         let debt = clock.debt(elapsed);
@@ -47,7 +48,7 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
             job.shared.delayed.fetch_add(1, Ordering::Relaxed);
         }
         for _ in 0..clock.take(elapsed) {
-            for id in [FighterId::First, FighterId::Second] {
+            for &id in room.game().fighter_ids() {
                 let i = id as usize;
                 let generation = job.shared.owners[i].load(Ordering::Acquire);
                 if owners[i] != generation {
