@@ -12,6 +12,7 @@ use rapier3d::prelude::*;
 
 pub(super) enum Control<'a> {
     Active {
+        pulling: bool,
         lifting: [bool; 2],
         attached: [bool; 2],
         arena: Option<&'a crate::arena::Skyline>,
@@ -79,12 +80,13 @@ impl Fighter {
             parts: self.parts(definition, physics, tick),
             world,
         };
-        let (lifting, attached, arena) = match control {
+        let (pulling, lifting, attached, arena) = match control {
             Control::Active {
+                pulling,
                 lifting,
                 attached,
                 arena,
-            } => (lifting, attached, arena),
+            } => (pulling, lifting, attached, arena),
             Control::Incapacitated { effort } => {
                 // Only internal pose motors wake during the ramp. Ground assistance
                 // and player actions resume after the timed transition completes.
@@ -118,6 +120,16 @@ impl Fighter {
                 &mut targets,
             );
         }
+        if pulling {
+            let bracing = [Hand::Left, Hand::Right].map(|h| {
+                attached[h as usize]
+                    || matches!(
+                        self.hands.state(h).phase,
+                        crate::HandPhase::Reach | crate::HandPhase::Idle
+                    )
+            });
+            super::mantle_drive::tuck(definition, &mut targets, bracing);
+        }
         implicit_motor::drive(
             &mut rig,
             &self.motors,
@@ -125,6 +137,22 @@ impl Fighter {
             Some(&mut self.balance),
             true,
         );
+    }
+    pub fn weight_on(&self, world: &PhysicsWorld, surface: RigidBodyHandle) -> bool {
+        use super::BodyPart::*;
+        [
+            Pelvis, Chest, LeftThigh, RightThigh, LeftShin, RightShin, LeftFoot, RightFoot,
+        ]
+        .into_iter()
+        .any(|part| {
+            super::support::foot_support(
+                world,
+                self.bodies[part.index()],
+                &self.bodies,
+                &self.balance.config,
+            )
+            .is_some_and(|s| s.body == Some(surface))
+        })
     }
     pub fn hand_collider(&self, world: &PhysicsWorld, side: Hand) -> ColliderHandle {
         world.bodies[self.bodies[side.body().index()]].colliders()[0]

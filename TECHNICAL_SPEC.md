@@ -674,7 +674,7 @@ Require a valid grip, remaining stamina and plausible ledge/surface geometry. A 
 
 MVP: simple Skyline edges, both one- and two-hand rescue cases. Full game: vertical surfaces, moving holds and alternating hand-over-hand climbing. Tests must include occupied ledges, low ceilings, broken panels, high latency and a second player hanging from the climber.
 
-The local Skyline controller can aim a reaching hand at an exposed lip within anatomical reach and hang from it as the floor falls away. The physical catch and release are covered by a normal-input round fixture. Mantling and obstruction acceptance remain pending. [Catch and release evidence](docs/slices/10c2-ledge-catch.md).
+The local Skyline controller can aim a reaching hand at an exposed lip within anatomical reach and hang from it as the floor falls away. The physical catch and release are covered by a normal-input round fixture. Holding jump now drives a local one- or two-hand mantle. The controller checks the approach and landing every assisted tick, limits one-hand and two-hand force to 760 N and 960 N, and releases the roof grips after the pelvis is inside and the trunk or legs bear weight. Native fixtures cover obstruction, panel failure and a hanging passenger. Network latency and human evaluation remain open. [Catch and release](docs/slices/10c2-ledge-catch.md) and [mantle calibration and verification](docs/slices/10c3-mantling.md).
 
 ## 14. Map engine and environment system
 

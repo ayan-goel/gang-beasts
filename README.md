@@ -10,7 +10,7 @@ Start the browser project using the setup below and open `/play/`, or select **P
 
 Hold a hand control near a crate, vent or exposed roof edge to grab it. The HUD shows which hand has the grip. Use the lift control to raise movable crates.
 
-If a walkway falls, keep a hand held within reach of the main roof to catch the lip. Releasing your last hand lets you fall. [Catch behavior and controls](docs/slices/10c2-ledge-catch.md).
+If a walkway falls, keep a hand held within reach of the main roof to catch the lip. Hold Space (Coral) or Enter (Blue) to pull onto a clear roof. Release jump to stop pulling. Releasing your last hand lets you fall. [Catch behavior](docs/slices/10c2-ledge-catch.md) and [pull-up controls](docs/slices/10c3-mantling.md).
 
 For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open the printed local address with `/play/` appended. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
 

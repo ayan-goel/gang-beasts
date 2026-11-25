@@ -4,7 +4,11 @@ use rapier3d::prelude::*;
 
 const OWNER: FighterId = FighterId::First;
 
-fn falling_reach(hands: &[Hand], outside: f32) -> Duel {
+pub(super) fn falling_reach(hands: &[Hand], outside: f32) -> Duel {
+    falling_at(hands, outside, std::f32::consts::FRAC_PI_2)
+}
+
+pub(super) fn falling_at(hands: &[Hand], outside: f32, yaw: f32) -> Duel {
     let mut game = Duel::skyline(PhysicsConfig::default()).unwrap();
     for hand in hands {
         game.set_hand(OWNER, *hand, true);
@@ -16,8 +20,7 @@ fn falling_reach(hands: &[Hand], outside: f32) -> Duel {
     // outside contact range, and its shoulder stays within anatomical reach of the lip.
     let fighter = &game.fighters[0];
     let hips = &game.world.bodies[fighter.bodies[BodyPart::Pelvis.index()]];
-    let turn = Rotation::from_axis_angle(&Vector::y_axis(), std::f32::consts::FRAC_PI_2)
-        * hips.rotation().inverse();
+    let turn = Rotation::from_axis_angle(&Vector::y_axis(), yaw) * hips.rotation().inverse();
     let origin = *hips.translation();
     for body in fighter.bodies {
         let b = &mut game.world.bodies[body];

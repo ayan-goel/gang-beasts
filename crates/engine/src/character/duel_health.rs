@@ -26,6 +26,7 @@ impl Duel {
                     self.fighters[i].hands.clear();
                     self.fighters[i].walking.reset();
                     self.lifting[i] = false;
+                    self.pulls[i] = Default::default();
                 }
                 self.changes.push((id, next));
             }

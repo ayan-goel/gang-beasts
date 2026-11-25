@@ -23,7 +23,19 @@ impl Duel {
     }
     pub fn set_jump(&mut self, who: FighterId, held: bool) {
         if self.accepts_input(who) {
-            self.fighters[who as usize].walking.set_jump(held);
+            if held {
+                self.pulls[who as usize].held = true;
+            } else {
+                self.pulls[who as usize] = Default::default();
+            }
+            let on_lip = [Hand::Left, Hand::Right]
+                .into_iter()
+                .any(|h| self.grips.lip_anchor(who, h).is_some());
+            if held && on_lip {
+                self.fighters[who as usize].walking.clear_jump_input();
+            } else {
+                self.fighters[who as usize].walking.set_jump(held);
+            }
         }
     }
     pub fn set_hand(&mut self, who: FighterId, hand: Hand, held: bool) {
@@ -47,6 +59,7 @@ impl Duel {
         }
     }
     pub fn clear_jump(&mut self, who: FighterId) {
+        self.pulls[who as usize] = Default::default();
         self.fighters[who as usize].walking.clear_jump_input();
     }
 }

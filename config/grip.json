@@ -4,6 +4,13 @@
   "stiffness_n_m": 4200.0,
   "damping_n_s_m": 95.0,
   "maximum_force_n": 1200.0,
+  "mantle": {
+    "one_hand_force_n": 760.0,
+    "two_hand_force_n": 960.0,
+    "speed_m_s": 2.2,
+    "stamina_per_s": 6.0,
+    "maximum_ticks": 240
+  },
   "costs": {
     "maximum_stamina": 100.0,
     "one_hand_per_s": 4.0,

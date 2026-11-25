@@ -12,7 +12,7 @@ export function bindMovementInput(canvas: HTMLCanvasElement, input: MovementInpu
     const mapped = secondPlayerKeys[code];
     return second && mapped ? second.key(mapped, down, repeat) : input.key(code, down, repeat);
   };
-  if (second) canvas.setAttribute('aria-description', 'Coral uses WASD, J and K, E to lift, Space and left Shift. Blue uses arrows, comma and period, slash to lift, Enter and right Shift.');
+  if (second) canvas.setAttribute('aria-description', 'Coral uses WASD, J and K, E to lift, Space to jump or pull up, and left Shift to run. Blue uses arrows, comma and period, slash to lift, Enter to jump or pull up, and right Shift to run.');
   const keydown = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (key(event.code, true, event.repeat)) event.preventDefault();

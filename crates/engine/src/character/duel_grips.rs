@@ -53,6 +53,16 @@ impl Grips {
         self.budgets[owner as usize].stamina
     }
 
+    pub fn mantle_tuning(&self) -> crate::combat::MantleTuning {
+        self.tuning.mantle
+    }
+    pub fn spend_pull(&mut self, owner: FighterId) -> bool {
+        let stamina = &mut self.budgets[owner as usize].stamina;
+        let cost = self.tuning.mantle.stamina_per_s * crate::TICK_SECONDS;
+        let enough = *stamina >= cost;
+        *stamina = (*stamina - cost).max(0.);
+        enough
+    }
     pub fn settle(&mut self, world: &mut PhysicsWorld, iterations: usize) {
         for owner in [FighterId::First, FighterId::Second] {
             let id = owner as usize;
@@ -94,6 +104,17 @@ impl Grips {
             hand_anchor: a.hand_anchor,
             target_anchor: a.target_anchor,
         })
+    }
+    pub fn lip_anchor(
+        &self,
+        owner: FighterId,
+        hand: Hand,
+    ) -> Option<(u16, RigidBodyHandle, Point<Real>)> {
+        let a = self.slots[owner as usize][hand as usize].as_ref()?;
+        match a.target {
+            Target::Arena(id) if a.ledge => Some((id, a.target_body, a.target_anchor.into())),
+            _ => None,
+        }
     }
     pub fn arena_target(&self, owner: FighterId, hand: Hand) -> Option<u16> {
         match self.slots[owner as usize][hand as usize].as_ref()?.target {

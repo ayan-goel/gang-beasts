@@ -10,6 +10,7 @@ pub(crate) struct GripTuning {
     pub damping_n_s_m: f32,
     pub maximum_force_n: f32,
     pub costs: GripCosts,
+    pub mantle: MantleTuning,
 }
 
 #[derive(Deserialize)]
@@ -27,6 +28,26 @@ pub(crate) struct GripCosts {
     pub ledge_break_after_ticks: u16,
     pub break_after_ticks: u16,
     pub smoothing_s: f32,
+}
+
+#[derive(Clone, Copy, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct MantleTuning {
+    pub one_hand_force_n: f32,
+    pub two_hand_force_n: f32,
+    pub speed_m_s: f32,
+    pub stamina_per_s: f32,
+    pub maximum_ticks: u16,
+}
+
+impl MantleTuning {
+    fn valid(self) -> bool {
+        (1.0..=1500.).contains(&self.one_hand_force_n)
+            && (self.one_hand_force_n..=1500.).contains(&self.two_hand_force_n)
+            && (0.1..=3.).contains(&self.speed_m_s)
+            && (0.1..=30.).contains(&self.stamina_per_s)
+            && (1..=360).contains(&self.maximum_ticks)
+    }
 }
 
 impl GripCosts {
@@ -50,6 +71,7 @@ impl GripTuning {
     pub fn bundled() -> Result<Self, CharacterError> {
         let config: Self = serde_json::from_str(include_str!("../../../../config/grip.json"))?;
         if config.schema_version != 1
+            || !config.mantle.valid()
             || !config.costs.valid(config.maximum_force_n)
             || !(0.0..=0.04).contains(&config.reach_gap_m)
             || !(1.0..=10000.).contains(&config.stiffness_n_m)

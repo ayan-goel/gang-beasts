@@ -1,8 +1,10 @@
 mod definition;
 mod grip;
+mod landing;
 mod lip;
 use crate::{CharacterError, TICK_SECONDS, physics::PhysicsWorld};
 pub use definition::{ArenaKind, MapDefinition};
+pub(crate) use landing::Landing;
 use rapier3d::prelude::*;
 use serde::Serialize;
 
@@ -71,14 +73,18 @@ impl Skyline {
         })
     }
 
+    fn panel_deadlines(&self) -> [(u16, u64); 2] {
+        let s = &self.definition.schedule;
+        [(8, s.west_tick.into()), (9, s.east_tick.into())]
+    }
     pub fn step(&mut self, world: &mut PhysicsWorld, tick: u64) {
         self.events.clear();
         let s = &self.definition.schedule;
         if tick == u64::from(s.warn_tick) {
             self.events.push(SkylineEvent::EdgeWarning);
         }
-        for (id, deadline) in [(8u16, s.west_tick), (9, s.east_tick)] {
-            if tick == u64::from(deadline) {
+        for (id, deadline) in self.panel_deadlines() {
+            if tick == deadline {
                 // Keep the body and its local anchors alive when the roof connection fails.
                 world.bodies[self.bodies[usize::from(id - 1)]]
                     .set_body_type(RigidBodyType::Dynamic, true);

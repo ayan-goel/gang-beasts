@@ -10,6 +10,7 @@ mod grip_contact;
 mod grip_joint;
 mod ledge_reach;
 mod lifting;
+mod mantle_drive;
 pub use duel::{Duel, FighterId};
 pub use duel_contacts::StrikeHit;
 pub use duel_grips::GripState;

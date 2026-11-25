@@ -31,6 +31,7 @@ pub struct Duel {
     presets: MotorPresets,
     impact: crate::combat::ImpactTuning,
     lifting: [bool; 2],
+    pulls: [mantle::Pull; 2],
     vitals: [crate::Vitals; 2],
     health_rules: crate::combat::HealthRules,
     changes: Vec<(FighterId, crate::Consciousness)>,
@@ -89,6 +90,7 @@ impl Duel {
             presets: MotorPresets::bundled()?,
             impact: crate::combat::ImpactTuning::bundled()?,
             lifting: [false; 2],
+            pulls: Default::default(),
             vitals: [crate::Vitals::new(&health_rules); 2],
             health_rules,
             changes: Vec::with_capacity(2),
@@ -119,16 +121,19 @@ impl Duel {
         // Both controllers publish their bounded commands before the one room-wide
         // solve. Stepping per fighter would double gravity and age contacts unevenly.
         for id in [FighterId::First, FighterId::Second] {
-            let lifting = [Hand::Left, Hand::Right]
-                .map(|h| self.lifting[id as usize] && self.grips.attached(id, h));
             let vitals = self.vitals(id);
             let control = match vitals.phase {
                 crate::Consciousness::Eliminated => continue,
-                crate::Consciousness::Active => Control::Active {
-                    lifting,
-                    attached: [Hand::Left, Hand::Right].map(|h| self.grips.attached(id, h)),
-                    arena: self.arena.as_ref(),
-                },
+                crate::Consciousness::Active => {
+                    let pulling = self.pull_from_ledge(id);
+                    let attached = [Hand::Left, Hand::Right].map(|h| self.grips.attached(id, h));
+                    Control::Active {
+                        pulling,
+                        lifting: attached.map(|held| held && self.lifting[id as usize] && !pulling),
+                        attached,
+                        arena: self.arena.as_ref(),
+                    }
+                }
                 crate::Consciousness::KnockedOut => Control::Incapacitated { effort: 0. },
                 crate::Consciousness::Recovering => Control::Incapacitated {
                     effort: vitals.waking_effort(self.tick + 1, &self.health_rules),
@@ -243,3 +248,14 @@ mod rounds;
 #[cfg(test)]
 #[path = "ledge_tests.rs"]
 mod ledge_tests;
+
+#[cfg(test)]
+#[path = "mantle_tests.rs"]
+mod mantle_tests;
+
+#[path = "duel_mantle.rs"]
+mod mantle;
+
+#[cfg(test)]
+#[path = "mantle_constraints.rs"]
+mod mantle_constraints;
