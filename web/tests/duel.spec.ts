@@ -26,7 +26,7 @@ test('two players land independent punches in the sparring scene and reset the e
   await expect(page.locator('canvas')).toHaveCount(1);
 });
 
-test('native and WASM agree on both bodies and simultaneous hit events at each completed tick', async ({ page }) => {
+test('native and WASM agree on both rigs, reciprocal grips and hit events at each completed tick', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const result = await page.evaluate(async () => {
@@ -40,8 +40,9 @@ test('native and WASM agree on both bodies and simultaneous hit events at each c
       }
       const frames: number[][][] = [];
       const hits: (string | number)[][] = [];
+      const grips: (number | null)[][][] = [];
       const saved = duel.body_states(0);
-      for (let tick = 0; tick <= 130; tick++) {
+      for (let tick = 0; tick <= 240; tick++) {
         if (tick === 61) for (const id of [0, 1]) {
           duel.set_hand(id, 0, true);
           duel.set_hand(id, 0, false);
@@ -50,29 +51,43 @@ test('native and WASM agree on both bodies and simultaneous hit events at each c
           duel.set_input(1, -1, 0, false);
           duel.set_jump(0, true);
         }
+        if (tick === 131) {
+          duel.reset();
+          duel.set_input(1, 0, 1, false);
+          for (const id of [0, 1]) duel.set_hand(id, 0, true);
+        }
+        if (tick === 156) duel.set_input(1, 0, 0, false);
+        if (tick === 205) duel.clear_hands(0);
+        if (tick === 220) duel.set_hand(1, 0, false);
         if (tick) duel.step();
+        grips.push([0, 1].map(id => [0, 1].map(hand => duel.grip_region(id, hand) ?? null)));
         frames.push([Array.from(duel.body_states(0)), Array.from(duel.body_states(1))]);
         for (const h of JSON.parse(duel.hits_json() ?? '[]')) {
           hits.push([h.tick, h.attacker, h.defender, h.attackId, h.hand, h.region, h.damage, h.energyJ, h.closingSpeed]);
         }
       }
-      return { frames, hits, rejected, saved: Array.from<number>(saved) };
+      return { frames, hits, grips, rejected, saved: Array.from<number>(saved) };
     } finally { duel.free(); }
   });
   const { execFileSync } = await import('node:child_process');
-  const native: { frames: number[][][]; hits: (string | number)[][] } = JSON.parse(execFileSync('cargo',
+  const native: { grips: (number | null)[][][]; frames: number[][][]; hits: (string | number)[][] } = JSON.parse(execFileSync('cargo',
     ['run', '--release', '--quiet', '--locked', '-p', 'brawler-engine', '--example', 'duel_trace'],
     { cwd: '..', encoding: 'utf8', maxBuffer: 4*1024*1024 }));
   expect(result.rejected).toBe(3);
   expect(result.saved).toEqual(result.frames[0]![0]);
-  expect(result.hits).toHaveLength(2);
-  expect(native.hits).toHaveLength(2);
+  expect(result.grips).toEqual(native.grips);
+  expect(result.grips[200]!.every(player => player[0] != null)).toBe(true);
+  expect(result.grips[205]![0]![0]).toBeNull();
+  expect(result.grips[205]![1]![0]).not.toBeNull();
+  expect(result.grips[220]).toEqual([[null, null], [null, null]]);
+  expect(result.hits.length).toBeGreaterThanOrEqual(2);
+  expect(result.hits).toHaveLength(native.hits.length);
   for (const [i, hit] of result.hits.entries()) {
     expect(hit.slice(0, 6)).toEqual(native.hits[i]!.slice(0, 6));
     for (let j = 6; j < 9; j++) expect(hit[j]).toBeCloseTo(Number(native.hits[i]![j]), 5);
   }
   let maxDifference = 0;
-  expect(native.frames).toHaveLength(131);
+  expect(native.frames).toHaveLength(241);
   for (const [tick, fighters] of native.frames.entries()) {
     for (const [id, body] of fighters.entries()) {
       const frame = result.frames[tick]![id]!;

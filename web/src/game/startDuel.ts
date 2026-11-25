@@ -15,6 +15,7 @@ export interface DuelState {
   tick: string;
   paused: boolean;
   hits: [number, number];
+  grips: [string[], string[]];
   latest?: DuelHit;
 }
 
@@ -51,7 +52,15 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     }, () => !paused);
     const inputs = [playerInput(0), playerInput(1)];
     unbind = bindMovementInput(canvas, inputs[0]!, inputs[1]!);
-    const snapshot = () => publish({ tick: duel.tick().toString(), hits: [...hits], latest, paused });
+    const readGrips = (owner: Player) => ([0, 1] as const).flatMap(side => {
+      const region = duel.grip_region(owner, side);
+      if (region === undefined) return [];
+      const part = definition.bodies[region]!.part.replaceAll('_', ' ');
+      return [`${side === 0 ? 'Left' : 'Right'} hand on ${owner === 0 ? 'Blue' : 'Coral'}’s ${part}`];
+    });
+    const snapshot = () => publish({
+      tick: duel.tick().toString(), hits: [...hits], latest, paused, grips: [readGrips(0), readGrips(1)],
+    });
     const render = () => renderer.renderDuel(duel.body_states(0), duel.body_states(1));
     const step = () => {
       duel.step();

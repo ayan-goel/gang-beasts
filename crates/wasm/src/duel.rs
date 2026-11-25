@@ -82,6 +82,12 @@ impl LocalDuel {
         );
         Ok(())
     }
+    pub fn grip_region(&self, who: JsValue, side: JsValue) -> Result<Option<u8>, JsValue> {
+        let grip = self
+            .duel
+            .grip(fighter(who)?, [Hand::Left, Hand::Right][index(side)?]);
+        Ok(grip.map(|g| g.region.index() as u8))
+    }
     pub fn clear_jump(&mut self, who: JsValue) -> Result<(), JsValue> {
         self.duel.clear_jump(fighter(who)?);
         Ok(())
