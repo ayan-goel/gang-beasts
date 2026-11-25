@@ -1,4 +1,8 @@
-use super::{BodyPart, CharacterError, FighterId, duel_fighter::Fighter, grip_contact::nearest};
+use super::{
+    BodyPart, CharacterError, FighterId,
+    duel_fighter::Fighter,
+    grip_contact::{Target, nearest},
+};
 use crate::{
     Hand, HandPhase,
     combat::{GripBudget, GripTuning},
@@ -19,7 +23,12 @@ pub struct GripState {
 struct Attachment {
     attack_id: u64,
     joint: ImpulseJointHandle,
-    state: GripState,
+    target: Target,
+    target_body: RigidBodyHandle,
+    created_tick: u64,
+    load_n: f32,
+    hand_anchor: [f32; 3],
+    target_anchor: [f32; 3],
 }
 pub(super) struct Grips {
     slots: [[Option<Attachment>; 2]; 2],
@@ -62,16 +71,46 @@ impl Grips {
                         self.slots[id][side].as_ref().map(|grip| grip.attack_id);
                     self.release(world, owner, hand);
                 } else if let Some(grip) = &mut self.slots[id][side] {
-                    grip.state.load_n = self.budgets[id].force(side);
+                    grip.load_n = self.budgets[id].force(side);
                 }
             }
         }
     }
 
     pub fn state(&self, owner: FighterId, hand: Hand) -> Option<GripState> {
-        self.slots[owner as usize][hand as usize]
-            .as_ref()
-            .map(|a| a.state)
+        let a = self.slots[owner as usize][hand as usize].as_ref()?;
+        let Target::Fighter(target, region) = a.target else {
+            return None;
+        };
+        Some(GripState {
+            target,
+            region,
+            load_n: a.load_n,
+            created_tick: a.created_tick,
+            hand_anchor: a.hand_anchor,
+            target_anchor: a.target_anchor,
+        })
+    }
+    pub fn arena_target(&self, owner: FighterId, hand: Hand) -> Option<u16> {
+        match self.slots[owner as usize][hand as usize].as_ref()?.target {
+            Target::Arena(id) => Some(id),
+            Target::Fighter(..) => None,
+        }
+    }
+    pub fn attached(&self, owner: FighterId, hand: Hand) -> bool {
+        self.slots[owner as usize][hand as usize].is_some()
+    }
+    pub fn release_disabled(&mut self, world: &mut PhysicsWorld) {
+        for owner in [FighterId::First, FighterId::Second] {
+            for hand in [Hand::Left, Hand::Right] {
+                if self.slots[owner as usize][hand as usize]
+                    .as_ref()
+                    .is_some_and(|a| !world.bodies[a.target_body].is_enabled())
+                {
+                    self.release(world, owner, hand);
+                }
+            }
+        }
     }
     pub fn release(&mut self, world: &mut PhysicsWorld, owner: FighterId, hand: Hand) {
         if let Some(grip) = self.slots[owner as usize][hand as usize].take() {
@@ -79,7 +118,13 @@ impl Grips {
             world.impulse_joints.remove(grip.joint, true);
         }
     }
-    pub fn acquire(&mut self, world: &mut PhysicsWorld, fighters: &[Fighter; 2], tick: u64) {
+    pub fn acquire(
+        &mut self,
+        world: &mut PhysicsWorld,
+        fighters: &[Fighter; 2],
+        arena: Option<&crate::arena::Skyline>,
+        tick: u64,
+    ) {
         for owner in [FighterId::First, FighterId::Second] {
             let fighter = &fighters[owner as usize];
             let target = owner.opponent();
@@ -97,7 +142,9 @@ impl Grips {
                 let Some(c) = nearest(
                     world,
                     collider,
+                    target,
                     &fighters[target as usize],
+                    arena,
                     self.tuning.reach_gap_m,
                 ) else {
                     continue;
@@ -114,14 +161,12 @@ impl Grips {
                 *slot = Some(Attachment {
                     attack_id: state.attack_id,
                     joint: handle,
-                    state: GripState {
-                        target,
-                        region: c.region,
-                        created_tick: tick,
-                        load_n: 0.,
-                        hand_anchor: a.coords.into(),
-                        target_anchor: b.coords.into(),
-                    },
+                    target: c.target,
+                    target_body: c.body,
+                    created_tick: tick,
+                    load_n: 0.,
+                    hand_anchor: a.coords.into(),
+                    target_anchor: b.coords.into(),
                 });
             }
         }

@@ -29,7 +29,7 @@ impl Duel {
     pub fn set_hand(&mut self, who: FighterId, hand: Hand, held: bool) {
         // A fall can switch the arm to its get-up pose while the grip persists.
         // A repeated held input cannot start a punch with that attached hand.
-        if held && (self.grip(who, hand).is_some() || !self.accepts_input(who)) {
+        if held && (self.grips.attached(who, hand) || !self.accepts_input(who)) {
             return;
         }
         if !held {

@@ -120,11 +120,14 @@ impl Duel {
         // solve. Stepping per fighter would double gravity and age contacts unevenly.
         for id in [FighterId::First, FighterId::Second] {
             let lifting = [Hand::Left, Hand::Right]
-                .map(|h| self.lifting[id as usize] && self.grip(id, h).is_some());
+                .map(|h| self.lifting[id as usize] && self.grips.attached(id, h));
             let vitals = self.vitals(id);
             let control = match vitals.phase {
                 crate::Consciousness::Eliminated => continue,
-                crate::Consciousness::Active => Control::Active { lifting },
+                crate::Consciousness::Active => Control::Active {
+                    lifting,
+                    arena: self.arena.as_ref(),
+                },
                 crate::Consciousness::KnockedOut => Control::Incapacitated { effort: 0. },
                 crate::Consciousness::Recovering => Control::Incapacitated {
                     effort: vitals.waking_effort(self.tick + 1, &self.health_rules),
@@ -142,12 +145,17 @@ impl Duel {
         let contacts = super::duel_contacts::ContactFrame::capture(&self.world, &self.fighters);
         if let Some(a) = &mut self.arena {
             a.step(&mut self.world, self.tick + 1);
+            self.grips.release_disabled(&mut self.world);
         }
         self.world.step();
         self.tick += 1;
         self.hits.clear();
-        self.grips
-            .acquire(&mut self.world, &self.fighters, self.tick);
+        self.grips.acquire(
+            &mut self.world,
+            &self.fighters,
+            self.arena.as_ref(),
+            self.tick,
+        );
         self.grips
             .settle(&mut self.world, self.physics.solver_iterations);
         if let Some(frame) = contacts {
@@ -164,13 +172,16 @@ impl Duel {
     }
     pub fn hand_state(&self, who: FighterId, hand: Hand) -> HandState {
         let mut state = self.fighters[who as usize].hands.state(hand);
-        if self.grip(who, hand).is_some() {
+        if self.grips.attached(who, hand) {
             state.phase = crate::HandPhase::Gripping;
         }
         state
     }
     pub fn stamina(&self, who: FighterId) -> f32 {
         self.grips.stamina(who)
+    }
+    pub fn arena_grip(&self, who: FighterId, hand: Hand) -> Option<u16> {
+        self.grips.arena_target(who, hand)
     }
     pub fn grip(&self, who: FighterId, hand: Hand) -> Option<super::GripState> {
         self.grips.state(who, hand)

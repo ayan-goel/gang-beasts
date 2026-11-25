@@ -1,10 +1,16 @@
-use super::{BodyPart, duel_fighter::Fighter};
+use super::{BodyPart, FighterId, duel_fighter::Fighter};
 use crate::physics::PhysicsWorld;
 use rapier3d::{parry::query::contact, prelude::*};
 
+#[derive(Clone, Copy)]
+pub(super) enum Target {
+    Fighter(FighterId, BodyPart),
+    Arena(u16),
+}
+
 pub(super) struct Candidate {
     pub body: RigidBodyHandle,
-    pub region: BodyPart,
+    pub target: Target,
     pub point: Point<Real>,
     distance: Real,
 }
@@ -12,45 +18,62 @@ pub(super) struct Candidate {
 pub(super) fn nearest(
     world: &PhysicsWorld,
     hand: ColliderHandle,
+    id: FighterId,
     opponent: &Fighter,
+    arena: Option<&crate::arena::Skyline>,
     reach: f32,
 ) -> Option<Candidate> {
     let fist = &world.colliders[hand];
     let mut best: Option<Candidate> = None;
+    let mut consider = |body, handle, target| {
+        let collider: &Collider = &world.colliders[handle];
+        if !collider.is_enabled() || collider.is_sensor() {
+            return;
+        }
+        let Some(c) = contact(
+            fist.position(),
+            fist.shape(),
+            collider.position(),
+            collider.shape(),
+            reach,
+        )
+        .ok()
+        .flatten() else {
+            return;
+        };
+        if best.as_ref().is_some_and(|b| b.distance <= c.dist)
+            || occluded(world, [hand, handle], c.point1, c.point2, c.dist)
+        {
+            return;
+        }
+        if let Target::Arena(id) = target {
+            let palm = fist.shape().compute_local_aabb().half_extents().min();
+            if !arena
+                .expect("arena surface")
+                .allows_grip(world, id, c.point2, palm)
+            {
+                return;
+            }
+        }
+        best = Some(Candidate {
+            body,
+            target,
+            distance: c.dist,
+            point: nalgebra::center(&c.point1, &c.point2),
+        });
+    };
+    // Stable iteration resolves equal surface distances in favor of a fighter, then the lowest map ID.
     for region in BodyPart::ALL {
         let body = opponent.bodies[region.index()];
-        let target = &world.bodies[body];
-        if !target.is_enabled() {
-            continue;
+        if world.bodies[body].is_enabled() {
+            for &handle in world.bodies[body].colliders() {
+                consider(body, handle, Target::Fighter(id, region));
+            }
         }
-        for &handle in target.colliders() {
-            let collider = &world.colliders[handle];
-            if collider.is_sensor() || !collider.is_enabled() {
-                continue;
-            }
-            let Some(c) = contact(
-                fist.position(),
-                fist.shape(),
-                collider.position(),
-                collider.shape(),
-                reach,
-            )
-            .ok()
-            .flatten() else {
-                continue;
-            };
-            if best.as_ref().is_some_and(|b| b.distance <= c.dist) {
-                continue;
-            }
-            if occluded(world, [hand, handle], c.point1, c.point2, c.dist) {
-                continue;
-            }
-            best = Some(Candidate {
-                body,
-                region,
-                point: nalgebra::center(&c.point1, &c.point2),
-                distance: c.dist,
-            });
+    }
+    if let Some(map) = arena {
+        for (id, body, handle) in map.grip_surfaces(world) {
+            consider(body, handle, Target::Arena(id));
         }
     }
     best

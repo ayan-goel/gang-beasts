@@ -8,6 +8,8 @@ The [technical specification](TECHNICAL_SPEC.md) is canonical. See the [document
 
 Start the browser project using the setup below and open `/play/`, or select **Play Skyline Melee** from the playground. The match is first to three rooftop ring-outs. A countdown starts each round, and rematch is available after the winning round. Coral uses WASD and J/K, Blue uses the arrow keys and comma/period. The start and pause screens show the full bindings.
 
+Hold a hand control near a crate, vent or exposed roof edge to grab it. The HUD shows which hand has the grip. Use the lift control to raise movable crates.
+
 For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open the printed local address with `/play/` appended. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
 
 ## Native development

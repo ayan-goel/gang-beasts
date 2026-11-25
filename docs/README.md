@@ -27,6 +27,7 @@
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
 - [Playable asset provenance](asset-provenance.md) identifies the source of the current arena, fighter geometry and interface.
+- [Arena grips](slices/10c1-arena-grips.md) covers physical interaction with rooftop props and edges.
 - [Play Skyline](slices/12b-play-skyline.md) covers the playable local match, rooftop presentation and camera.
 - [Local melee rounds](slices/12a-local-rounds.md) records fall elimination, first-to-three scoring, round epochs and rematch.
 - [Skyline physics](slices/11a-skyline-physics.md) covers authored geometry, validation, debris, hazards and fall detection.

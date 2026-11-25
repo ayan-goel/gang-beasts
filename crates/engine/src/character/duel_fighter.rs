@@ -10,9 +10,14 @@ use super::{
 use crate::{Hand, PhysicsConfig, combat::Hands, physics::PhysicsWorld};
 use rapier3d::prelude::*;
 
-pub(super) enum Control {
-    Active { lifting: [bool; 2] },
-    Incapacitated { effort: f32 },
+pub(super) enum Control<'a> {
+    Active {
+        lifting: [bool; 2],
+        arena: Option<&'a crate::arena::Skyline>,
+    },
+    Incapacitated {
+        effort: f32,
+    },
 }
 
 pub(super) struct Fighter {
@@ -67,14 +72,14 @@ impl Fighter {
         physics: &PhysicsConfig,
         tick: u64,
         presets: &MotorPresets,
-        control: Control,
+        control: Control<'_>,
     ) {
         let mut rig = RigFrame {
             parts: self.parts(definition, physics, tick),
             world,
         };
-        let lifting = match control {
-            Control::Active { lifting } => lifting,
+        let (lifting, arena) = match control {
+            Control::Active { lifting, arena } => (lifting, arena),
             Control::Incapacitated { effort } => {
                 // Only internal pose motors wake during the ramp. Ground assistance
                 // and player actions resume after the timed transition completes.
@@ -95,6 +100,9 @@ impl Fighter {
             &mut self.hands,
             true,
         );
+        if let Some(map) = arena {
+            super::prop_reach::aim(rig.read(), map, &self.hands, &mut targets);
+        }
         if lifting.contains(&true) {
             super::lifting::apply(
                 &mut rig,

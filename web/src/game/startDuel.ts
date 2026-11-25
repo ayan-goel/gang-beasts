@@ -65,7 +65,13 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     unbind = bindMovementInput(canvas, inputs[0]!, inputs[1]!);
     const readGrips = (owner: Player) => ([0, 1] as const).flatMap(side => {
       const region = duel.grip_region(owner, side);
-      if (region === undefined) return [];
+      if (region === undefined) {
+        const id = map && duel.arena_grip(owner, side);
+        const target = id === undefined ? undefined : map?.objects.find(o => o.id === id);
+        if (!target) return [];
+        const label = { deck: 'roof edge', panel: 'walkway edge', crate: 'crate', vent: 'vent' }[target.kind];
+        return [`${side === 0 ? 'Left' : 'Right'} hand on ${label}`];
+      }
       const part = definition.bodies[region]!.part.replaceAll('_', ' ');
       return [`${side === 0 ? 'Left' : 'Right'} hand on ${owner === 0 ? 'Blue' : 'Coral'}’s ${part}`];
     });

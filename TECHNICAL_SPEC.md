@@ -636,6 +636,8 @@ Use a soft positional grip with bounded effort and permissive angular movement; 
 
 The local opponent-grip fixture uses a 25 mm maximum gap between collider surfaces, checks intervening solids, and stores the midpoint in each body’s local frame. The three linear spring motors share a bounded force budget and leave relative rotation free. [Native implementation and verification](docs/slices/09a-opponent-grips.md).
 
+Skyline uses the same constraint and stamina rules for crates, vents and exposed upper roof or walkway edges. Reach motors angle toward lower props during approach. Grips remain attached to a falling panel until release, failure or debris retirement. [Surface eligibility and verification](docs/slices/10c1-arena-grips.md).
+
 ### 13.7 Stamina and grip failure
 
 | Parameter | Proposed value |

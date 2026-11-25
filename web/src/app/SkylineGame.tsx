@@ -39,7 +39,7 @@ export function SkylineGame() {
         <div className="skyline-bindings">
           <h2><i className="dot coral" />Coral</h2><p>WASD move · Left Shift run · Space jump<br />J / K punch or grab · E lift</p>
           <h2><i className="dot blue" />Blue</h2><p>Arrows move · Right Shift run · Enter jump<br />Comma / period punch or grab · Slash lift</p>
-          <p>Hold a hand button to grab. Release it during a lift or swing to throw.</p>
+          <p>Hold a hand button to grab a fighter, crate, vent or roof edge. Release during a lift or swing to throw.</p>
         </div>
         <button className="skyline-start" disabled={!match} onClick={start}>{complete ? 'Rematch' : started ? 'Resume match' : 'Start match'} <span aria-hidden="true">→</span></button>
       </section>}
@@ -56,6 +56,11 @@ export function SkylineGame() {
           {match.phase === 'round_results' && <strong>{winner}</strong>}
           {match.phase === 'playing' && hazards[match.hazard] && <span>{hazards[match.hazard]}</span>}
           {match.phase === 'playing' && state?.conditions.map((c, i) => c.phase === 'knocked_out' ? <span key={i}>{names[i]} knocked out</span> : null)}
+        </div>}
+        {started && !menu && match?.phase === 'playing' && <div className="match-grips">
+          {state?.grips.map((hands, id) => hands.length > 0 && <div key={id} aria-label={`${names[id]} grips`}>
+            <b>{names[id]}</b> {hands.join(' · ')}
+          </div>)}
         </div>}
         {error && <p role="alert">{error}</p>}
       </section>

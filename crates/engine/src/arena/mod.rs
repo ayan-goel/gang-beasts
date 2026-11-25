@@ -1,4 +1,5 @@
 mod definition;
+mod grip;
 use crate::{CharacterError, TICK_SECONDS, physics::PhysicsWorld};
 pub use definition::{ArenaKind, MapDefinition};
 use rapier3d::prelude::*;

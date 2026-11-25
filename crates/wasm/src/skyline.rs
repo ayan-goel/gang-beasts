@@ -1,4 +1,5 @@
-use super::{Duel, FighterId, LocalDuel, PhysicsConfig};
+use super::{Duel, FighterId, LocalDuel, PhysicsConfig, fighter, index};
+use brawler_engine::Hand;
 use serde_json::json;
 use wasm_bindgen::prelude::*;
 
@@ -10,6 +11,11 @@ impl LocalDuel {
         Ok(Self {
             duel: Duel::skyline_match(physics).map_err(|e| JsValue::from_str(&e.to_string()))?,
         })
+    }
+    pub fn arena_grip(&self, who: JsValue, side: JsValue) -> Result<Option<u16>, JsValue> {
+        Ok(self
+            .duel
+            .arena_grip(fighter(who)?, [Hand::Left, Hand::Right][index(side)?]))
     }
     pub fn map_json(&self) -> Option<String> {
         self.duel
