@@ -10,15 +10,15 @@ impl Duel {
     }
 
     pub(super) fn resolve_health(&mut self) {
-        // Both attackers complete contact resolution before either can lose control.
+        // All attackers complete contact resolution before anyone can lose control.
         self.hits
             .retain(|hit| self.vitals[hit.defender as usize].phase == Consciousness::Active);
-        let mut damage = [0.; 2];
+        let mut damage = [0.; FighterId::ALL.len()];
         for hit in &self.hits {
             damage[hit.defender as usize] += hit.damage;
         }
         self.changes.clear();
-        for id in [FighterId::First, FighterId::Second] {
+        for &id in self.fighter_ids() {
             let i = id as usize;
             if let Some(next) = self.vitals[i].advance(self.tick, damage[i], &self.health_rules) {
                 if next == Consciousness::KnockedOut {

@@ -577,6 +577,8 @@ Headbutts drive neck/upper-body motion with bounded counter-motion and their own
 
 The native two-fighter sparring fixture runs both complete character controllers before one world step. Each player owns its body and joint handles, hand timers, locomotion and balance state. A local fighter ID qualifies hand and body observations within the fixture. Both fighters can independently walk, jump and punch. Reset rebuilds both rigs and clears the shared contact history.
 
+The [native Skyline simulation](docs/slices/15d-native-roster.md) accepts two through eight fighters. Each slot uses its authored spawn. All controllers share one solver step, strikes register once per victim, and hands can grip any eligible fighter. Round reconstruction preserves the roster and scores. A fresh match resets all scores.
+
 The browser’s Local sparring scene exposes the same duel through WASM. Coral uses WASD and J/K or the mouse buttons. Blue uses arrows and comma/period. Each has a separate run and jump binding. A shared camera frames both pelvis positions. The panel counts qualifying hits separately and shows the most recent hit region and points.
 
 ### 13.4 Impact and damage

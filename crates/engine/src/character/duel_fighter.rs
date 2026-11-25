@@ -1,5 +1,6 @@
 use super::{
-    BalanceConfig, CharacterDefinition, CharacterError, LocomotionConfig, MotorConfig,
+    BalanceConfig, BodyPart, CharacterDefinition, CharacterError, FighterId, LocomotionConfig,
+    MotorConfig,
     balance::{BalanceController, BalanceState},
     fighter_control::MotorPresets,
     implicit_motor,
@@ -26,13 +27,32 @@ pub(super) struct Fighter {
     pub bodies: [RigidBodyHandle; 15],
     joints: [ImpulseJointHandle; 14],
     pub hands: Hands,
-    pub last_hit: [u64; 2],
+    pub last_hit: [[u64; FighterId::ALL.len()]; 2],
     pub walking: WalkingController,
     motors: MotorConfig,
     balance: BalanceController,
 }
 
 impl Fighter {
+    pub fn other_limb(
+        fighters: &[Self],
+        owner: FighterId,
+        body: RigidBodyHandle,
+    ) -> Option<(FighterId, BodyPart)> {
+        FighterId::ALL
+            .iter()
+            .copied()
+            .zip(fighters)
+            .filter(|(id, _)| *id != owner)
+            .find_map(|(id, fighter)| {
+                fighter
+                    .bodies
+                    .iter()
+                    .position(|&handle| handle == body)
+                    .map(|index| (id, BodyPart::ALL[index]))
+            })
+    }
+
     pub fn spawn(
         world: &mut PhysicsWorld,
         definition: &CharacterDefinition,
@@ -44,7 +64,7 @@ impl Fighter {
             bodies,
             joints,
             hands: Hands::new()?,
-            last_hit: [0; 2],
+            last_hit: Default::default(),
             walking: WalkingController::new(LocomotionConfig::bundled()?),
             motors: MotorConfig::standing()?,
             balance: BalanceController {

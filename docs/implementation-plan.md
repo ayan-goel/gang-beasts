@@ -59,6 +59,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 15a — online startup | Two ready players enter one native match | Host authorization, real worker capacity, both views agree on round and score, reload |
 | 15b — online fighter controls | Bind each browser to one server-owned fighter | Reload, run both fighters, compare both scores, reset epochs and reject replaced inputs |
 | 15c — interpolated online poses | Smooth the complete authoritative scene at browser refresh rate | Shortest-path rotation, clock wrap, adaptive delay, capped extrapolation and stream recovery |
+| 15d — native Skyline rosters | Simulate two through eight independent fighters | Spawn slots, cross-roster combat, simultaneous elimination and round rebuild |
 | 15 | Two-to-eight online clients | Interpolation, resync, backpressure and latency matrix |
 | 16a — verified private admission | Anonymous secure cookies, create/join and room metadata | Scoped retry, eight distinct seats, ninth rejected, real Chromium cookie isolation |
 | 16b — browser lobby | Create, join, copy invite, reload and leave | Separate browser sessions, host transfer, narrow viewport and switching rooms from an invite |

@@ -19,47 +19,45 @@ pub struct StrikeHit {
     pub damage: f32,
 }
 
-pub(super) struct ContactFrame([[BodyMotion; 15]; 2]);
+pub(super) struct ContactFrame(Vec<[BodyMotion; 15]>);
 
 impl ContactFrame {
-    pub fn capture(world: &PhysicsWorld, fighters: &[Fighter; 2]) -> Option<Self> {
+    pub fn capture(world: &PhysicsWorld, fighters: &[Fighter]) -> Option<Self> {
         let striking = fighters.iter().any(|f| {
             [Hand::Left, Hand::Right]
                 .into_iter()
                 .any(|h| f.hands.state(h).phase == HandPhase::Strike)
         });
         striking.then(|| {
-            Self(std::array::from_fn(|i| {
-                fighters[i]
-                    .bodies
-                    .map(|h| BodyMotion::sample(&world.bodies[h]))
-            }))
+            Self(
+                fighters
+                    .iter()
+                    .map(|fighter| fighter.bodies.map(|h| BodyMotion::sample(&world.bodies[h])))
+                    .collect(),
+            )
         })
     }
 
     pub fn resolve(
         &self,
         world: &PhysicsWorld,
-        fighters: &mut [Fighter; 2],
+        fighters: &mut [Fighter],
         tuning: &ImpactTuning,
         tick: u64,
         hits: &mut Vec<StrikeHit>,
     ) {
-        for attacker in [FighterId::First, FighterId::Second] {
-            let defender = attacker.opponent();
+        for &attacker in &FighterId::ALL[..fighters.len()] {
             for hand in [Hand::Left, Hand::Right] {
                 let fighter = &fighters[attacker as usize];
                 let state = fighter.hands.state(hand);
-                if state.phase != HandPhase::Strike
-                    || fighter.last_hit[hand as usize] == state.attack_id
-                {
+                if state.phase != HandPhase::Strike {
                     continue;
                 }
                 let fist = fighter.hand_collider(world, hand);
-                let target = &fighters[defender as usize];
                 let punch = self.0[attacker as usize][hand.body().index()];
                 let heading = self.0[attacker as usize][BodyPart::Chest.index()].forward();
-                let mut best: Option<StrikeHit> = None;
+                let mut strongest: [Option<StrikeHit>; FighterId::ALL.len()] =
+                    [None; FighterId::ALL.len()];
                 for pair in world
                     .narrow_phase
                     .contact_pairs_with(fist)
@@ -74,10 +72,14 @@ impl ContactFrame {
                     let Some(body) = world.colliders[other].parent() else {
                         continue;
                     };
-                    let Some(index) = target.bodies.iter().position(|&h| h == body) else {
+                    let Some((defender, region)) = Fighter::other_limb(fighters, attacker, body)
+                    else {
                         continue;
                     };
-                    let region = BodyPart::ALL[index];
+                    if fighter.last_hit[hand as usize][defender as usize] == state.attack_id {
+                        continue;
+                    }
+                    let index = region.index();
                     let struck = self.0[defender as usize][index];
                     let Some(speed) = closing_speed(pair, first, heading, punch, struck) else {
                         continue;
@@ -87,10 +89,11 @@ impl ContactFrame {
                     else {
                         continue;
                     };
+                    let best = &mut strongest[defender as usize];
                     if best.is_none_or(|hit| {
                         damage > hit.damage || (damage == hit.damage && index < hit.region.index())
                     }) {
-                        best = Some(StrikeHit {
+                        *best = Some(StrikeHit {
                             tick,
                             attacker,
                             defender,
@@ -103,10 +106,9 @@ impl ContactFrame {
                         });
                     }
                 }
-                if let Some(hit) = best {
-                    // A duel has one opposing target. Both hands can score on the
-                    // same tick, but one punch cannot score twice across limb contacts.
-                    fighters[attacker as usize].last_hit[hand as usize] = state.attack_id;
+                for hit in strongest.into_iter().flatten() {
+                    fighters[attacker as usize].last_hit[hand as usize][hit.defender as usize] =
+                        state.attack_id;
                     hits.push(hit);
                 }
             }

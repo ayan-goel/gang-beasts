@@ -3,8 +3,14 @@ use crate::{CharacterError, Consciousness, Hand, MeleePhase, MeleeState, Physics
 
 impl Duel {
     pub fn skyline_match(physics: PhysicsConfig) -> Result<Self, CharacterError> {
-        let mut game = Self::skyline(physics)?;
-        game.melee = Some(MeleeState::new(2, 1));
+        Self::skyline_match_with_players(physics, 2)
+    }
+    pub fn skyline_match_with_players(
+        physics: PhysicsConfig,
+        count: usize,
+    ) -> Result<Self, CharacterError> {
+        let mut game = Self::create(physics, true, count)?;
+        game.melee = Some(MeleeState::new(count, 1));
         Ok(game)
     }
     pub fn match_state(&self) -> Option<&MeleeState> {
@@ -27,7 +33,8 @@ impl Duel {
         }
         if m.between_ticks() {
             let m = self.melee.take();
-            *self = Self::skyline(self.physics.clone()).expect("validated Skyline round");
+            *self = Self::create(self.physics.clone(), true, self.fighters.len())
+                .expect("validated Skyline round");
             self.melee = m;
         }
         false
@@ -37,7 +44,7 @@ impl Duel {
             return;
         }
         let mut alive = 0;
-        for id in [FighterId::First, FighterId::Second] {
+        for &id in self.fighter_ids() {
             if self.fall_state(id).is_some_and(|f| f.below_plane) {
                 self.eliminate(id);
             }
@@ -56,17 +63,16 @@ impl Duel {
                 .into();
         self.melee.as_mut().unwrap().settle(alive, expired);
     }
-    fn eliminate(&mut self, id: FighterId) {
+    pub(super) fn eliminate(&mut self, id: FighterId) {
         if self.vitals(id).phase == Consciousness::Eliminated {
             return;
         }
         self.clear_hands(id);
-        for hand in [Hand::Left, Hand::Right] {
-            if self
-                .grip(id.opponent(), hand)
-                .is_some_and(|g| g.target == id)
-            {
-                self.grips.release(&mut self.world, id.opponent(), hand);
+        for &owner in self.fighter_ids() {
+            for hand in [Hand::Left, Hand::Right] {
+                if self.grip(owner, hand).is_some_and(|g| g.target == id) {
+                    self.grips.release(&mut self.world, owner, hand);
+                }
             }
         }
         let i = id as usize;

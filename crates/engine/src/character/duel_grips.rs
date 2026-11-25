@@ -32,19 +32,19 @@ struct Attachment {
     target_anchor: [f32; 3],
 }
 pub(super) struct Grips {
-    slots: [[Option<Attachment>; 2]; 2],
-    budgets: [GripBudget; 2],
-    failed_attacks: [[Option<u64>; 2]; 2],
+    slots: Vec<[Option<Attachment>; 2]>,
+    budgets: Vec<GripBudget>,
+    failed_attacks: Vec<[Option<u64>; 2]>,
     tuning: GripTuning,
 }
 
 impl Grips {
-    pub fn new() -> Result<Self, CharacterError> {
+    pub fn new(count: usize) -> Result<Self, CharacterError> {
         let tuning = GripTuning::bundled()?;
         Ok(Self {
-            slots: Default::default(),
-            budgets: std::array::from_fn(|_| GripBudget::new(&tuning.costs)),
-            failed_attacks: Default::default(),
+            slots: (0..count).map(|_| Default::default()).collect(),
+            budgets: (0..count).map(|_| GripBudget::new(&tuning.costs)).collect(),
+            failed_attacks: vec![[None; 2]; count],
             tuning,
         })
     }
@@ -64,7 +64,7 @@ impl Grips {
         enough
     }
     pub fn settle(&mut self, world: &mut PhysicsWorld, iterations: usize) {
-        for owner in [FighterId::First, FighterId::Second] {
+        for &owner in &FighterId::ALL[..self.slots.len()] {
             let id = owner as usize;
             let loads = self.slots[id].each_ref().map(|slot| {
                 let grip = slot.as_ref()?;
@@ -126,7 +126,7 @@ impl Grips {
         self.slots[owner as usize][hand as usize].is_some()
     }
     pub fn release_disabled(&mut self, world: &mut PhysicsWorld) {
-        for owner in [FighterId::First, FighterId::Second] {
+        for &owner in &FighterId::ALL[..self.slots.len()] {
             for hand in [Hand::Left, Hand::Right] {
                 if self.slots[owner as usize][hand as usize]
                     .as_ref()
@@ -146,13 +146,12 @@ impl Grips {
     pub fn acquire(
         &mut self,
         world: &mut PhysicsWorld,
-        fighters: &[Fighter; 2],
+        fighters: &[Fighter],
         arena: Option<&crate::arena::Skyline>,
         tick: u64,
     ) {
-        for owner in [FighterId::First, FighterId::Second] {
+        for &owner in &FighterId::ALL[..self.slots.len()] {
             let fighter = &fighters[owner as usize];
-            let target = owner.opponent();
             for hand in [Hand::Left, Hand::Right] {
                 let slot = &mut self.slots[owner as usize][hand as usize];
                 let state = fighter.hands.state(hand);
@@ -167,8 +166,8 @@ impl Grips {
                 let Some(c) = nearest(
                     world,
                     collider,
-                    target,
-                    &fighters[target as usize],
+                    owner,
+                    fighters,
                     arena,
                     self.tuning.reach_gap_m,
                 ) else {

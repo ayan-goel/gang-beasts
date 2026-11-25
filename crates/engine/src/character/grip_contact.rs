@@ -18,8 +18,8 @@ pub(super) struct Candidate {
 pub(super) fn nearest(
     world: &PhysicsWorld,
     hand: ColliderHandle,
-    id: FighterId,
-    opponent: &Fighter,
+    owner: FighterId,
+    fighters: &[Fighter],
     arena: Option<&crate::arena::Skyline>,
     reach: f32,
 ) -> Option<Candidate> {
@@ -62,12 +62,17 @@ pub(super) fn nearest(
             point: nalgebra::center(&c.point1, &c.point2),
         });
     };
-    // Stable iteration resolves equal surface distances in favor of a fighter, then the lowest map ID.
-    for region in BodyPart::ALL {
-        let body = opponent.bodies[region.index()];
-        if world.bodies[body].is_enabled() {
-            for &handle in world.bodies[body].colliders() {
-                consider(body, handle, Target::Fighter(id, region));
+    // Equal distances favor fighters in slot/limb order, then arena surfaces in map order.
+    for (&id, fighter) in FighterId::ALL.iter().zip(fighters) {
+        if id == owner {
+            continue;
+        }
+        for region in BodyPart::ALL {
+            let body = fighter.bodies[region.index()];
+            if world.bodies[body].is_enabled() {
+                for &handle in world.bodies[body].colliders() {
+                    consider(body, handle, Target::Fighter(id, region));
+                }
             }
         }
     }

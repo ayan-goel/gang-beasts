@@ -11,14 +11,29 @@ use rapier3d::prelude::*;
 pub enum FighterId {
     First,
     Second,
+    Third,
+    Fourth,
+    Fifth,
+    Sixth,
+    Seventh,
+    Eighth,
 }
 
 impl FighterId {
+    pub const ALL: [Self; 8] = [
+        Self::First,
+        Self::Second,
+        Self::Third,
+        Self::Fourth,
+        Self::Fifth,
+        Self::Sixth,
+        Self::Seventh,
+        Self::Eighth,
+    ];
+
+    /// The other member of an adjacent sparring pair in fixture code.
     pub fn opponent(self) -> Self {
-        match self {
-            Self::First => Self::Second,
-            Self::Second => Self::First,
-        }
+        Self::ALL[self as usize ^ 1]
     }
 }
 
@@ -26,13 +41,13 @@ pub struct Duel {
     world: PhysicsWorld,
     arena: Option<crate::arena::Skyline>,
     melee: Option<crate::MeleeState>,
-    fighters: [Fighter; 2],
+    fighters: Vec<Fighter>,
     definition: CharacterDefinition,
     presets: MotorPresets,
     impact: crate::combat::ImpactTuning,
-    lifting: [bool; 2],
-    pulls: [mantle::Pull; 2],
-    vitals: [crate::Vitals; 2],
+    lifting: Vec<bool>,
+    pulls: Vec<mantle::Pull>,
+    vitals: Vec<crate::Vitals>,
     health_rules: crate::combat::HealthRules,
     changes: Vec<(FighterId, crate::Consciousness)>,
     grips: super::duel_grips::Grips,
@@ -43,12 +58,18 @@ pub struct Duel {
 
 impl Duel {
     pub fn new(physics: PhysicsConfig) -> Result<Self, CharacterError> {
-        Self::create(physics, false)
+        Self::create(physics, false, 2)
     }
     pub fn skyline(physics: PhysicsConfig) -> Result<Self, CharacterError> {
-        Self::create(physics, true)
+        Self::create(physics, true, 2)
     }
-    fn create(physics: PhysicsConfig, skyline: bool) -> Result<Self, CharacterError> {
+    pub fn fighter_ids(&self) -> &'static [FighterId] {
+        &FighterId::ALL[..self.fighters.len()]
+    }
+    fn create(physics: PhysicsConfig, skyline: bool, count: usize) -> Result<Self, CharacterError> {
+        if !(2..=FighterId::ALL.len()).contains(&count) {
+            return Err(CharacterError::Invalid("Skyline requires 2 to 8 fighters"));
+        }
         physics.validate()?;
         let definition = CharacterDefinition::bundled()?;
         let mut world = PhysicsWorld::new(&physics);
@@ -76,26 +97,27 @@ impl Duel {
                 )
             }
         };
-        let (at, heading) = spawn(0);
-        let first = Fighter::spawn(&mut world, &definition, at, heading)?;
-        let (at, heading) = spawn(1);
-        let second = Fighter::spawn(&mut world, &definition, at, heading)?;
+        let mut fighters = Vec::with_capacity(count);
+        for index in 0..count {
+            let (at, heading) = spawn(index);
+            fighters.push(Fighter::spawn(&mut world, &definition, at, heading)?);
+        }
         let health_rules = crate::combat::HealthRules::bundled()?;
         Ok(Self {
             world,
             arena,
             melee: None,
-            fighters: [first, second],
+            fighters,
             definition,
             presets: MotorPresets::bundled()?,
             impact: crate::combat::ImpactTuning::bundled()?,
-            lifting: [false; 2],
-            pulls: Default::default(),
-            vitals: [crate::Vitals::new(&health_rules); 2],
+            lifting: vec![false; count],
+            pulls: vec![Default::default(); count],
+            vitals: vec![crate::Vitals::new(&health_rules); count],
             health_rules,
-            changes: Vec::with_capacity(2),
-            hits: Vec::with_capacity(4),
-            grips: super::duel_grips::Grips::new()?,
+            changes: Vec::with_capacity(count),
+            hits: Vec::with_capacity(2 * count),
+            grips: super::duel_grips::Grips::new(count)?,
             physics,
             tick: 0,
         })
@@ -118,9 +140,8 @@ impl Duel {
             }
             return;
         }
-        // Both controllers publish their bounded commands before the one room-wide
-        // solve. Stepping per fighter would double gravity and age contacts unevenly.
-        for id in [FighterId::First, FighterId::Second] {
+        // Every fighter publishes commands before the shared solve so gravity and contact age advance once.
+        for &id in self.fighter_ids() {
             let vitals = self.vitals(id);
             let control = match vitals.phase {
                 crate::Consciousness::Eliminated => continue,
@@ -200,7 +221,6 @@ impl Duel {
     }
     pub fn hand_contact_impulse(&self, who: FighterId, hand: Hand) -> f32 {
         let fist = self.fighters[who as usize].hand_collider(&self.world, hand);
-        let opponent = &self.fighters[who.opponent() as usize];
         self.world
             .narrow_phase
             .contact_pairs_with(fist)
@@ -213,7 +233,8 @@ impl Duel {
                 pair.has_any_active_contact
                     && self.world.colliders[other]
                         .parent()
-                        .is_some_and(|body| opponent.bodies.contains(&body))
+                        .and_then(|body| Fighter::other_limb(&self.fighters, who, body))
+                        .is_some()
             })
             .map(|pair| pair.total_impulse_magnitude())
             .sum()
@@ -222,9 +243,13 @@ impl Duel {
         let melee = self
             .melee
             .as_ref()
-            .map(|m| crate::MeleeState::new(2, m.round_id + 1));
-        *self = Self::create(self.physics.clone(), self.arena.is_some())
-            .expect("validated duel configuration");
+            .map(|m| crate::MeleeState::new(self.fighters.len(), m.round_id + 1));
+        *self = Self::create(
+            self.physics.clone(),
+            self.arena.is_some(),
+            self.fighters.len(),
+        )
+        .expect("validated duel configuration");
         self.melee = melee;
     }
 }
@@ -259,3 +284,7 @@ mod mantle;
 #[cfg(test)]
 #[path = "mantle_constraints.rs"]
 mod mantle_constraints;
+
+#[cfg(test)]
+#[path = "skyline_roster_tests.rs"]
+mod roster_tests;
