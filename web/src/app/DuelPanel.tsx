@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { startDuel, type DuelState } from '../game/startDuel';
 
+const phases = { active: 'Active', knocked_out: 'Knocked out', recovering: 'Recovering' };
 const colors = ['Coral', 'Blue'] as const;
 
 export function DuelPanel({ viewport }: { viewport: RefObject<HTMLDivElement | null> }) {
@@ -33,6 +34,10 @@ export function DuelPanel({ viewport }: { viewport: RefObject<HTMLDivElement | n
       </div>)}
       {colors.map((name, id) => <div key={name}>
         <dt>{name} stamina</dt><dd aria-label={`${name} stamina`}>{Math.round(state.stamina[id]!)}</dd>
+      </div>)}
+      {state.conditions.map((condition, id) => <div key={id}>
+        <dt>{colors[id]} condition</dt>
+        <dd aria-label={`${colors[id]} condition`}>{phases[condition.phase]} · {Math.ceil(condition.health)} health</dd>
       </div>)}
       <div><dt>Completed tick</dt><dd id="duel-tick">{state.tick}</dd></div>
     </dl>

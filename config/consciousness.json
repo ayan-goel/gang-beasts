@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "max_health": 100.0,
+  "regen_delay_ticks": 120,
+  "regen_points_per_s": 8.0,
+  "first_ko_ticks": 180,
+  "extra_ko_ticks": 60,
+  "max_ko_ticks": 720,
+  "wake_health": 60.0,
+  "wake_ticks": 30
+}

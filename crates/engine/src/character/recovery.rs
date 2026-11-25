@@ -95,27 +95,33 @@ impl Recovery {
             return None;
         }
         let strength = (f32::from(self.age) / RAMP_TICKS).min(1.0);
-        let up = pelvis.rotation() * Vector::y();
-        let facing = (pelvis.rotation() * -Vector::z()).y;
-        let tuck = (1.0 - up.y).clamp(0.0, 1.0) * strength;
-        let mut targets = [[0.0; 3]; 14];
-        for (target, joint) in targets.iter_mut().zip(&rig.parts.definition.joints) {
-            // Reverse the shoulder reach between prone and supine falls. A side fall
-            // uses neutral shoulder pitch. Extend the knees as the pelvis rises.
-            let pitch = match joint.child {
-                BodyPart::LeftThigh | BodyPart::RightThigh => 0.65 * tuck,
-                BodyPart::LeftShin | BodyPart::RightShin => -1.3 * tuck,
-                BodyPart::LeftFoot | BodyPart::RightFoot => 0.45 * tuck,
-                BodyPart::LeftUpperArm | BodyPart::RightUpperArm => -facing * tuck,
-                BodyPart::LeftForearm | BodyPart::RightForearm => 0.7 * tuck,
-                _ => 0.0,
-            };
-            target[0] = pitch.clamp(joint.angular_limits[0][0], joint.angular_limits[0][1]);
-        }
+        let targets = tuck_targets(rig.read(), strength);
         Some(RecoveryStep {
             strength,
             targets,
             loads: recovery_drive::apply(rig, strength, &tuning.recovery),
         })
     }
+}
+
+pub(super) fn tuck_targets(rig: super::rig_frame::ReadRig, strength: f32) -> [[f32; 3]; 14] {
+    let pelvis = &rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]];
+    let up = pelvis.rotation() * Vector::y();
+    let facing = (pelvis.rotation() * -Vector::z()).y;
+    let tuck = (1.0 - up.y).clamp(0.0, 1.0) * strength;
+    let mut targets = [[0.0; 3]; 14];
+    for (target, joint) in targets.iter_mut().zip(&rig.parts.definition.joints) {
+        // Reverse the shoulder reach between prone and supine falls. A side fall
+        // uses neutral shoulder pitch. Extend the knees as the pelvis rises.
+        let pitch = match joint.child {
+            BodyPart::LeftThigh | BodyPart::RightThigh => 0.65 * tuck,
+            BodyPart::LeftShin | BodyPart::RightShin => -1.3 * tuck,
+            BodyPart::LeftFoot | BodyPart::RightFoot => 0.45 * tuck,
+            BodyPart::LeftUpperArm | BodyPart::RightUpperArm => -facing * tuck,
+            BodyPart::LeftForearm | BodyPart::RightForearm => 0.7 * tuck,
+            _ => 0.0,
+        };
+        target[0] = pitch.clamp(joint.angular_limits[0][0], joint.angular_limits[0][1]);
+    }
+    targets
 }

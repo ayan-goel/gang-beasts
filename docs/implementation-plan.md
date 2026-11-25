@@ -39,7 +39,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 09c — verified local fixtures | Grip stamina and overload | Owner-specific stamina, calibrated suspended weights, exhaustion, sustained overload and release |
 | 09d | World grip targets and lifecycle | Props and fixed holds, reverse lookup on destruction, multi-party stress and cleanup |
 | 10a — verified local encounter | Lift and release in motion | Valid support, per-hand force budget, all target colliders airborne, momentum-preserving release and matching browser trace |
-| 10b | Knockout and recovery | Physical impacts, bounded unconscious time, grip ownership, motor ramp and get-up |
+| 10b — local punch and recovery fixtures | Knockout and recovery | Physical impacts, bounded unconscious time, grip ownership, motor ramp and get-up |
 | 10c | Ledge rescue | One- and two-hand recovery, ceiling and obstruction cases |
 | 11 | Skyline and group camera | Spawns, props, panels, warnings, camera bounds and local round |
 | 12 | Melee match lifecycle | Simultaneous elimination, scoring, full reset and rematch |

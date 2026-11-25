@@ -3,7 +3,7 @@
 mod character;
 mod combat;
 mod config;
-pub use combat::{Hand, HandPhase, HandState};
+pub use combat::{Consciousness, Hand, HandPhase, HandState, Vitals};
 mod debug;
 mod fixture;
 mod physics;

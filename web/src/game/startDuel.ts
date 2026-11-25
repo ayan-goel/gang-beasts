@@ -11,7 +11,12 @@ export interface DuelHit {
   attacker: Player; defender: Player; hand: Player; region: string;
   damage: number; attackId: string; tick: string;
 }
+export interface FighterCondition {
+  phase: 'active' | 'knocked_out' | 'recovering';
+  health: number; knockouts: number; sinceTick: string;
+}
 export interface DuelState {
+  conditions: [FighterCondition, FighterCondition];
   tick: string;
   paused: boolean;
   hits: [number, number];
@@ -63,6 +68,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     const snapshot = () => publish({
       tick: duel.tick().toString(), hits: [...hits], latest, paused, grips: [readGrips(0), readGrips(1)],
       stamina: [duel.stamina(0), duel.stamina(1)],
+      conditions: [JSON.parse(duel.condition_json(0)), JSON.parse(duel.condition_json(1))],
     });
     const render = () => renderer.renderDuel(duel.body_states(0), duel.body_states(1));
     const step = () => {

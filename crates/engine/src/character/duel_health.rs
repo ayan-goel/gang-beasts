@@ -1,0 +1,38 @@
+use super::{Duel, FighterId};
+use crate::{Consciousness, Vitals};
+
+impl Duel {
+    pub fn vitals(&self, id: FighterId) -> Vitals {
+        self.vitals[id as usize]
+    }
+    pub fn consciousness_changes(&self) -> &[(FighterId, Consciousness)] {
+        &self.changes
+    }
+
+    pub(super) fn resolve_health(&mut self) {
+        // Both attackers complete contact resolution before either can lose control.
+        self.hits
+            .retain(|hit| self.vitals[hit.defender as usize].phase == Consciousness::Active);
+        let mut damage = [0.; 2];
+        for hit in &self.hits {
+            damage[hit.defender as usize] += hit.damage;
+        }
+        self.changes.clear();
+        for id in [FighterId::First, FighterId::Second] {
+            let i = id as usize;
+            if let Some(next) = self.vitals[i].advance(self.tick, damage[i], &self.health_rules) {
+                if next == Consciousness::KnockedOut {
+                    self.clear_hands(id);
+                    self.fighters[i].hands.clear();
+                    self.fighters[i].walking.reset();
+                    self.lifting[i] = false;
+                }
+                self.changes.push((id, next));
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "duel_health_tests.rs"]
+mod tests;

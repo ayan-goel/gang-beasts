@@ -10,6 +10,11 @@ use super::{
 use crate::{Hand, PhysicsConfig, combat::Hands, physics::PhysicsWorld};
 use rapier3d::prelude::*;
 
+pub(super) enum Control {
+    Active { lifting: [bool; 2] },
+    Incapacitated { effort: f32 },
+}
+
 pub(super) struct Fighter {
     pub bodies: [RigidBodyHandle; 15],
     joints: [ImpulseJointHandle; 14],
@@ -62,11 +67,26 @@ impl Fighter {
         physics: &PhysicsConfig,
         tick: u64,
         presets: &MotorPresets,
-        lifting: [bool; 2],
+        control: Control,
     ) {
         let mut rig = RigFrame {
             parts: self.parts(definition, physics, tick),
             world,
+        };
+        let lifting = match control {
+            Control::Active { lifting } => lifting,
+            Control::Incapacitated { effort } => {
+                // Only internal pose motors wake during the ramp. Ground assistance
+                // and player actions resume after the timed transition completes.
+                presets.blend(&mut self.motors, 0.);
+                for motor in &mut self.motors.joints {
+                    motor.max_torque_nm *= effort;
+                }
+                let targets = super::recovery::tuck_targets(rig.read(), effort)
+                    .map(|[x, y, z]| Rotation::from_euler_angles(x, y, z));
+                implicit_motor::configure(&mut rig, &self.motors, &targets, effort > 0.);
+                return;
+            }
         };
         let mut targets = presets.prepare(
             &mut rig,

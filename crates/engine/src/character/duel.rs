@@ -1,6 +1,6 @@
 use super::{
     CharacterDefinition, CharacterError, RagdollBodyState,
-    duel_fighter::Fighter,
+    duel_fighter::{Control, Fighter},
     fighter_control::MotorPresets,
     rig_frame::{RigFrame, body_states},
 };
@@ -29,6 +29,9 @@ pub struct Duel {
     presets: MotorPresets,
     impact: crate::combat::ImpactTuning,
     lifting: [bool; 2],
+    vitals: [crate::Vitals; 2],
+    health_rules: crate::combat::HealthRules,
+    changes: Vec<(FighterId, crate::Consciousness)>,
     grips: super::duel_grips::Grips,
     hits: Vec<super::StrikeHit>,
     physics: PhysicsConfig,
@@ -51,6 +54,7 @@ impl Duel {
         )?;
         let opposite = Rotation::from_quaternion(nalgebra::Quaternion::new(0., 0., 1., 0.));
         let second = Fighter::spawn(&mut world, &definition, [-0.15, 0., -0.28], opposite)?;
+        let health_rules = crate::combat::HealthRules::bundled()?;
         Ok(Self {
             world,
             fighters: [first, second],
@@ -58,6 +62,9 @@ impl Duel {
             presets: MotorPresets::bundled()?,
             impact: crate::combat::ImpactTuning::bundled()?,
             lifting: [false; 2],
+            vitals: [crate::Vitals::new(&health_rules); 2],
+            health_rules,
+            changes: Vec::with_capacity(2),
             hits: Vec::with_capacity(4),
             grips: super::duel_grips::Grips::new()?,
             physics,
@@ -70,15 +77,6 @@ impl Duel {
     pub fn definition(&self) -> &CharacterDefinition {
         &self.definition
     }
-    pub fn clear_hands(&mut self, who: FighterId) {
-        self.fighters[who as usize].hands.release_inputs();
-        for hand in [Hand::Left, Hand::Right] {
-            self.grips.release(&mut self.world, who, hand);
-        }
-    }
-    pub fn clear_jump(&mut self, who: FighterId) {
-        self.fighters[who as usize].walking.clear_jump_input();
-    }
     pub fn tick(&self) -> u64 {
         self.tick
     }
@@ -88,13 +86,21 @@ impl Duel {
         for id in [FighterId::First, FighterId::Second] {
             let lifting = [Hand::Left, Hand::Right]
                 .map(|h| self.lifting[id as usize] && self.grip(id, h).is_some());
+            let vitals = self.vitals(id);
+            let control = match vitals.phase {
+                crate::Consciousness::Active => Control::Active { lifting },
+                crate::Consciousness::KnockedOut => Control::Incapacitated { effort: 0. },
+                crate::Consciousness::Recovering => Control::Incapacitated {
+                    effort: vitals.waking_effort(self.tick + 1, &self.health_rules),
+                },
+            };
             self.fighters[id as usize].prepare(
                 &mut self.world,
                 &self.definition,
                 &self.physics,
                 self.tick,
                 &self.presets,
-                lifting,
+                control,
             );
         }
         let contacts = super::duel_contacts::ContactFrame::capture(&self.world, &self.fighters);
@@ -114,36 +120,7 @@ impl Duel {
                 &mut self.hits,
             );
         }
-    }
-    pub fn set_input(
-        &mut self,
-        who: FighterId,
-        direction: [f32; 2],
-        running: bool,
-    ) -> Result<(), CharacterError> {
-        self.fighters[who as usize]
-            .walking
-            .set_input(direction, running)
-    }
-    pub fn set_lift(&mut self, who: FighterId, held: bool) {
-        self.lifting[who as usize] = held;
-    }
-    pub fn set_jump(&mut self, who: FighterId, held: bool) {
-        self.fighters[who as usize].walking.set_jump(held);
-    }
-    pub fn set_hand(&mut self, who: FighterId, hand: Hand, held: bool) {
-        // A fall can switch the arm to its get-up pose while the grip persists.
-        // A repeated held input cannot start a punch with that attached hand.
-        if held && self.grip(who, hand).is_some() {
-            return;
-        }
-        if !held {
-            self.grips.release(&mut self.world, who, hand);
-        }
-        let fighter = &mut self.fighters[who as usize];
-        if fighter.walking.state.recovery_strength == 0.0 {
-            fighter.hands.set(hand, held);
-        }
+        self.resolve_health();
     }
     pub fn hand_state(&self, who: FighterId, hand: Hand) -> HandState {
         let mut state = self.fighters[who as usize].hands.state(hand);
@@ -192,3 +169,9 @@ impl Duel {
 #[cfg(test)]
 #[path = "duel_lift_tests.rs"]
 mod lift_tests;
+
+#[path = "duel_health.rs"]
+mod health;
+
+#[path = "duel_input.rs"]
+mod input;

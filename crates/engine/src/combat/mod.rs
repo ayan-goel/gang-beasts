@@ -1,3 +1,6 @@
+mod vitals;
+pub(crate) use vitals::HealthRules;
+pub use vitals::{Consciousness, Vitals};
 mod grip_budget;
 pub(crate) use grip_budget::GripBudget;
 mod grip_tuning;

@@ -619,6 +619,8 @@ The native duel samples all limb velocities before the solve on active strike ti
 
 For knockout number `n ≥ 1`, use `min(3 + (n−1), 12)` seconds initially. Reset the counter each round. Any later decay or anti-camping immunity is an explicit balance change, not a hidden assumption. Damage while down must not reset the timer every tick; keep total incapacitation bounded. Button mashing does not accelerate recovery in the MVP. Avoid large health bars by default; use body language, face state and clear knockout/recovery audio.
 
+Local sparring applies the combined qualifying punch damage from a completed tick to each active fighter. Both down and wake durations have fixed deadlines. Punches against a downed or waking body still collide but award no further points. The 30-tick wake ramp limits internal motor torque before movement and new combat input resume. The body then completes any necessary supported get-up. [Timing, grip ownership and replay evidence](docs/slices/10b-consciousness.md).
+
 ### 13.6 Grabbing
 
 A reaching hand may acquire an eligible physically reachable surface on actual contact or a tightly bounded contact-proximity rule validated against geometry. A broad sensor overlap alone does not authorize a long-range grip.

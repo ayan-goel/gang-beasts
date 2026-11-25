@@ -86,6 +86,21 @@ impl LocalDuel {
         );
         Ok(())
     }
+    pub fn condition_json(&self, who: JsValue) -> Result<String, JsValue> {
+        let v = self.duel.vitals(fighter(who)?);
+        Ok(json!({"phase":v.phase,"health":v.health,"knockouts":v.knockouts,"sinceTick":v.since_tick.to_string()}).to_string())
+    }
+    pub fn condition_events_json(&self) -> Option<String> {
+        let changes = self.duel.consciousness_changes();
+        if changes.is_empty() {
+            return None;
+        }
+        let records: Vec<_> = changes
+            .iter()
+            .map(|(id, phase)| (*id as u8, phase))
+            .collect();
+        Some(serde_json::to_string(&records).expect("finite state transitions"))
+    }
     pub fn stamina(&self, who: JsValue) -> Result<f32, JsValue> {
         Ok(self.duel.stamina(fighter(who)?))
     }
