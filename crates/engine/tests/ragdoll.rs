@@ -107,3 +107,56 @@ fn invalid_character_assets_are_rejected_before_physics_creation() {
     }
     assert!(CharacterDefinition::from_json(&" ".repeat(32769)).is_err());
 }
+
+#[test]
+fn joint_diagnostics_use_current_world_frames_and_stable_anatomical_ids() {
+    let mut rig = make_rig();
+    rig.queue_impulse(BodyPart::Head, [3.0, 0.0, 1.0]).unwrap();
+    for _ in 0..90 {
+        rig.step();
+    }
+    let states = rig.body_states();
+    assert_ne!(states[0].state.rotation, [0.0, 0.0, 0.0, 1.0]);
+    for joint in rig.joint_states() {
+        let parent = &states[joint.parent.index()].state;
+        let child = &states[joint.child.index()].state;
+        let authored = rig
+            .definition()
+            .joints
+            .iter()
+            .find(|definition| definition.child == joint.child)
+            .unwrap();
+        for (part, state, actual) in [
+            (joint.parent, parent, joint.parent_anchor),
+            (joint.child, child, joint.child_anchor),
+        ] {
+            use rapier3d::na::{Quaternion, UnitQuaternion, Vector3};
+            let local = Vector3::from(authored.anchor)
+                - Vector3::from(rig.definition().bodies[part.index()].position);
+            let [x, y, z, w] = state.rotation;
+            let rotation = UnitQuaternion::from_quaternion(Quaternion::new(w, x, y, z));
+            let expected = Vector3::from(state.position) + rotation * local;
+            assert!((Vector3::from(actual) - expected).norm() < 1e-6);
+        }
+        assert_eq!(joint.parent_rotation, parent.rotation);
+        assert_eq!(joint.child_rotation, child.rotation);
+        let distance = joint
+            .parent_anchor
+            .iter()
+            .zip(joint.child_anchor)
+            .map(|(a, b)| (a - b).powi(2))
+            .sum::<f32>()
+            .sqrt();
+        assert!((distance - joint.anchor_error).abs() < 1e-6);
+        let buffer = joint.to_buffer();
+        assert_eq!(
+            &buffer[..2],
+            &[joint.parent.index() as f32, joint.child.index() as f32]
+        );
+        assert_eq!(&buffer[2..5], &joint.parent_anchor);
+        assert_eq!(&buffer[5..8], &joint.child_anchor);
+        assert_eq!(&buffer[8..12], &parent.rotation);
+        assert_eq!(&buffer[12..16], &child.rotation);
+        assert_eq!(buffer[16], joint.anchor_error);
+    }
+}

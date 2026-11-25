@@ -1,4 +1,4 @@
-use super::{BodyPart, CharacterDefinition, CharacterError, rig::insert_rig};
+use super::{BodyPart, CharacterDefinition, CharacterError, RagdollJointState, rig::insert_rig};
 use crate::{
     CommandError, FixtureState, PhysicsConfig, fixture::validate_impulse, physics::PhysicsWorld,
 };
@@ -8,13 +8,6 @@ use rapier3d::prelude::*;
 pub struct RagdollBodyState {
     pub part: BodyPart,
     pub state: FixtureState,
-}
-
-pub struct RagdollJointState {
-    pub parent: BodyPart,
-    pub child: BodyPart,
-    pub anchor_error: f32,
-    pub contacts_enabled: bool,
 }
 
 pub struct PassiveRagdoll {
@@ -67,6 +60,14 @@ impl PassiveRagdoll {
         self.completed_tick
     }
 
+    pub fn definition(&self) -> &CharacterDefinition {
+        &self.definition
+    }
+
+    pub fn configuration(&self) -> &PhysicsConfig {
+        &self.physics
+    }
+
     pub fn step(&mut self) {
         if let Some((part, impulse)) = self.pending_impulse.take() {
             self.world.bodies[self.bodies[part.index()]].apply_impulse(impulse.into(), true);
@@ -116,10 +117,8 @@ impl PassiveRagdoll {
             .impulse_joints
             .iter()
             .map(|(_, joint)| {
-                let anchor1 =
-                    self.world.bodies[joint.body1].position() * joint.data.local_anchor1();
-                let anchor2 =
-                    self.world.bodies[joint.body2].position() * joint.data.local_anchor2();
+                let frame1 = self.world.bodies[joint.body1].position() * joint.data.local_frame1;
+                let frame2 = self.world.bodies[joint.body2].position() * joint.data.local_frame2;
                 RagdollJointState {
                     parent: BodyPart::ALL[self
                         .bodies
@@ -131,7 +130,11 @@ impl PassiveRagdoll {
                         .iter()
                         .position(|handle| *handle == joint.body2)
                         .expect("owned anatomical body")],
-                    anchor_error: (anchor1 - anchor2).norm(),
+                    parent_anchor: frame1.translation.vector.into(),
+                    child_anchor: frame2.translation.vector.into(),
+                    parent_rotation: frame1.rotation.coords.into(),
+                    child_rotation: frame2.rotation.coords.into(),
+                    anchor_error: (frame1.translation.vector - frame2.translation.vector).norm(),
                     contacts_enabled: joint.data.contacts_enabled(),
                 }
             })

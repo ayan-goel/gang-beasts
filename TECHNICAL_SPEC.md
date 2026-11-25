@@ -1296,6 +1296,8 @@ interface LocalSimulation {
 
 Use explicit lengths/versioning and expose errors; the above signatures describe roles rather than complete ownership/error semantics. Batch transforms in stable ID order with a parallel ID map. Borrowed typed-array views become invalid if WASM memory grows; reacquire after any allocating call or expose copied/owned buffers. Define whether event retrieval drains or peeks.
 
+The passive diagnostic `LocalRagdoll` exports owned buffers: fifteen 14-float body records (position, XYZW rotation, linear/angular velocity, mass) in canonical anatomical order, and fourteen 17-float joint records (parent/child indices, both world anchors and XYZW joint-frame rotations, anchor separation). `definition_json()` supplies the validated geometry and limits. Limb indices are validated before numeric narrowing; tuning replaces the world only after validation. These local diagnostic layouts and the native trace comparison are documented in `docs/slices/04b1-ragdoll-wasm-contract.md`; they are not network snapshots or rollback checkpoints.
+
 The initial online client may render snapshots without running a duplicate world. WASM is immediately required for the local playground and later prediction. A worker can keep simulation off the main UI thread; begin with transferable buffers. Shared memory/threads are optional and require the relevant browser isolation/deployment headers, not an assumption for the baseline.
 
 ## 27. Physics development playground

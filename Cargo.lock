@@ -66,6 +66,7 @@ name = "brawler-wasm"
 version = "0.1.0"
 dependencies = [
  "brawler-engine",
+ "serde_json",
  "wasm-bindgen",
 ]
 
