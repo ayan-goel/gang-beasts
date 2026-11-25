@@ -52,6 +52,10 @@ impl Room {
 
     pub fn detach(&mut self, id: FighterId) {
         self.attached[id as usize] = false;
+        self.expire(id);
+    }
+
+    pub(crate) fn expire(&mut self, id: FighterId) {
         self.inboxes[id as usize].cancel();
         controls::neutralize(&mut self.game, id);
     }

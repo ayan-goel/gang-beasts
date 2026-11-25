@@ -7,11 +7,15 @@ use brawler_protocol::snapshot::{
 const SLOTS: [FighterId; 2] = [FighterId::First, FighterId::Second];
 
 pub struct RoomFrame {
+    tick: u64,
     world: SharedSnapshot,
     applied: [Option<u32>; 2],
 }
 
 impl RoomFrame {
+    pub fn tick(&self) -> u64 {
+        self.tick
+    }
     pub fn for_recipient(&self, id: FighterId) -> Vec<u8> {
         self.world.for_recipient(self.applied[id as usize])
     }
@@ -64,6 +68,7 @@ impl Room {
                 .collect(),
         };
         Ok(RoomFrame {
+            tick: self.tick(),
             world: snapshot.encode_shared()?,
             applied: SLOTS.map(|id| self.applied(id)),
         })

@@ -9,3 +9,6 @@ pub use room::Room;
 
 mod snapshot;
 pub use snapshot::RoomFrame;
+
+mod worker;
+pub use worker::{DispatchError, RoomClient, WorkerPool};

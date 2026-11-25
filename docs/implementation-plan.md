@@ -53,6 +53,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 13 | Rust/TS binary contracts | Golden inputs/snapshots, malformed records, sequence wrap and lifecycle |
 | 14a — verified headless room | Apply input records to two native Skyline fighters | Ordered actions, applied sequence, bounded inbox, stale grip release and round reset |
 | 14b — headless state publication | Capture one full world image per publication tick | Recipient-specific applied acknowledgements and a native-to-Chromium capture through grip, score, round reset and panel retirement |
+| 14c — verified native workers | Fixed-size worker pool and live snapshot delivery | Bounded catch-up, independent rooms, stale commands, shutdown and clean reuse |
 | 14 | Dedicated room server | Single owner, bounded queues, authoritative inputs, scheduling tests |
 | 15 | Two-to-eight online clients | Interpolation, resync, backpressure and latency matrix |
 | 16 | Private sessions and lobby | Link/code, ready/start, auth, reconnect, host transfer, late joining |

@@ -956,7 +956,7 @@ Use stable player/session IDs distinct from connection IDs. A reconnect attaches
 
 Run CPU-bound simulation on dedicated workers, separate from Tokio's network executor. Initially assign one or several rooms per worker based on measurements. Scale with a fixed room-worker pool; do not spawn an unbounded thread per incoming room. Never hold a global room-directory lock during a physics step.
 
-Room-level parallelism is the first scaling strategy. Internal parallel physics must earn its overhead in small-world benchmarks. All queues have limits and clear overload behavior. A worker owns room ordering and never concurrently steps the same room twice.
+The first [native worker pool](docs/slices/14c-worker.md) reserves one room per prestarted worker, retains a single latest full snapshot and suspends admission while a worker is behind by at least 60 ticks. Room-level parallelism is the first scaling strategy. Internal parallel physics must earn its overhead in small-world benchmarks. All queues have limits and clear overload behavior. A worker owns room ordering and never concurrently steps the same room twice.
 
 ### 18.3 Fixed-timestep pipeline
 
