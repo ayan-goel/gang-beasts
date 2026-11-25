@@ -1,6 +1,8 @@
+mod connection;
 mod directory;
 mod lobby;
 mod sessions;
+mod socket;
 mod types;
 
 use axum::{
@@ -25,6 +27,7 @@ use types::{Create, Empty, Fault, Join, PublicRoom, Seat};
 struct Admission {
     directory: Arc<Mutex<Directory>>,
     origin: HeaderValue,
+    sockets: Arc<tokio::sync::Semaphore>,
 }
 
 pub(crate) fn routes(origin: &str) -> Result<Router, CharacterError> {
@@ -44,10 +47,12 @@ pub(crate) fn routes(origin: &str) -> Result<Router, CharacterError> {
     }
     let state = Admission {
         directory: Arc::default(),
+        sockets: Arc::new(tokio::sync::Semaphore::new(512)),
         origin: HeaderValue::from_str(origin.trim_end_matches('/'))
             .map_err(|_| CharacterError::Invalid("invalid origin header"))?,
     };
     Ok(Router::new()
+        .route("/ws", get(socket::upgrade))
         .route("/api/session", post(session))
         .route("/api/rooms", post(create))
         .route("/api/rooms/{code}", get(metadata))
@@ -66,7 +71,7 @@ async fn guard(
     next: Next,
 ) -> Response {
     // Browser credentials are ambient. Reject foreign or missing Origins before state changes.
-    let mut response = if req.method() == axum::http::Method::POST
+    let mut response = if (req.method() == axum::http::Method::POST || req.uri().path() == "/ws")
         && req.headers().get(header::ORIGIN) != Some(&state.origin)
     {
         Fault(StatusCode::FORBIDDEN, "origin_denied").into_response()

@@ -1,6 +1,6 @@
 export const colors = ['Coral', 'Blue', 'Gold', 'Mint', 'Lilac', 'Rose', 'Lime', 'Slate'] as const;
 export interface Seat { code: string; slot: number; host: boolean; color: number; name: string }
-export interface Roster { code: string; capacity: number; you: number; players: Seat[] }
+export interface Roster { code: string; capacity: number; you: number; revision: number; players: Seat[] }
 
 const messages: Record<string, string> = {
   room_not_found: 'Room code was not found. Check the six characters and try again.',
@@ -43,10 +43,11 @@ export async function enter(name: string, color: number | undefined, code: strin
 export async function roster(code: string, signal: AbortSignal): Promise<Roster> {
   const data = await request('rooms/' + code + '/lobby', undefined, signal);
   if (!object(data) || data.code !== code || !slot(data.you) || typeof data.capacity !== 'number'
+    || typeof data.revision !== 'number' || !Number.isInteger(data.revision) || data.revision < 0 || data.revision > 0xffffffff
     || !Number.isInteger(data.capacity) || data.capacity < 2 || data.capacity > 8 || !Array.isArray(data.players)
     || data.players.length > data.capacity || !data.players.every(p => isSeat(p) && p.code === code)
     || !data.players.some(p => p.slot === data.you)) throw new Error('Invalid room roster.');
-  return { code, capacity: data.capacity, you: data.you, players: data.players };
+  return { code, capacity: data.capacity, you: data.you, revision: data.revision, players: data.players };
 }
 export async function leave(code: string) { await request('rooms/' + code + '/leave', {}); }
 export const errorText = (e: unknown) => e instanceof TypeError ? 'Cannot reach the room service. Check your connection and try again.'

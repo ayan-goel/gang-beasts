@@ -13,7 +13,8 @@ use std::{
 #[derive(Default)]
 pub(super) struct Directory {
     pub sessions: Sessions,
-    rooms: HashMap<String, Lobby>,
+    pub(super) next_connection: u64,
+    pub(super) rooms: HashMap<String, Lobby>,
     traffic: HashMap<IpAddr, (Instant, u16)>,
     last_sweep: Option<Instant>,
 }
@@ -51,6 +52,7 @@ impl Directory {
                     .is_some_and(|m| !self.sessions.0.contains_key(&m.session))
                 {
                     *seat = None;
+                    r.revision = r.revision.wrapping_add(1);
                 }
             }
             r.update_host(now);
@@ -139,6 +141,7 @@ impl Directory {
             code: r.code.clone(),
             capacity: r.capacity,
             you: you as u8,
+            revision: r.revision,
             players: r
                 .members
                 .iter()
@@ -152,6 +155,7 @@ impl Directory {
         let r = self.rooms.get_mut(code).ok_or(Fault::MISSING)?;
         if let Some(slot) = r.slot(session) {
             r.members[slot] = None;
+            r.revision = r.revision.wrapping_add(1);
             r.update_host(now);
         }
         Ok(())

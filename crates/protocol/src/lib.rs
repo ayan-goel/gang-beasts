@@ -10,4 +10,5 @@ pub fn is_newer(candidate: u32, previous: u32) -> bool {
     distance != 0 && distance < (1 << 31)
 }
 
+pub mod lobby;
 pub mod snapshot;

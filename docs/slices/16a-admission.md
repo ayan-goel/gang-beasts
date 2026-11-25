@@ -23,4 +23,4 @@ Inactive sessions expire after 30 minutes. Cleanup transfers the host role to th
 
 Run `cargo test --release --locked -p brawler-server`. Router tests cover safe create retries, rejected origin and invalid fields, two- and eight-slot admission, and a ninth player denied entry. Internal clock tests cover expiry, host transfer, empty cleanup and rate-window reset. Two independent Chromium contexts also created and joined one room against the compiled process on loopback. Both browsers received a secure HttpOnly cookie accessible to HTTP alone.
 
-Admission reserves lobby seats. Worker startup on ready/start, live socket authentication and reconnecting an existing fighter still need integration. The native physics room currently supports two fighters.
+Admission reserves lobby seats. The [live lobby socket](16c-lobby-ready.md) authenticates members. Starting a worker from the lobby and reconnecting an existing fighter still need integration. The native physics room currently supports two fighters.

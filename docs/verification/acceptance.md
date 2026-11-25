@@ -15,9 +15,9 @@ The friend-joining criterion has passed in Chromium on loopback. Update each row
 | Skyline mechanics/reset | [Native Skyline fixtures](../slices/11a-skyline-physics.md) exercise movable crates, timed panel failure, sensor versus root crossing, and full reconstruction. Ledge gameplay and online acceptance remain open. |
 | Camera readability | [Local group framing](../slices/12b-play-skyline.md) checks portrait/landscape view bounds and follows both visible fighters. Occlusion, spectating and human readability remain open. |
 | Server authority | [Headless room fixtures](../slices/14a-room-input.md) apply validated intent to the native solver, reproduce a physical ring-out, and reject stale-round submissions. Transport, session authorization and multiclient acceptance remain open. |
-| Smooth multiplayer/latency | Chromium decodes five [native room captures](../slices/14a-room-input.md#state-publication) through physical grip, score, reset and panel retirement. Live socket, interpolation and latency tests remain open. |
+| Smooth multiplayer/latency | Chromium decodes five [native room captures](../slices/14a-room-input.md#state-publication) through physical grip, score, reset and panel retirement. Live fighter snapshots, interpolation and latency tests remain open. |
 | Round/match scoring | [Local melee](../slices/12a-local-rounds.md) verifies three real ring-outs, simultaneous eliminations and deadline draws. [The browser match](../slices/12b-play-skyline.md) exercises keyboard ring-outs and rematch. Online client agreement pending. |
-| Disconnect/reconnect/host transfer | Browser lobby tests cover reloading a seat and transferring the host on voluntary leave. Gameplay socket loss and reconnection remain open. |
+| Disconnect/reconnect/host transfer | Browser tests cover reloading a seat, host transfer on voluntary leave, and [socket replacement and readiness reset](../slices/16c-lobby-ready.md). Gameplay socket loss and reconnection remain open. |
 | Repeated rematch | [Local round fixtures](../slices/12a-local-rounds.md) verify score, body, prop and round identity reset. Endurance and network baselines pending. |
 | Measured eight-player performance | Pending |
 | Endurance/stability | Pending |

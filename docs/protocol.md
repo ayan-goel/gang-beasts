@@ -40,3 +40,16 @@ Fighter offsets 0–4 are slot, consciousness (active/knocked out/recovering/eli
 Room snapshots are due on even completed room ticks (30 Hz). A join or resync may request a full record on any tick. Reliable transient events have a separate lifecycle. A full snapshot carries the state needed to display the current world without replaying earlier hits or warnings.
 
 The independent [binary fixture](../tests/fixtures/protocol/full-skyline-v1.bin) has 31 transforms, two fighters, a zero-valued valid acknowledgement, a crate grip and an epoch above the JavaScript safe integer limit. Run `cargo test --locked -p brawler-protocol` and `npm --prefix web test -- --run src/net` to check both endpoints.
+
+## Lobby controls
+
+The authenticated `/ws` endpoint uses binary messages with one-byte kind and version 1. Multibyte fields are little-endian. Slots and color IDs range from 0 to 7. The [lobby implementation](slices/16c-lobby-ready.md) defines ownership, rate and timeout behavior.
+
+| Kind | Layout after the two header bytes |
+| --- | --- |
+| 16 Connect | Six ASCII room-code bytes, matching the authenticated seat |
+| 17 Welcome | Own slot (u8), then room-state fields and a complete roster |
+| 18 SetReady | A u8 Boolean, 0 or 1 |
+| 19 RoomState | Room-state fields, followed by a roster when its revision changes |
+
+Room-state fields are occupied-slot mask, ready-slot mask, host slot (u8 each), then u32 roster revision. The host and receiver must be occupied. Ready bits must belong to occupied slots. A full roster starts with capacity (u8, 2–8), then one record per occupied slot in ascending order. A player record contains color (u8), UTF-8 name length (u8, 1–96), then the name bytes. The server validates the 24-character limit during HTTP admission. The browser checks lengths before reading and requires the packet to end at the last declared field. A same-revision update has exactly nine bytes and keeps the preceding roster. Welcome starts a new connection and always includes the roster.

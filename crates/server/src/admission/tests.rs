@@ -74,3 +74,57 @@ fn admission_budget_is_bounded_per_peer_and_recovers_in_the_next_window() {
     assert!(d.allow(IpAddr::from([127, 0, 0, 2]), t).is_ok());
     assert!(d.allow(first, t + Duration::from_secs(60)).is_ok());
 }
+
+#[test]
+fn replacing_a_connection_or_reusing_a_seat_fences_late_messages_and_disconnects() {
+    let mut d = Directory::default();
+    let t = Instant::now();
+    let host = issue(&mut d, t);
+    let guest = issue(&mut d, t);
+    let a = d.sessions.authenticate(&host, t).ok().unwrap();
+    let b = d.sessions.authenticate(&guest, t).ok().unwrap();
+    let (_, seat) = d
+        .create(
+            a,
+            Create {
+                request_id: "a".repeat(32),
+                name: "Coral".into(),
+                color: None,
+                capacity: 2,
+            },
+        )
+        .ok()
+        .unwrap();
+    let code = &seat.code;
+    assert!(d.connect(code, b).is_none());
+    let first = d.connect(code, a).unwrap();
+    assert_eq!(d.live_state(code, first, Some(true)).unwrap().ready, 1);
+    let second = d.connect(code, a).unwrap();
+    assert_eq!(d.live_state(code, second, None).unwrap().ready, 0);
+    assert!(d.live_state(code, first, Some(true)).is_none());
+    d.live_state(code, second, Some(true)).unwrap();
+    d.disconnect(code, first);
+    assert_eq!(d.live_state(code, second, None).unwrap().ready, 1);
+    d.leave(a, code, t).ok().unwrap();
+    d.join(
+        b,
+        code,
+        Join {
+            name: "Blue".into(),
+            color: None,
+        },
+    )
+    .ok()
+    .unwrap();
+    let successor = d.connect(code, b).unwrap();
+    let state = d.live_state(code, successor, Some(true)).unwrap();
+    assert_eq!(
+        (state.occupied, state.ready, state.host, state.revision),
+        (1, 1, 0, 3)
+    );
+    d.disconnect(code, second);
+    assert!(d.live_state(code, second, Some(false)).is_none());
+    assert_eq!(d.live_state(code, successor, None).unwrap().ready, 1);
+    d.disconnect(code, successor);
+    assert!(d.live_state(code, successor, None).is_none());
+}

@@ -92,5 +92,6 @@ pub(super) struct Roster {
     pub code: String,
     pub capacity: u8,
     pub you: u8,
+    pub revision: u32,
     pub players: Vec<Seat>,
 }

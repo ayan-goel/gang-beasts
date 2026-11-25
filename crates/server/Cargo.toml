@@ -7,8 +7,8 @@ rust-version.workspace = true
 [dependencies]
 brawler-engine = { path = "../engine" }
 brawler-protocol = { path = "../protocol" }
-axum = { version = "=0.8.9", default-features = false, features = ["http1", "json", "tokio"] }
-tokio = { version = "=1.54.1", features = ["macros", "net", "rt-multi-thread", "signal"] }
+axum = { version = "=0.8.9", default-features = false, features = ["http1", "json", "tokio", "ws"] }
+tokio = { version = "=1.54.1", features = ["macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
 serde.workspace = true
 getrandom = "=0.2.17"
 sha2 = "=0.10.9"

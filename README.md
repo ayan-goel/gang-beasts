@@ -16,7 +16,7 @@ For the production build, run `npm --prefix web run build` followed by `npm --pr
 
 ## Open a private room
 
-Start the API and web app in separate terminals using `cargo run --release --locked -p brawler-server` and `npm --prefix web run dev`. Open [Private rooms](http://127.0.0.1:5173/rooms/) and create a room. Copy the invite into a separate browser profile to try joining as a second player on the same machine. Reloading retains your seat. The host role passes to the next occupied slot when the host leaves. [Lobby design and tests](docs/slices/16b-browser-lobby.md)
+Start the API and web app in separate terminals using `cargo run --release --locked -p brawler-server` and `npm --prefix web run dev`. Open [Private rooms](http://127.0.0.1:5173/rooms/) and create a room. Copy the invite into a separate browser profile to try joining as a second player on the same machine. Use **Ready up** to mark your seat ready. Friends see the change in their roster. Reloading retains your seat and clears readiness. The host role passes to the next occupied slot when the host leaves. [Lobby design and tests](docs/slices/16b-browser-lobby.md)
 
 ## Native server
 

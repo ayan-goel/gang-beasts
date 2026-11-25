@@ -7,6 +7,8 @@ use std::time::Instant;
 
 pub(super) struct Member {
     pub session: SessionId,
+    pub ready: bool,
+    pub generation: Option<u64>,
     name: String,
     color: u8,
 }
@@ -17,6 +19,7 @@ pub(super) struct Lobby {
     pub capacity: u8,
     pub members: Vec<Option<Member>>,
     pub host: usize,
+    pub revision: u32,
     pub empty_since: Option<Instant>,
     original_name: String,
     original_color: Option<u8>,
@@ -34,6 +37,8 @@ impl Lobby {
         let mut members: Vec<_> = (0..capacity).map(|_| None).collect();
         members[0] = Some(Member {
             session,
+            ready: false,
+            generation: None,
             name: name.to_owned(),
             color: color.unwrap_or(0),
         });
@@ -44,6 +49,7 @@ impl Lobby {
             capacity,
             members,
             host: 0,
+            revision: 1,
             empty_since: None,
             original_name: name.to_owned(),
             original_color: color,
@@ -116,8 +122,11 @@ impl Lobby {
         if self.empty_since.take().is_some() {
             self.host = slot;
         }
+        self.revision = self.revision.wrapping_add(1);
         self.members[slot] = Some(Member {
             session,
+            ready: false,
+            generation: None,
             name: name.to_owned(),
             color,
         });
