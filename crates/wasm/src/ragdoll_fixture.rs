@@ -61,13 +61,9 @@ impl RagdollFixture {
             _ => None,
         }
     }
-    pub fn set_movement(
-        &mut self,
-        direction: [f32; 2],
-        running: bool,
-    ) -> Result<(), CharacterError> {
+    pub fn walking_mut(&mut self) -> Result<&mut LocomotionRagdoll, CharacterError> {
         match self {
-            Self::Locomotion(rig) => rig.set_input(direction, running),
+            Self::Locomotion(rig) => Ok(rig),
             _ => Err(CharacterError::Invalid(
                 "this rig has no locomotion controller",
             )),

@@ -55,8 +55,25 @@ impl LocalRagdoll {
         let running = running
             .as_bool()
             .ok_or_else(|| js_error("running must be a boolean"))?;
-        self.rig.set_movement(direction, running).map_err(js_error)
+        self.rig
+            .walking_mut()
+            .map_err(js_error)?
+            .set_input(direction, running)
+            .map_err(js_error)
     }
+    pub fn set_jump(&mut self, held: JsValue) -> Result<(), JsValue> {
+        let held = held
+            .as_bool()
+            .ok_or_else(|| js_error("jump state must be a boolean"))?;
+        self.rig.walking_mut().map_err(js_error)?.set_jump(held);
+        Ok(())
+    }
+
+    pub fn clear_jump_input(&mut self) -> Result<(), JsValue> {
+        self.rig.walking_mut().map_err(js_error)?.clear_jump_input();
+        Ok(())
+    }
+
     pub fn movement_state(&self) -> Vec<f32> {
         self.rig
             .walking()

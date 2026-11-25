@@ -32,7 +32,11 @@ export function MovementControls({state, act, focus}: InspectorProps & {focus():
         })}>{arrow}</button>)}
       <label className="check"><input type="checkbox" checked={state.movementInput.run} onChange={event=>act(p=>p.movementInput?.setRun(event.target.checked))}/>Run</label>
     </div>
-    <button className="focus-movement" onClick={focus}>Focus movement controls</button>
-    <p>Hold WASD / arrows · Shift to run · Moving away releases input</p>
+    <div className="button-row">
+      <button disabled={blocked} onKeyDown={event => { if (event.repeat && event.key === 'Enter') event.preventDefault(); }}
+        onClick={() => act(p => p.movementInput?.tapJump())}>Jump</button>
+      <button className="focus-movement" onClick={focus}>Focus movement controls</button>
+    </div>
+    <p>Hold WASD / arrows · Shift to run · Space to jump</p>
   </div>;
 }

@@ -2,7 +2,7 @@
 
 Status: in progress. All release gates in specification §33 remain required.
 
-Each numbered slice uses failing behavioral tests, minimal implementation, appropriate native/browser verification, documentation, and an atomic commit. Dependencies follow the order below. Split further whenever a slice cannot be verified independently.
+Each numbered slice uses failing behavioral tests, minimal implementation, appropriate native/browser verification, documentation, and an atomic commit. The terrain investigation remains open alongside jump and recovery. Both use the verified foot-support contract. This follows the core movement order in specification §32.1 and retains the stair acceptance tests. Split further whenever a slice cannot be verified independently.
 
 | Slice | Deliverable | Exit evidence |
 | --- | --- | --- |
@@ -26,7 +26,8 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 06c2b4a — verified | Native backward/cross-slope traversal | 48 slope cases, stopping and overpowering fixtures, native/WASM flat traces |
 | 06c2b4b — shared native/browser fixture verified, ascent failing | Low stairs and terrain transitions | Ascend three physical treads, cross flat/slope boundaries and handle distinct support normals |
 | 06c3 | Browser terrain and human movement assessment | Matching scenes/traces, visible contact transitions and human playability |
-| 07 | Jump, fall and recovery | Buffered edge consumed once; total impulse bounded; physical get-up |
+| 07a — verified local fixtures | Jump, flight and landing | Single bounded takeoff, coyote and buffer boundaries, finite air control, native/WASM agreement and accessible controls |
+| 07b | Fallen recovery | Face-up, face-down and side get-up using bounded physical actuation |
 | 08 | Independent strikes and contact damage | Real contact, attack deduplication, no resting damage |
 | 09 | Grips, stamina and release | Per-hand constraints, valid anchors, load failure, cyclic stress cleanup |
 | 10 | Lift, throw, knockout and rescue | Momentum preserved; bounded assistance; KO and ledge cases verified |

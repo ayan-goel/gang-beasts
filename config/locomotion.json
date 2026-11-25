@@ -23,5 +23,12 @@
   "settle_spin_rad_s": 0.3,
   "settle_minimum_up_y": 0.98,
   "gait_blend_s": 0.15,
-  "minimum_upright_y": 0.5
+  "minimum_upright_y": 0.5,
+  "jump": {
+    "takeoff_speed_m_s": 4.5,
+    "buffer_ticks": 6,
+    "coyote_ticks": 6,
+    "air_acceleration_fraction": 0.2,
+    "air_velocity_budget_m_s": 1.0
+  }
 }

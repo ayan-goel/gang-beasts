@@ -10,6 +10,10 @@ use crate::{CommandError, PhysicsConfig};
 mod tests;
 
 #[cfg(test)]
+#[path = "jump_tests.rs"]
+mod jump_tests;
+
+#[cfg(test)]
 #[path = "moving_support_tests.rs"]
 mod moving_support_tests;
 
@@ -99,6 +103,14 @@ impl LocomotionRagdoll {
     }
     pub fn set_input(&mut self, direction: [f32; 2], running: bool) -> Result<(), CharacterError> {
         self.controller.set_input(direction, running)
+    }
+    pub fn set_jump(&mut self, held: bool) {
+        if self.pose.enabled() {
+            self.controller.set_jump(held);
+        }
+    }
+    pub fn clear_jump_input(&mut self) {
+        self.controller.clear_jump_input();
     }
     pub fn set_enabled(&mut self, enabled: bool) {
         self.pose.set_enabled(enabled);

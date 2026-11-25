@@ -2,10 +2,10 @@ import type { MovementInput } from './MovementInput';
 
 export function bindMovementInput(canvas: HTMLCanvasElement, input: MovementInput) {
   canvas.tabIndex = 0;
-  canvas.setAttribute('aria-description', 'Use WASD or arrow keys to move and Shift to run.');
+  canvas.setAttribute('aria-description', 'Use WASD or arrow keys to move, Shift to run, and Space to jump.');
   const keydown = (event: KeyboardEvent) => {
-    if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
-    if (input.key(event.code, true)) event.preventDefault();
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (input.key(event.code, true, event.repeat)) event.preventDefault();
   };
   const keyup = (event: KeyboardEvent) => { if (input.key(event.code, false)) event.preventDefault(); };
   const clear = () => input.clear();

@@ -236,3 +236,25 @@ fn reset_discards_pending_support_motion_before_rebuilding_the_default_floor() {
         assert_eq!(rig.state(), fresh.state());
     }
 }
+
+#[test]
+fn jumping_from_a_translating_deck_keeps_existing_horizontal_momentum() {
+    let (mut rig, _) = moving_floor(Vector::x() * 0.8);
+    for _ in 0..180 {
+        rig.step();
+    }
+    let bodies = rig.pose.rig.body_states();
+    let velocity = |bodies: &[crate::RagdollBodyState]| {
+        bodies
+            .iter()
+            .map(|b| Vector::from(b.state.linear_velocity) * b.state.mass / 40.)
+            .sum::<Vector<Real>>()
+    };
+    let before = velocity(&bodies);
+    assert!((before.x - 0.8).abs() < 0.05);
+    rig.set_jump(true);
+    rig.step();
+    let change = velocity(&rig.pose.rig.body_states()) - before;
+    assert!(change.x.hypot(change.z) < 0.01, "{change:?}");
+    assert!((change.y - (4.5 - 9.81 / 60.)).abs() < 0.025);
+}

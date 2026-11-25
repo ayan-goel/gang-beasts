@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LocomotionConfig {
+    #[serde(default)]
+    pub jump: super::JumpConfig,
     pub schema_version: u32,
     pub walk_speed_m_s: f32,
     pub run_speed_m_s: f32,
@@ -46,6 +48,7 @@ impl LocomotionConfig {
         Ok(config)
     }
     pub fn validate(&self) -> Result<(), CharacterError> {
+        self.jump.validate()?;
         if self.schema_version != 3
             || self.run_speed_m_s < self.walk_speed_m_s
             || self.braking_ticks > 120

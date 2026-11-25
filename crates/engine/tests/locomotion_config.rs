@@ -97,3 +97,32 @@ fn settling_tuning_cannot_require_an_impossible_strict_endpoint() {
         );
     }
 }
+
+#[test]
+fn jump_defaults_preserve_earlier_schema_three_documents_and_reject_unsafe_tuning() {
+    let base = serde_json::to_value(LocomotionConfig::bundled().unwrap()).unwrap();
+    let mut old = base.clone();
+    old.as_object_mut().unwrap().remove("jump");
+    let restored = LocomotionConfig::from_json(&old.to_string()).unwrap();
+    assert_eq!(serde_json::to_value(restored.jump).unwrap(), base["jump"]);
+    for (field, value) in [
+        ("takeoff_speed_m_s", 4.51),
+        ("air_acceleration_fraction", 1.),
+        ("air_velocity_budget_m_s", 1.1),
+    ] {
+        let mut invalid = base.clone();
+        invalid["jump"][field] = serde_json::json!(value);
+        assert!(
+            LocomotionConfig::from_json(&invalid.to_string()).is_err(),
+            "{field}"
+        );
+    }
+    for field in ["buffer_ticks", "coyote_ticks"] {
+        let mut invalid = base.clone();
+        invalid["jump"][field] = serde_json::json!(7);
+        assert!(
+            LocomotionConfig::from_json(&invalid.to_string()).is_err(),
+            "{field}"
+        );
+    }
+}

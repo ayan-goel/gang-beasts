@@ -20,7 +20,7 @@ export class Playground {
   constructor(readonly simulation: SimulationPort, private readonly now = () => performance.now()) {
     this.previousTime = now();
     const movement = simulation.rig?.movement;
-    if (movement) this.movementInput = new MovementInput((x,z,run) => movement.setInput(x,z,run), () => !this.paused && simulation.rig!.controller!.state()[0] === 1);
+    if (movement) this.movementInput = new MovementInput(movement, () => !this.paused && simulation.rig!.controller!.state()[0] === 1);
   }
 
   get sessionRevision(): number { return this.revision; }

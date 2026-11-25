@@ -49,6 +49,7 @@ pub(super) struct WalkingController {
     pose_motion: super::pose_motion::PoseMotion,
     support_motion: SupportMotion,
     reversal: super::reversal::ReversalBrake,
+    jump: super::jump::Jump,
     stumbled: bool,
     sampled_motion: bool,
     running: bool,
@@ -67,6 +68,7 @@ impl WalkingController {
             pose_motion: Default::default(),
             support_motion: SupportMotion::default(),
             reversal: Default::default(),
+            jump: Default::default(),
             stumbled: false,
             sampled_motion: false,
             running: false,
@@ -75,7 +77,14 @@ impl WalkingController {
             state: LocomotionState::default(),
         }
     }
+    pub fn set_jump(&mut self, held: bool) {
+        self.jump.input(held, &self.config.jump);
+    }
+    pub fn clear_jump_input(&mut self) {
+        self.jump.clear_input();
+    }
     pub fn reset(&mut self) {
+        self.jump = Default::default();
         self.intent = Vector::zeros();
         self.swing_completion.finish();
         self.pose_motion = Default::default();
@@ -144,7 +153,6 @@ impl WalkingController {
         });
         self.state.feet = supports.map(|support| support.is_some());
         let count = supports.iter().flatten().count();
-        let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
         let trunk_up = [BodyPart::Pelvis, BodyPart::Chest, BodyPart::Head]
             .map(|p| (rig.world.bodies[rig.bodies[p.index()]].rotation() * Vector::y()).y)
             .into_iter()
@@ -157,7 +165,24 @@ impl WalkingController {
             self.stumbled = false;
         }
         let upright = !self.stumbled;
-        if count == 0 || !upright {
+        let launch = self.jump.takeoff(count > 0, upright, &self.config.jump);
+        if launch {
+            super::jump::apply_velocity_change(
+                rig,
+                Vector::y() * self.config.jump.takeoff_speed_m_s,
+            );
+            self.state.feet = [false; 2];
+        } else if count == 0 && upright {
+            let delta = self.jump.steer(
+                self.intent,
+                self.config.maximum_acceleration_m_s2 * self.config.jump.air_acceleration_fraction,
+            );
+            if delta != Vector::zeros() {
+                super::jump::apply_velocity_change(rig, delta);
+                self.state.acceleration = (delta / TICK_SECONDS).into();
+            }
+        }
+        if launch || count == 0 || !upright {
             self.swing_completion.finish();
             self.pose_motion = Default::default();
             self.support_motion = SupportMotion::default();
@@ -180,6 +205,7 @@ impl WalkingController {
             }
             return [Rotation::identity(); 14];
         }
+        let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
         if !idle {
             self.state.motor_strength = 1.0;
         }

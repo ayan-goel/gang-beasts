@@ -5,6 +5,8 @@ mod foot_target;
 mod gait;
 mod implicit_motor;
 mod joint_state;
+mod jump;
+pub use jump::JumpConfig;
 mod locomotion;
 mod locomotion_config;
 mod motor;

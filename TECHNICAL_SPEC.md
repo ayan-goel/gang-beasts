@@ -517,6 +517,10 @@ Configuration owns these values. Grounding requires plausible support normals/co
 
 Allow one jump from a support episode or the coyote window; consume buffered press edges once. Holding jump does not retrigger it. Use bounded weaker airborne steering, with no unlimited horizontal acceleration. Climb pulls use their own stamina/force rules. Moving-platform departure retains existing support momentum without adding it twice.
 
+The local controller implements a mass-proportional takeoff impulse on the next eligible simulation tick. The six-tick press buffer includes the first sampled tick. The six coyote ticks begin at the first unsupported sample following eligible support. A held key remains consumed across landing. New support after a sampled departure rearms takeoff. An ineligible trunk posture or disabled controller clears the windows. Reset starts a fresh episode. A release preserves a buffered tap, while input cancellation on pause or focus loss discards it.
+
+Air steering after an intentional jump has two limits. At bundled settings the character can change horizontal velocity at 2.4 m/s² and spend at most 1 m/s of total horizontal velocity change during that flight. Steering reversals spend the same budget. The impulse preserves existing support momentum, and ordinary ledge departures keep their ballistic motion. Schema-three locomotion configuration accepts a nested `jump` object and supplies the bundled defaults for older files. [Jump fixtures and controls](docs/slices/07a-jumping.md)
+
 ### 12.5 Get-up behavior
 
 Detect torso orientation and contacts; select face-up, face-down or side recovery; move limbs toward support poses; gradually regain balance. A blocked or held character must struggle physically rather than clip through the captor/floor. Resume normal gait when posture and support are sufficient. Retain controllable wobble, not a compulsory canned animation.

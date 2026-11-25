@@ -2,6 +2,8 @@ export interface MovementPort {
   state(): Float32Array;
   stoppingMoment(): Float32Array;
   supportMoment(): Float32Array;
+  setJump(held: boolean): void;
+  clearJumpInput(): void;
   setInput(x: number, z: number, running: boolean): void;
 }
 
