@@ -29,7 +29,7 @@ npm --prefix web run wasm
 npm --prefix web run dev
 ```
 
-Open the localhost URL printed by Vite. During development, re-run `npm --prefix web run wasm` after changing Rust or configuration; generated browser files are ignored. Production `npm run build` always rebuilds WASM and copies the current canonical configuration first. wasm-pack installs the matching wasm-bindgen generator on first use. React UI arrives with the interactive playground slice; per-frame rendering stays imperative.
+Open the localhost URL printed by Vite. During development, re-run `npm --prefix web run wasm` after changing Rust or configuration; generated browser files are ignored. Production `npm run build` always rebuilds WASM and copies the current canonical configuration first. wasm-pack installs the matching wasm-bindgen generator on first use. React manages the playground inspector; per-frame rendering stays imperative.
 
 ```sh
 npm --prefix web run typecheck
@@ -40,3 +40,7 @@ npm --prefix web run build
 ```
 
 Browser integration tests start their own local server if needed. They compare a 600-tick WASM trace against the native release fixture and test canvas resize containment. The production static bundle is in `web/dist`; it is a diagnostic fixture, not an online game.
+
+## Playground controls
+
+Pause to enable exact single-step. Reset reconstructs the fixture and preserves the paused/running mode. Slow motion changes playback cadence without changing physics dt. The upward impulse is queued once for the next tick. Enable **Show colliders** to inspect Rapier geometry; **Export configuration** downloads the JSON used by this build. Recording/replay and editable tuning are still in progress.

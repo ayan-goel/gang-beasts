@@ -4,6 +4,10 @@ export class FixtureScene {
   private readonly renderer = new THREE.WebGLRenderer({ antialias: true });
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(45, 1, 0.1, 150);
+  private readonly colliders = new THREE.LineSegments(
+    new THREE.BufferGeometry(),
+    new THREE.LineBasicMaterial({ color: '#ffe1a6', depthTest: false }),
+  );
   private readonly cube = new THREE.Mesh(
     new THREE.BoxGeometry(1, 1, 1),
     new THREE.MeshStandardMaterial({ color: '#f58465', roughness: 0.65 }),
@@ -28,6 +32,9 @@ export class FixtureScene {
     platform.receiveShadow = true;
     this.cube.castShadow = true;
     this.scene.add(platform, this.cube);
+    this.colliders.frustumCulled = false;
+    this.colliders.renderOrder = 1;
+    this.scene.add(this.colliders);
     const grid = new THREE.GridHelper(12, 12, '#b0d1c5', '#8aada5');
     grid.position.y = 0.005;
     this.scene.add(grid, new THREE.HemisphereLight('#e1f4ff', '#38463b', 2.3));
@@ -46,8 +53,19 @@ export class FixtureScene {
     this.resize();
   }
 
-  render(position: Float32Array): void {
-    this.cube.position.set(position[0]!, position[1]!, position[2]!);
+  render(state: Float32Array, lines?: Float32Array): void {
+    this.cube.position.set(state[0]!, state[1]!, state[2]!);
+    this.cube.quaternion.set(state[3]!, state[4]!, state[5]!, state[6]!);
+    this.colliders.visible = !!lines?.length;
+    if (lines?.length) {
+      const attribute = this.colliders.geometry.getAttribute('position');
+      if (!attribute || attribute.array.length !== lines.length) {
+        this.colliders.geometry.setAttribute('position', new THREE.BufferAttribute(lines, 3));
+      } else {
+        attribute.array.set(lines);
+        attribute.needsUpdate = true;
+      }
+    }
     this.renderer.render(this.scene, this.camera);
   }
 

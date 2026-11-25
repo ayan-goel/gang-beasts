@@ -5,6 +5,10 @@ export class FixedClock {
   private accumulator = 0;
   droppedSeconds = 0;
 
+  clearDebt(): void {
+    this.accumulator = 0;
+  }
+
   advance(seconds: number): number {
     if (!Number.isFinite(seconds) || seconds < 0) return 0;
     this.accumulator += seconds;

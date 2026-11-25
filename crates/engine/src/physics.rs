@@ -15,6 +15,7 @@ pub(crate) struct PhysicsWorld {
     impulse_joints: ImpulseJointSet,
     multibody_joints: MultibodyJointSet,
     ccd: CCDSolver,
+    debug_renderer: DebugRenderPipeline,
 }
 
 impl PhysicsWorld {
@@ -36,6 +37,10 @@ impl PhysicsWorld {
             impulse_joints: ImpulseJointSet::new(),
             multibody_joints: MultibodyJointSet::new(),
             ccd: CCDSolver::new(),
+            debug_renderer: DebugRenderPipeline::new(
+                DebugRenderStyle::default(),
+                DebugRenderMode::COLLIDER_SHAPES,
+            ),
         }
     }
 
@@ -55,5 +60,18 @@ impl PhysicsWorld {
             &(),
             &(),
         );
+    }
+
+    pub fn collider_lines(&mut self) -> Vec<f32> {
+        let mut lines = crate::debug::DebugLines::default();
+        self.debug_renderer.render(
+            &mut lines,
+            &self.bodies,
+            &self.colliders,
+            &self.impulse_joints,
+            &self.multibody_joints,
+            &self.narrow_phase,
+        );
+        lines.0
     }
 }

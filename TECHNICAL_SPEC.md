@@ -278,7 +278,7 @@ Rust provides a cohesive native/WASM core and controlled ownership across room w
 
 Three.js owns presentation without introducing a second full game framework. No Bevy/Unity runtime, custom general-purpose physics engine, mandatory ECS or database is needed for the MVP. Consider Jolt/C++ only if a controlled equivalent-workload prototype demonstrates a material advantage that outweighs migration cost.
 
-Foundation implementation selects Rust 1.88.0 and Rapier 0.26.1 with `enhanced-determinism` and no parallel/SIMD features; dependency changes require native/WASM verification. Configuration files use strict versioned JSON (see `docs/decisions/0001-foundation-boundaries.md`). Pin Rust in `rust-toolchain.toml`, commit `Cargo.lock` and the frontend lockfile, pin the Node runtime and `wasm-pack`, and record Rapier features. Use a compatible math version; do not accidentally introduce duplicate incompatible transform types. Validate both native and `wasm32-unknown-unknown` targets before accepting upgrades. The current documentation uses APIs that may differ from older examples; this document specifies behavior rather than promising every illustrative signature matches an unpinned release. [Rapier documentation](https://rapier.rs/docs/), [wasm-bindgen guide](https://rustwasm.github.io/docs/wasm-bindgen/)
+Foundation implementation selects Rust 1.88.0 and Rapier 0.26.1 with `enhanced-determinism` and `debug-render`, and no parallel/SIMD features; dependency changes require native/WASM verification. Configuration files use strict versioned JSON (see `docs/decisions/0001-foundation-boundaries.md`). Pin Rust in `rust-toolchain.toml`, commit `Cargo.lock` and the frontend lockfile, pin the Node runtime and `wasm-pack`, and record Rapier features. Use a compatible math version; do not accidentally introduce duplicate incompatible transform types. Validate both native and `wasm32-unknown-unknown` targets before accepting upgrades. The current documentation uses APIs that may differ from older examples; this document specifies behavior rather than promising every illustrative signature matches an unpinned release. [Rapier documentation](https://rapier.rs/docs/), [wasm-bindgen guide](https://rustwasm.github.io/docs/wasm-bindgen/)
 
 ## 9. High-level system architecture
 
@@ -1299,6 +1299,8 @@ The initial online client may render snapshots without running a duplicate world
 ## 27. Physics development playground
 
 Build this before the production lobby. It must run the shared Rust engine in the browser and offer a matching headless native scenario runner.
+
+The implemented cuboid fixture inspector uses one pending diagnostic impulse, finite and at most 10 N·s, consumed on the next tick; its upward-impulse button supplies 4 N·s. Reset rebuilds the complete fixture from its validated configuration. Playback rates 1×, 0.5× and 0.25× change cadence, never physics dt. Pause/rate changes discard fractional debt while preserving cumulative discarded time; reset clears both. Collider outlines come from Rapier geometry. These are diagnostic-fixture controls, not character actuation or release-completion claims. See `docs/decisions/0003-playground-controls.md`.
 
 Required controls: spawn/remove ragdolls and props; stand/walk/jump/fall/recover; slow motion; pause; single tick; reset with seed; apply known impulses; record/replay inputs; inspect contacts, motor targets, actual poses, anchor error, center of mass, support region, grip load, stamina and step time.
 
