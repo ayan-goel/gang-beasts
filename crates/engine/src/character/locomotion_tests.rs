@@ -170,3 +170,42 @@ fn leaving_the_platform_removes_drive_and_preserves_ballistic_momentum() {
     let after = momentum(&rig);
     assert!((before.x - after.x).abs() < 1e-3 && (before.z - after.z).abs() < 1e-3);
 }
+
+#[test]
+fn nearly_perpendicular_steering_does_not_flip_the_foot_impulse() {
+    let sample = |offset: f32| {
+        let mut rig = walker();
+        for _ in 0..60 {
+            rig.step();
+        }
+        for handle in rig.pose.rig.bodies {
+            let body = &mut rig.pose.rig.world.bodies[handle];
+            body.set_linvel(vector![2.0 + offset, 0.0, 0.0], true);
+            body.set_angvel(Vector::zeros(), true);
+        }
+        rig.set_input([0.8, 0.2], false).unwrap();
+        let before = rig.pose.rig.body_states();
+        rig.controller.advance(&mut rig.pose.rig, true);
+        let after = rig.pose.rig.body_states();
+        let feet = [BodyPart::LeftFoot, BodyPart::RightFoot].into_iter().fold(
+            Vector::zeros(),
+            |sum, part| {
+                let index = part.index();
+                sum + (Vector::from(after[index].state.linear_velocity)
+                    - Vector::from(before[index].state.linear_velocity))
+                    * before[index].state.mass
+            },
+        );
+        (Vector::from(rig.state().acceleration), feet)
+    };
+    let before = sample(-0.00001);
+    let after = sample(0.00001);
+    assert!(
+        (before.0 - after.0).norm() < 0.002,
+        "acceleration flips: {before:?}, {after:?}"
+    );
+    assert!(
+        (before.1 - after.1).norm() < 0.002,
+        "foot impulse flips: {before:?}, {after:?}"
+    );
+}

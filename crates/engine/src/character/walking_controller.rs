@@ -168,7 +168,6 @@ impl WalkingController {
             acceleration += carry / TICK_SECONDS;
         }
         acceleration = acceleration.cap_magnitude(self.config.maximum_acceleration_m_s2);
-        self.state.acceleration = acceleration.into();
         let local = root.rotation().inverse() * self.intent;
         let forward = root.rotation() * -Vector::z();
         if self.intent.norm_squared() > 0.0 {
@@ -185,24 +184,42 @@ impl WalkingController {
         let direction = acceleration.try_normalize(0.001).unwrap_or(Vector::zeros());
         let lean = (root.rotation() * Vector::y()).dot(&direction);
         let lean_rate = root.angvel().dot(&Vector::y().cross(&direction));
-        // Friction estimates where to apply an already bounded command; it is not
-        // a traction limit. Lean feedback shifts effort toward/away from the feet
-        // to avoid pitching the rig while retaining the same total linear impulse.
+        // Release braking can oppose foot drag while slowing the torso. Active
+        // steering retains its existing allocation; direction changes need gait control.
+        let braking = !idle && self.intent.norm_squared() == 0.0;
+        let relative = velocity - surface;
+        let horizontal = vector![relative.x, 0.0, relative.z];
+        let motion_speed = horizontal.norm();
+        let resolved =
+            (motion_speed / (self.config.maximum_acceleration_m_s2 * TICK_SECONDS)).min(1.0);
+        let motion = horizontal.try_normalize(0.000001).unwrap_or(direction);
+        let friction_alignment = if braking {
+            1.0 + resolved * (motion.dot(&direction) - 1.0)
+        } else {
+            1.0
+        };
         let fraction = if idle {
             0.0
         } else {
             ((supports
                 .iter()
                 .flatten()
-                .map(|support| support.friction)
+                .map(|support| {
+                    support.friction * friction_alignment
+                        - support.normal.dot(&direction) / support.normal.y
+                })
                 .sum::<f32>()
                 / count as f32)
                 * rig.configuration().gravity_y.abs()
                 / acceleration.norm().max(0.001)
                 + self.config.drive_tilt_gain * lean
                 + self.config.drive_tilt_damping_s * lean_rate)
-                .clamp(0.0, 1.0)
+                .clamp(if braking { -1.0 } else { 0.0 }, 1.0)
         };
+        // Counteracting foot friction may require an opposing foot impulse.
+        // Normalize both shares so their absolute sum keeps the original budget.
+        acceleration /= 1.0 - fraction + fraction.abs();
+        self.state.acceleration = acceleration.into();
         // Tick-scoped assistance preserves the total linear impulse budget.
         for handle in rig.bodies {
             let body = &mut rig.world.bodies[handle];
@@ -240,6 +257,13 @@ impl WalkingController {
             local,
             self.state.phase,
             self.blend,
+        );
+        super::terrain_gait::adapt(
+            rig,
+            supports,
+            &self.config,
+            self.blend,
+            &mut self.state.targets,
         );
         self.state
             .targets

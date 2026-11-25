@@ -4,11 +4,13 @@ Recorded November 25, 2026, starting from commit `f36979a`. These are failed exp
 
 All use Rust 1.88.0, Rapier 0.26.1, bundled physics/character/standing/balance/locomotion configurations, 60 Hz fixed ticks, and no RNG. The preserved temporary source is `.cache/terrain-exploration.rs`; the parameters below are the persistent reproduction record. Future tests must retain meaningful displacement, posture, finite-state and effort gates rather than accepting collapse or slowing movement until the fixture passes.
 
-## Slopes
+## Slopes: native uphill/downhill fixtures addressed, other terrain open
 
-Replace the flat collider with a cuboid of half-extents (6, 0.5, 10), rotated about world X by +15° and −15°, translated to Y = −0.5/cos(angle). Its top plane is Y = −tan(angle)×Z. Spawn at (0, 0.04, 0), settle 120 ticks, then walk toward −Z for 120 ticks.
+[Slice 06c2a](../slices/06c2a-native-slopes.md) and [ADR 0011](../decisions/0011-slope-gait-and-braking.md) record the native correction. Committed tests use a 0.08 m spawn and explicitly prove both soles start clear; the original 0.04 m spawn could penetrate the uphill toe. They cover 60-second stands and four-second walk/run traversal on ±15° slopes, rotating the character and plane together into four world orientations. They also cover stopping, chest impacts, removed support and the command budget. This is uphill/downhill coverage, not cross-slope or browser acceptance.
 
-The original +15° run had fallen during settling: its head was approximately (0.00024, 0.300, 1.488) at the first movement tick, only 0.698 m above the plane. Require head clearance >1.1 m during settling and walking, and more than 2 m of commanded travel measured from the post-settle pelvis position. Confirm initial toe clearance separately so spawn penetration is not mistaken for a controller failure. The next implementation needs a supported sole target derived from the current slope normal while retaining gravity-upright balance.
+The original controller failed the corrected +15° idle fixture at tick 115. Following actual shin tilt instead of the desired leg pose only delayed collapse, failing the extended stand at tick 374. The successful pose generator keeps gravity-up/heading as its reference, adjusts leg reach for the slope and preserves bounded ankle targets. The initial downhill release failed at tick 277; bounded counteracting foot impulses corrected the release-braking case without increasing the absolute impulse ceiling.
+
+Next: cross-slope travel with plane rotation about world Z while the character initially faces −Z; entry/exit between flat and tilted surfaces; different supported normals under the two feet; start/stop at other gait phases; native/WASM slope scenes; human movement assessment. These scenarios remain required and must retain meaningful posture/travel/contact gates. No result is yet claimed for them.
 
 ## Low steps
 

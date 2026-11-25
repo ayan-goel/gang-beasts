@@ -19,6 +19,7 @@ mod rig_tests;
 mod shape;
 mod support;
 mod support_motion;
+mod terrain_gait;
 mod walking_controller;
 
 pub use balance::BalanceState;

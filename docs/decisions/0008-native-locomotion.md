@@ -1,5 +1,7 @@
 # ADR 0008: Ground-gated movement assistance and procedural gait
 
+Update (November 25, 2026): [ADR 0011](0011-slope-gait-and-braking.md) supersedes the original same-direction allocation during release braking. It preserves the absolute impulse ceiling while permitting an opposing foot command and reducing net acceleration. The original allocation below remains historical context.
+
 Date: 2026-11-24. Status: accepted for native flat-ground fixtures. Specification §§11.3, 12, 26, 29. Extends [standing control](0007-support-aware-standing.md).
 
 ## Decision
