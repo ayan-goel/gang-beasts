@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "gravity_y": -9.81,
+  "solver_iterations": 8
+}
