@@ -10,9 +10,9 @@ mod session;
 mod simulation;
 
 pub use character::{
-    BodyDefinition, BodyPart, BodyShape, CharacterDefinition, CharacterError, JointDefinition,
-    JointMotorConfig, MotorConfig, PassiveRagdoll, PoseRagdoll, RagdollBodyState,
-    RagdollJointState,
+    BalanceConfig, BalanceState, BodyDefinition, BodyPart, BodyShape, CharacterDefinition,
+    CharacterError, JointDefinition, JointMotorConfig, MotorConfig, PassiveRagdoll, PoseRagdoll,
+    RagdollBodyState, RagdollJointState,
 };
 pub use config::{ConfigError, PhysicsConfig};
 pub use fixture::{CommandError, FixtureState};

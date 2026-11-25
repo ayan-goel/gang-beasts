@@ -1,13 +1,7 @@
 use super::JointMotorConfig;
 use rapier3d::prelude::*;
 
-pub(super) fn local_torque(
-    current: Rotation<Real>,
-    target: Rotation<Real>,
-    relative_velocity: Vector<Real>,
-    free_axes: [bool; 3],
-    config: &JointMotorConfig,
-) -> Vector<Real> {
+pub(super) fn rotation_error(current: Rotation<Real>, target: Rotation<Real>) -> Vector<Real> {
     let mut error = (target * current.inverse()).into_inner();
     error.normalize_mut();
     // Canonicalize the hemisphere, including exactly 180 degrees, so q and -q
@@ -19,7 +13,17 @@ pub(super) fn local_torque(
     {
         error = -error;
     }
-    let angle_error = Rotation::new_unchecked(error).scaled_axis();
+    Rotation::new_unchecked(error).scaled_axis()
+}
+
+pub(super) fn local_torque(
+    current: Rotation<Real>,
+    target: Rotation<Real>,
+    relative_velocity: Vector<Real>,
+    free_axes: [bool; 3],
+    config: &JointMotorConfig,
+) -> Vector<Real> {
+    let angle_error = rotation_error(current, target);
     let mut torque =
         angle_error * config.stiffness_nm_per_rad - relative_velocity * config.damping_nm_s_per_rad;
     for axis in 0..3 {

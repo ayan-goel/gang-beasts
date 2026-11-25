@@ -117,3 +117,55 @@ fn a_displaced_neck_restores_with_the_exact_tick_impulse() {
         assert!((momentum - vector![expected, 0.0, 0.0]).norm() < 1e-6);
     }
 }
+
+#[test]
+fn enabling_solver_motors_wakes_a_sleeping_rig() {
+    let mut rig = fixture();
+    rig.motors = MotorConfig::standing().unwrap();
+    rig.set_enabled(false);
+    let joint = rig.rig.world.impulse_joints.iter().next().unwrap().1;
+    let (parent, child) = (joint.body1, joint.body2);
+    rig.rig.world.bodies[child]
+        .set_rotation(Rotation::from_scaled_axis(vector![0.2, 0.0, 0.0]), true);
+    for (_, body) in rig.rig.world.bodies.iter_mut() {
+        body.sleep();
+    }
+    rig.set_enabled(true);
+    assert!(
+        rig.rig
+            .world
+            .bodies
+            .iter()
+            .all(|(_, body)| !body.is_sleeping())
+    );
+    rig.step();
+    assert!(
+        rig.rig.world.bodies[parent]
+            .rotation()
+            .angle_to(rig.rig.world.bodies[child].rotation())
+            < 0.2
+    );
+}
+
+#[test]
+fn queued_foot_departure_is_consumed_before_support_and_balance() {
+    let mut rig = PoseRagdoll::new(
+        PhysicsConfig::default(),
+        CharacterDefinition::bundled().unwrap(),
+        MotorConfig::standing().unwrap(),
+        [0.0; 3],
+    )
+    .unwrap();
+    rig.configure_balance(Some(BalanceConfig::bundled().unwrap()))
+        .unwrap();
+    rig.step();
+    let root = rig.rig.bodies[BodyPart::Pelvis.index()];
+    rig.rig.world.bodies[root]
+        .set_rotation(Rotation::from_scaled_axis(vector![0.2, 0.0, 0.0]), true);
+    rig.rig.world.bodies[root].set_angvel(Vector::zeros(), true);
+    rig.queue_impulse(BodyPart::LeftFoot, [0.0, 10.0, 0.0])
+        .unwrap();
+    rig.step();
+    assert_eq!(rig.balance_state().unwrap().feet, [false, true]);
+    assert!((Vector::from(rig.balance_state().unwrap().torque).norm() - 15.0).abs() < 1e-5);
+}

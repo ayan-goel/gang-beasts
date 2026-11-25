@@ -24,6 +24,8 @@ fn main() {
         root.join("rust-toolchain.toml"),
         root.join("config/character.json"),
         root.join("config/motors.json"),
+        root.join("config/balance.json"),
+        root.join("config/standing-motors.json"),
         manifest.join("Cargo.toml"),
         manifest.join("build.rs"),
     ];

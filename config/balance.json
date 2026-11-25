@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "stiffness_nm_per_rad": 480,
+  "damping_nm_s_per_rad": 4,
+  "max_torque_nm": 30,
+  "minimum_normal_y": 0.7,
+  "maximum_contact_distance_m": 0.015,
+  "maximum_separation_speed_m_s": 0.5
+}

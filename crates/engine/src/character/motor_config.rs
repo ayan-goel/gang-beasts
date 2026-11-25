@@ -23,6 +23,10 @@ impl MotorConfig {
         Self::from_json(include_str!("../../../../config/motors.json"))
     }
 
+    pub fn standing() -> Result<Self, CharacterError> {
+        Self::from_json(include_str!("../../../../config/standing-motors.json"))
+    }
+
     pub fn from_json(json: &str) -> Result<Self, CharacterError> {
         // Limit allocation before deserialization; tuning cannot create more actuators.
         if json.len() > 8192 {
@@ -34,7 +38,9 @@ impl MotorConfig {
     }
 
     pub fn validate(&self) -> Result<(), CharacterError> {
-        if self.schema_version != 1 || self.model != "explicit_pd" {
+        if self.schema_version != 1
+            || !matches!(self.model.as_str(), "explicit_pd" | "implicit_velocity_pd")
+        {
             return Err(CharacterError::Invalid("unsupported motor schema or model"));
         }
         let mut seen = [false; 15];

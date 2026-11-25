@@ -12,7 +12,7 @@ pub struct RagdollBodyState {
 
 pub struct PassiveRagdoll {
     pub(super) world: PhysicsWorld,
-    bodies: [RigidBodyHandle; 15],
+    pub(super) bodies: [RigidBodyHandle; 15],
     pub(super) definition: CharacterDefinition,
     physics: PhysicsConfig,
     spawn: [f32; 3],
@@ -69,11 +69,15 @@ impl PassiveRagdoll {
     }
 
     pub fn step(&mut self) {
+        self.apply_pending_impulse();
+        self.world.step();
+        self.completed_tick += 1;
+    }
+
+    pub(super) fn apply_pending_impulse(&mut self) {
         if let Some((part, impulse)) = self.pending_impulse.take() {
             self.world.bodies[self.bodies[part.index()]].apply_impulse(impulse.into(), true);
         }
-        self.world.step();
-        self.completed_tick += 1;
     }
 
     pub fn queue_impulse(&mut self, part: BodyPart, impulse: [f32; 3]) -> Result<(), CommandError> {

@@ -10,6 +10,7 @@
 - [Ragdoll WASM contract](slices/04b1-ragdoll-wasm-contract.md): batched body/joint buffers, ownership and native/browser parity.
 - [Ragdoll browser inspector](slices/04b2-ragdoll-browser-inspector.md): scene selection, solid geometry, joint inspection and resource cleanup.
 - [Bounded pose motors](slices/05a-bounded-pose-motors.md): native relative control, physical effort budgets and conservation fixtures.
+- [Native standing](slices/05b1-native-standing.md): support detection, solver-based pose control, bounded balance and physical standing/push fixtures.
 - [Foundation evidence](verification/foundation.md): native/WASM tests, build identity and browser smoke.
 - [Decisions](decisions/): numbered records of context, alternatives, and consequences.
 - [Slices](slices/): behavior, contracts, tests, and remaining work for each completed increment.
