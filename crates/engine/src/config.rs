@@ -29,6 +29,10 @@ impl Default for PhysicsConfig {
 
 impl PhysicsConfig {
     pub fn from_json(json: &str) -> Result<Self, ConfigError> {
+        // Configuration is tiny; reject oversized pasted/imported data before parsing.
+        if json.len() > 4096 {
+            return Err(ConfigError::Invalid("configuration exceeds 4 KiB"));
+        }
         let config: Self = serde_json::from_str(json)?;
         config.validate()?;
         Ok(config)

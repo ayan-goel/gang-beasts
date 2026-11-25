@@ -43,4 +43,14 @@ Browser integration tests start their own local server if needed. They compare a
 
 ## Playground controls
 
-Pause to enable exact single-step. Reset reconstructs the fixture and preserves the paused/running mode. Slow motion changes playback cadence without changing physics dt. The upward impulse is queued once for the next tick. Enable **Show colliders** to inspect Rapier geometry; **Export configuration** downloads the JSON used by this build. Recording/replay and editable tuning are still in progress.
+Pause to enable exact single-step. Reset reconstructs the fixture and preserves the paused/running mode. Slow motion changes playback cadence without changing physics dt. The upward impulse is queued once for the next tick. Enable **Show colliders** to inspect Rapier geometry.
+
+**Apply tuning** validates gravity/solver settings and restarts paused. **Export configuration** downloads the running configuration. **Export recording** saves completed ticks and impulses; **Import recording** loads a compatible file paused at tick zero. Resume or single-step to its exact endpoint, then reset to return to live play. During replay, export preserves the entire imported recording. Logs are limited to 10 simulated minutes, 1,024 impulses and 256 KiB; reset starts a new log after a limit is reached.
+
+Reproduce a browser recording with the same engine sources/toolchain natively:
+
+```sh
+cargo run --quiet --locked --release -p brawler-engine --example replay_fixture < fixture-recording-v1.json > trace.json
+```
+
+The trace includes initial state and every completed tick as position, XYZW quaternion, linear velocity, angular velocity and mass (14 floats). See [recording contracts and evidence](docs/slices/03b-recording-tuning.md). This validates the cuboid fixture, not full-game deterministic replay.

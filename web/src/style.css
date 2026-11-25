@@ -27,7 +27,8 @@ aside { border-left: 1px solid var(--line); padding: 2rem 1.5rem; overflow-y: au
 aside h2 { font-size: 0.85rem; margin: 0 0 1.5rem; }
 .controls { margin: 1.5rem 0 2rem; }
 .controls h2:not(:first-child) { margin-top: 1.5rem; }
-button, select { font: inherit; font-size: 0.75rem; border: 1px solid var(--line); border-radius: 0.25rem; padding: 0.7rem 0.75rem; background: #203641; color: var(--text); }
+button, select, input[type=number], input[type=file] { font: inherit; font-size: 0.75rem; border: 1px solid var(--line); border-radius: 0.25rem; padding: 0.7rem 0.75rem; background: #203641; color: var(--text); min-width: 0; max-width: 100%; }
+.inspector-section { border-top: 1px solid var(--line); margin-top: 1.5rem; padding-top: 1.5rem; }
 button { cursor: pointer; width: 100%; }
 button:hover:not(:disabled) { border-color: var(--accent); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }

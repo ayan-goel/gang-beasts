@@ -3,6 +3,9 @@ import type { PlaygroundSnapshot } from '../game/Playground';
 import { startPlayground, type PlaygroundRuntime } from '../game/startPlayground';
 import { Controls } from './Controls';
 import { Diagnostics } from './Diagnostics';
+import { Recordings } from './Recordings';
+import { Tuning } from './Tuning';
+import type { InspectorProps } from './types';
 
 export function App() {
   const viewport = useRef<HTMLDivElement>(null);
@@ -17,6 +20,10 @@ export function App() {
     }
     return () => { runtime.current?.dispose(); runtime.current = null; };
   }, []);
+  const act: InspectorProps['act'] = action => {
+    try { runtime.current?.act(action); setError(null); }
+    catch (failure) { setError(String(failure)); }
+  };
   return <>
     <header>
       <div><p className="eyebrow">Physics Brawler</p><h1>Development playground</h1></div>
@@ -30,10 +37,11 @@ export function App() {
       <aside aria-label="Playground tools">
         {error ? <p role="alert">{error}</p> : <p role="status">{state ? 'Simulation ready' : 'Loading simulation…'}</p>}
         {state && <>
-          <Controls state={state} act={action => {
-            try { runtime.current?.act(action); } catch (failure) { setError(String(failure)); }
-          }} />
+          <Controls state={state} act={act} />
           <Diagnostics state={state} />
+          <Tuning key={state.configuration} state={state} act={act} />
+          <Recordings state={state} act={act} reportError={setError}
+            sessionRevision={() => runtime.current?.playground.sessionRevision ?? -1} />
         </>}
       </aside>
     </div>

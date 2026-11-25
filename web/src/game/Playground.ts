@@ -1,13 +1,19 @@
 import { FixedClock } from './FixedClock';
 
 export interface SimulationPort {
-  step(): void;
+  step(): boolean;
   tick(): bigint;
   reset(): void;
   queue_impulse(x: number, y: number, z: number): void;
   fixture_state(): Float32Array;
   collider_lines(): Float32Array;
   free(): void;
+  configure(json: string): void;
+  configuration_json(): string;
+  import_recording(json: string): void;
+  export_recording(): string;
+  replay_end(): number | undefined;
+  recording_available(): boolean;
 }
 
 export type PlaybackRate = 0.25 | 0.5 | 1;
@@ -19,11 +25,14 @@ export class Playground {
   private impulsePending = false;
   private stepMs = 0;
   private previousTime: number;
+  private revision = 0;
   showColliders = false;
 
   constructor(readonly simulation: SimulationPort, private readonly now = () => performance.now()) {
     this.previousTime = now();
   }
+
+  get sessionRevision(): number { return this.revision; }
 
   frame(timestamp: number): void {
     if (!Number.isFinite(timestamp) || timestamp < this.previousTime) return;
@@ -33,7 +42,7 @@ export class Playground {
   }
 
   setPaused(paused: boolean): void {
-    this.paused = paused;
+    this.paused = paused || this.replayComplete();
     // Discard fractional playback debt so resume never consumes pre-pause time.
     this.clock.clearDebt();
     this.previousTime = this.now();
@@ -58,6 +67,23 @@ export class Playground {
 
   reset(): void {
     this.simulation.reset();
+    this.clearPlayback();
+  }
+
+  configure(json: string): void {
+    this.simulation.configure(json);
+    this.clearPlayback();
+    this.paused = true;
+  }
+
+  importRecording(json: string): void {
+    this.simulation.import_recording(json);
+    this.clearPlayback();
+    this.paused = true;
+  }
+
+  private clearPlayback(): void {
+    this.revision++;
     this.impulsePending = false;
     this.clock = new FixedClock();
     this.previousTime = this.now();
@@ -73,15 +99,28 @@ export class Playground {
       showColliders: this.showColliders, stepMs: this.stepMs,
       droppedSeconds: this.clock.droppedSeconds,
       debugSegments: this.showColliders ? this.simulation.collider_lines().length / 6 : 0,
+      configuration: this.simulation.configuration_json(),
+      replayEnd: this.simulation.replay_end(), replayComplete: this.replayComplete(),
+      recordingAvailable: this.simulation.recording_available(),
     };
   }
 
   private step(count: number): void {
     if (!count) return;
     const start = performance.now();
-    for (let i = 0; i < count; i++) this.simulation.step();
-    this.stepMs = (performance.now() - start) / count;
+    let completed = 0;
+    for (let i = 0; i < count; i++) {
+      if (!this.simulation.step()) break;
+      completed++;
+    }
+    if (completed) this.stepMs = (performance.now() - start) / completed;
     this.impulsePending = false;
+    if (this.replayComplete()) this.setPaused(true);
+  }
+
+  private replayComplete(): boolean {
+    const end = this.simulation.replay_end();
+    return end !== undefined && this.simulation.tick() >= BigInt(end);
   }
 }
 

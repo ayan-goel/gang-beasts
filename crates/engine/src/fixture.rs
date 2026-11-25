@@ -9,6 +9,18 @@ pub struct FixtureState {
     pub mass: f32,
 }
 
+impl FixtureState {
+    pub fn to_buffer(self) -> [f32; 14] {
+        let mut buffer = [0.0; 14];
+        buffer[..3].copy_from_slice(&self.position);
+        buffer[3..7].copy_from_slice(&self.rotation);
+        buffer[7..10].copy_from_slice(&self.linear_velocity);
+        buffer[10..13].copy_from_slice(&self.angular_velocity);
+        buffer[13] = self.mass;
+        buffer
+    }
+}
+
 #[derive(Debug, Error, PartialEq)]
 pub enum CommandError {
     #[error("impulse must be finite with magnitude at most 10 N·s")]

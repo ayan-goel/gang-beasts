@@ -6,14 +6,25 @@ function createFixture() {
   let pending = false;
   let impulseCount = 0;
   let now = 0;
+  let replayEnd: number | undefined;
   const simulation = {
-    step() { tick++; if (pending) { impulseCount++; pending = false; } },
+    step() {
+      if (replayEnd !== undefined && tick >= BigInt(replayEnd)) return false;
+      tick++; if (pending) { impulseCount++; pending = false; }
+      return true;
+    },
     tick: () => tick,
-    reset() { tick = 0n; pending = false; },
+    reset() { tick = 0n; pending = false; replayEnd = undefined; },
     queue_impulse() { pending = true; },
     fixture_state: () => new Float32Array(14),
     collider_lines: () => new Float32Array(),
     free() {},
+    configure(json: string) { if (json === 'invalid') throw new Error('invalid config'); tick = 0n; pending = false; replayEnd = undefined; },
+    configuration_json: () => '{}',
+    import_recording(json: string) { if (json === 'invalid') throw new Error('invalid recording'); tick = 0n; pending = false; replayEnd = 2; },
+    export_recording: () => '{}',
+    replay_end: () => replayEnd,
+    recording_available: () => true,
   };
   const playground = new Playground(simulation, () => now);
   return {
@@ -92,5 +103,30 @@ describe('playground playback', () => {
     playground.setRate(0.5);
     advance(1 / 30);
     expect(simulation.tick()).toBe(2n);
+  });
+
+  it('imports paused, stops exactly at the replay end and exits replay on reset', () => {
+    const { playground, simulation, advance } = createFixture();
+    playground.importRecording('{}');
+    advance(1);
+    expect(simulation.tick()).toBe(0n);
+    playground.setPaused(false);
+    advance(1);
+    expect(simulation.tick()).toBe(2n);
+    expect(playground.snapshot().paused).toBe(true);
+    playground.setPaused(false);
+    expect(playground.snapshot().paused).toBe(true);
+    playground.reset();
+    expect(playground.snapshot().replayEnd).toBeUndefined();
+  });
+
+  it('a rejected import or tuning change preserves playback and pending input', () => {
+    const { playground, simulation } = createFixture();
+    playground.queueImpulse();
+    expect(() => playground.importRecording('invalid')).toThrow();
+    expect(() => playground.configure('invalid')).toThrow();
+    expect(playground.snapshot().paused).toBe(false);
+    expect(playground.snapshot().impulsePending).toBe(true);
+    expect(simulation.tick()).toBe(0n);
   });
 });
