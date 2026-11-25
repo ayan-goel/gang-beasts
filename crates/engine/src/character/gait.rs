@@ -2,6 +2,10 @@ use super::{BodyPart, CharacterDefinition, LocomotionConfig};
 use rapier3d::na::ComplexField;
 use rapier3d::prelude::*;
 
+#[cfg(test)]
+#[path = "gait_geometry_tests.rs"]
+pub(super) mod geometry_tests;
+
 pub(super) fn targets(
     definition: &CharacterDefinition,
     config: &LocomotionConfig,
@@ -10,6 +14,7 @@ pub(super) fn targets(
     blend: f32,
 ) -> [[f32; 3]; 14] {
     let mut targets = [[0.0; 3]; 14];
+    let lateral = local.x * lateral_scale(definition, config.hip_amplitude_rad);
     // The stance sweep and raised return use different paths. Half the knee
     // flexion is offset at the hip/ankle to lift the foot beneath the body.
     let legs = [0.0, 0.5].map(|offset| {
@@ -41,11 +46,11 @@ pub(super) fn targets(
         let [swing, knee] = legs[side];
         let angles = match joint.child {
             BodyPart::LeftThigh | BodyPart::RightThigh => {
-                [-local.z * swing - knee * 0.5, 0.0, local.x * swing]
+                [-local.z * swing - knee * 0.5, 0.0, lateral * swing]
             }
             BodyPart::LeftShin | BodyPart::RightShin => [knee, 0.0, 0.0],
             BodyPart::LeftFoot | BodyPart::RightFoot => {
-                [local.z * swing - knee * 0.5, 0.0, -local.x * swing]
+                [local.z * swing - knee * 0.5, 0.0, -lateral * swing]
             }
             BodyPart::LeftUpperArm | BodyPart::RightUpperArm => [local.z * swing, 0.0, 0.0],
             _ => [0.0; 3],
@@ -57,9 +62,43 @@ pub(super) fn targets(
     targets
 }
 
+fn lateral_scale(definition: &CharacterDefinition, amplitude: f32) -> f32 {
+    let legs = [
+        [BodyPart::LeftThigh, BodyPart::LeftShin, BodyPart::LeftFoot],
+        [
+            BodyPart::RightThigh,
+            BodyPart::RightShin,
+            BodyPart::RightFoot,
+        ],
+    ];
+    let mut scale = 1.0_f32;
+    for parts in legs {
+        let anchors = parts.map(|part| {
+            Vector::from(
+                definition
+                    .joints
+                    .iter()
+                    .find(|j| j.child == part)
+                    .unwrap()
+                    .anchor,
+            )
+        });
+        let body = &definition.bodies[parts[2].index()];
+        let bounds = body.shape.collider().build().compute_aabb();
+        let margin = (body.position[0].abs() - bounds.half_extents().x).max(0.0);
+        let reach = (anchors[0] - anchors[1]).norm() + (anchors[1] - anchors[2]).norm();
+        let sole = (Vector::from(body.position) - anchors[2]).norm() + body.shape.bounding_radius();
+        // Bound displacement from both hip roll and counter-rotating ankle roll.
+        // A whole-cycle envelope avoids discontinuous corrections at foot overlap.
+        scale = scale.min(margin / (amplitude * (reach + 2.0 * sole)).max(0.000001));
+    }
+    scale
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn swing_returns_above_the_stance_path_and_extends_before_touchdown() {
         let definition = CharacterDefinition::bundled().unwrap();

@@ -1,6 +1,52 @@
 use super::*;
 
 #[test]
+fn slope_gait_does_not_command_intersecting_feet() {
+    for degrees in [-15.0, 15.0] {
+        for terrain_heading in [0.0, std::f32::consts::FRAC_PI_2] {
+            let (mut rig, _, _) = slope_with_headings(degrees, 0.0, terrain_heading);
+            for _ in 0..120 {
+                rig.step();
+            }
+            let contacts = supports(&rig);
+            assert!(contacts.iter().all(Option::is_some));
+            let root = rig.pose.rig.bodies[BodyPart::Pelvis.index()];
+            rig.pose.rig.world.bodies[root].set_rotation(Rotation::identity(), true);
+            let config = LocomotionConfig::bundled().unwrap();
+            for direction_index in 0..16 {
+                let angle = direction_index as f32 * std::f32::consts::TAU / 16.0;
+                let direction = vector![angle.sin(), 0.0, -angle.cos()];
+                for sample in 0..120 {
+                    let phase = sample as f32 * std::f32::consts::TAU / 120.0;
+                    let mut targets = crate::character::gait::targets(
+                        &rig.pose.rig.definition,
+                        &config,
+                        direction,
+                        phase,
+                        1.0,
+                    );
+                    crate::character::terrain_gait::adapt(
+                        &rig.pose.rig,
+                        contacts,
+                        &config,
+                        1.0,
+                        &mut targets,
+                    );
+                    let separation = crate::character::gait::geometry_tests::foot_separation(
+                        &rig.pose.rig.definition,
+                        targets,
+                    );
+                    assert!(
+                        separation >= -0.00001,
+                        "slope {degrees}, terrain {terrain_heading}, direction {direction_index}, phase {sample}: separation {separation}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn slope_targets_preserve_placement_when_the_ankle_saturates_and_do_not_follow_body_tilt() {
     let (mut rig, normal, _) = slope(15.0, 0.0);
     for _ in 0..120 {

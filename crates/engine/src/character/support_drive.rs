@@ -14,6 +14,7 @@ pub(super) fn allocate(
     velocity: Vector<Real>,
     requested: Vector<Real>,
     base_foot: Vector<Real>,
+    steering: bool,
     config: &LocomotionConfig,
 ) -> Option<SupportDrive> {
     let count = supports.iter().flatten().count() as f32;
@@ -32,16 +33,13 @@ pub(super) fn allocate(
         / count;
     extra.y = 0.0;
     let magnitude = extra.norm();
-    if magnitude == 0.0 || config.support_moment_cap_nm == 0.0 {
+    if config.support_moment_cap_nm == 0.0 || (magnitude == 0.0 && !steering) {
         return None;
     }
-    let direction = -extra / magnitude;
-    // Only contact-supplied carry has the foot lever arm. Subtract existing
-    // distributed assistance, and never compensate more than the support load.
-    let residual = (magnitude - (requested - base_foot).dot(&direction)).clamp(0.0, magnitude);
-    extra = -direction * residual;
-    if extra.norm_squared() == 0.0 {
-        return None;
+    if magnitude > 0.0 {
+        let direction = -extra / magnitude;
+        let residual = (magnitude - (requested - base_foot).dot(&direction)).clamp(0.0, magnitude);
+        extra = -direction * residual;
     }
     let mass = rig
         .bodies
@@ -57,6 +55,65 @@ pub(super) fn allocate(
         })
         .sum::<Vector<Real>>()
         / mass;
+    if steering {
+        let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+        let up = root.rotation() * Vector::y();
+        let rate = root.angvel().cross(&up);
+        let surface = supports
+            .iter()
+            .flatten()
+            // Compare both velocities at COM. A rotating deck has different
+            // contact-point velocities even when the character moves with it.
+            .map(|s| s.velocity + s.angular_velocity.cross(&(center - s.contact_point.coords)))
+            .sum::<Vector<Real>>()
+            / count;
+        let relative = velocity - surface;
+        let horizontal = vector![relative.x, 0.0, relative.z];
+        let motion = horizontal
+            / horizontal
+                .norm()
+                .max(config.maximum_acceleration_m_s2 * crate::TICK_SECONDS)
+                .max(0.000001);
+        let g = rig.configuration().gravity_y.abs();
+        let drag = supports
+            .iter()
+            .flatten()
+            .map(|s| {
+                let n = s.normal;
+                let tangent = vector![
+                    horizontal.x,
+                    -(n.x * horizontal.x + n.z * horizontal.z) / n.y,
+                    horizontal.z
+                ];
+                let direction = tangent
+                    / tangent
+                        .norm()
+                        .max(config.maximum_acceleration_m_s2 * crate::TICK_SECONDS)
+                        .max(0.000001);
+                let normal_load = (g * n.y - requested.dot(&n)).max(0.0);
+                vector![
+                    direction.x * s.friction - n.x,
+                    0.0,
+                    direction.z * s.friction - n.z
+                ] * normal_load
+            })
+            .sum::<Vector<Real>>()
+            / count;
+        let target = drag
+            + (vector![up.x, 0.0, up.z] * config.drive_tilt_gain
+                + vector![rate.x, 0.0, rate.z] * config.drive_tilt_damping_s)
+                * g;
+        let mut correction = target - base_foot;
+        if let Some(direction) = requested.try_normalize(0.001) {
+            let alignment = direction.dot(&motion);
+            let brake = alignment.min(0.0).powi(2);
+            correction -= direction * correction.dot(&direction).min(0.0) * (1.0 - brake);
+        }
+        extra += correction;
+    }
+    if extra.norm_squared() == 0.0 {
+        return None;
+    }
     let feet = [BodyPart::LeftFoot, BodyPart::RightFoot]
         .into_iter()
         .zip(supports)

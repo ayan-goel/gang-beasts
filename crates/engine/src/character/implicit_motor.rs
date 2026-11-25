@@ -36,6 +36,8 @@ pub(super) fn configure(
             &mut joint.data,
             parent.inverse() * child,
             targets[index],
+            parent.inverse()
+                * (rig.world.bodies[joint.body2].angvel() - rig.world.bodies[joint.body1].angvel()),
             free,
             config,
         );
@@ -46,6 +48,7 @@ fn configure_joint(
     joint: &mut GenericJoint,
     current: Rotation<Real>,
     target: Rotation<Real>,
+    angular_velocity: Vector<Real>,
     free: [bool; 3],
     config: &JointMotorConfig,
 ) {
@@ -58,15 +61,24 @@ fn configure_joint(
     // The solver evaluates damping against its next velocity. Adding Kp*dt
     // gives a first-order implicit position term without quaternion component subtraction.
     let velocity = error * (config.stiffness_nm_per_rad / damping);
-    // Independent axis caps conservatively preserve the whole-vector budget.
-    // A single-axis request cannot borrow unused effort from the other free axes.
-    let cap = config.max_torque_nm / (count as f32).sqrt();
+    // Allocate predicted effort first, then reserve spare squared capacity equally.
+    // The sum of squared axis ceilings stays within the joint's vector budget,
+    // while a saturated pitch request can use capacity idle axes do not need.
+    let demand = Vector::from(std::array::from_fn(|axis| {
+        if free[axis] {
+            config.stiffness_nm_per_rad * error[axis] - damping * angular_velocity[axis]
+        } else {
+            0.0
+        }
+    }))
+    .cap_magnitude(config.max_torque_nm);
+    let reserve = (config.max_torque_nm.powi(2) - demand.norm_squared()).max(0.0) / count as f32;
     for (index, axis) in AXES.into_iter().enumerate() {
         if free[index] {
             joint
                 .set_motor_model(axis, MotorModel::ForceBased)
                 .set_motor_velocity(axis, velocity[index], damping)
-                .set_motor_max_force(axis, cap);
+                .set_motor_max_force(axis, (demand[index].powi(2) + reserve).sqrt());
         }
     }
 }

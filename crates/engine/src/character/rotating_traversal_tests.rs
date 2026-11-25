@@ -132,6 +132,10 @@ fn support_assistance_clears_on_disable_reset_lost_support_and_ineligible_postur
         for _ in 0..60 {
             rig.step();
         }
+        // Exercise compensation during relative movement before clearing it;
+        // steady deck carry can already be supplied by contacts and idle drive.
+        rig.set_input([1.0, 0.0], true).unwrap();
+        rig.step();
         assert!(Vector::from(rig.state().support_moment).norm() > 0.01);
         match exit {
             0 => rig.set_enabled(false),
@@ -172,3 +176,9 @@ fn zero_linear_budget_disables_rotating_support_impulses() {
     assert_eq!(rig.state().acceleration, [0.0; 3]);
     assert_eq!(before, rig.pose.rig.body_states());
 }
+
+#[path = "swing_completion_tests.rs"]
+mod swing_completion_tests;
+
+#[path = "swing_completion_lifecycle_tests.rs"]
+mod swing_completion_lifecycle_tests;

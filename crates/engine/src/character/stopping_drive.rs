@@ -45,17 +45,26 @@ pub(super) fn allocate(
     let quantum = config.maximum_acceleration_m_s2 * crate::TICK_SECONDS;
     // Fade drag below one tick's velocity correction to avoid reversing a full
     // foot command when nearly stationary feedback changes sign.
-    let motion = horizontal / horizontal.norm().max(quantum).max(0.000001);
     let fade = (horizontal.norm() / quantum.max(0.000001)).min(1.0);
     let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
     let up = root.rotation() * Vector::y();
     let rate = root.angvel().cross(&up);
+    let gravity = rig.configuration().gravity_y.abs();
     let drag = supports
         .iter()
         .flatten()
         .fold(Vector::zeros(), |sum, support| {
-            sum + motion * support.friction
-                - vector![support.normal.x, 0.0, support.normal.z] * fade / support.normal.y
+            let normal = support.normal;
+            let tangent = vector![
+                horizontal.x,
+                -(normal.x * horizontal.x + normal.z * horizontal.z) / normal.y,
+                horizontal.z
+            ];
+            let direction = tangent / tangent.norm().max(quantum).max(0.000001);
+            let load = (gravity * normal.y - requested.dot(&normal)).max(0.0);
+            sum + (vector![direction.x, 0.0, direction.z] * support.friction
+                - vector![normal.x, 0.0, normal.z] * fade)
+                * (load / gravity)
         })
         / count;
     let mut foot = ((drag

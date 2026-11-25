@@ -12,7 +12,7 @@ The original controller failed the corrected +15° idle fixture at tick 115. Fol
 
 The 06c2b probes confirmed a cross-slope running failure on +15° about world Z, yaw 0, using the same clear spawn and 120-tick settling period: head clearance fell below 1.1 m at total tick 256. This plane is tilted sideways relative to −Z travel. Reducing the extension reserve or adding bounded yaw feedforward also broke earlier terrain cases and was not retained.
 
-Next: cross-slope travel with plane rotation about world Z while the character initially faces −Z; entry/exit between flat and tilted surfaces; different supported normals under the two feet; start/stop at other gait phases; native/WASM slope scenes; human movement assessment. These scenarios remain required and must retain meaningful posture/travel/contact gates. No result is yet claimed for them.
+[Slice 06c2b4](../slices/06c2b4-transverse-slopes.md) preserves explicit backward and contour-traversal matrices. Historical baseline `d30f63b` passes 1/16 backward and 12/16 contour cases. Exact forward-kinematics checks reproduce overlapping requested foot colliders on that baseline. The current native controller passes all 48 forward, backward and contour traversals along with both physical shove suites and rotating stops. Steps, entry and exit between surfaces, adjacent supports with different normals, browser terrain and human movement assessment remain open. [Controller decision and verification](../decisions/0015-terrain-locomotion.md)
 
 ## Low steps
 

@@ -1,6 +1,7 @@
 mod balance;
 mod balance_config;
 mod definition;
+mod foot_target;
 mod gait;
 mod implicit_motor;
 mod joint_state;
@@ -13,6 +14,8 @@ mod motor_tests;
 mod parts;
 mod passive;
 mod pose;
+mod pose_motion;
+mod pose_release;
 mod reversal;
 mod rig;
 #[cfg(test)]
@@ -22,6 +25,7 @@ mod stopping_drive;
 mod support;
 mod support_drive;
 mod support_motion;
+mod swing_completion;
 mod terrain_gait;
 mod walking_controller;
 

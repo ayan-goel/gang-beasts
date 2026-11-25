@@ -22,6 +22,18 @@ mod slope_tests;
 mod stopping_support_tests;
 
 #[cfg(test)]
+#[path = "settling_tests.rs"]
+mod settling_tests;
+
+#[cfg(test)]
+#[path = "settling_support_tests.rs"]
+mod settling_support_tests;
+
+#[cfg(test)]
+#[path = "pose_transition_tests.rs"]
+mod pose_transition_tests;
+
+#[cfg(test)]
 #[path = "rotating_traversal_tests.rs"]
 mod rotating_traversal_tests;
 

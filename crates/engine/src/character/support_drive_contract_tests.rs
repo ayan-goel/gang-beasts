@@ -1,5 +1,99 @@
 use super::*;
 
+#[test]
+fn co_moving_com_at_requested_speed_receives_no_net_velocity_correction() {
+    for moving in [false, true] {
+        let (mut walking, deck) = rotating_deck(0.0, 2.0);
+        for _ in 0..60 {
+            walking.step();
+        }
+        let rig = &mut walking.pose.rig;
+        let spin = Vector::y() * 0.4;
+        rig.world.bodies[deck].set_angvel(spin, true);
+        let config = LocomotionConfig::bundled().unwrap();
+        let command = if moving {
+            Vector::x() * config.walk_speed_m_s
+        } else {
+            Vector::zeros()
+        };
+        let mut controller = WalkingController::new(config);
+        if moving {
+            controller.set_input([1.0, 0.0], false).unwrap();
+        }
+        // Keep each body at the requested rigid velocity field while allowing
+        // the bounded carry reference to catch up, without advancing geometry.
+        for _ in 0..100 {
+            for handle in rig.bodies {
+                let velocity = rig.world.bodies[deck]
+                    .velocity_at_point(rig.world.bodies[handle].center_of_mass())
+                    + command;
+                rig.world.bodies[handle].set_linvel(velocity, true);
+                rig.world.bodies[handle].set_angvel(spin, true);
+            }
+            controller.advance(rig, true);
+        }
+        assert_eq!(controller.state.feet, [true, true]);
+        assert!(
+            Vector::from(controller.state.acceleration).norm() < 0.00001,
+            "moving={moving}: spurious velocity correction {:?}",
+            controller.state.acceleration
+        );
+    }
+}
+
+#[test]
+fn active_drag_does_not_confuse_rigid_deck_rotation_with_relative_motion() {
+    let (mut walking, _) = rotating_deck(0.0, 0.0);
+    for _ in 0..60 {
+        walking.step();
+    }
+    let rig = &mut walking.pose.rig;
+    let root = &mut rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+    root.set_rotation(Rotation::identity(), true);
+    root.set_angvel(Vector::zeros(), true);
+    let center = rig.bodies.iter().fold(Vector::zeros(), |sum, handle| {
+        let body = &rig.world.bodies[*handle];
+        sum + body.center_of_mass().coords * body.mass()
+    }) / 40.0;
+    let spin = Vector::y() * 0.4;
+    let translation = Vector::x() * 0.8;
+    let supports = [BodyPart::LeftFoot, BodyPart::RightFoot].map(|part| {
+        let mut support = crate::character::support::foot_support(
+            &rig.world,
+            rig.bodies[part.index()],
+            &rig.bodies,
+            &BalanceConfig::bundled().unwrap(),
+        )
+        .unwrap();
+        support.angular_velocity = spin;
+        support.linear_velocity = translation;
+        support.velocity = translation + spin.cross(&support.contact_point.coords);
+        Some(support)
+    });
+    let config = LocomotionConfig::bundled().unwrap();
+    for supports in [supports, [supports[0], None], [None, supports[1]]] {
+        let allocate = |steering| {
+            crate::character::support_drive::allocate(
+                rig,
+                supports,
+                translation + spin.cross(&center),
+                Vector::zeros(),
+                Vector::zeros(),
+                steering,
+                &config,
+            )
+            .unwrap()
+        };
+        let carried = allocate(false);
+        let active = allocate(true);
+        assert!(
+            (active.foot - carried.foot).norm() < 0.00001,
+            "co-moving body received additional drag {:?}",
+            active.foot - carried.foot
+        );
+    }
+}
+
 fn isolated_drive(spin: f32, translation: f32, cap: f32, one_foot: bool) -> ([f32; 3], [f32; 3]) {
     let (mut walking, deck) = rotating_deck(0.0, 0.0);
     for _ in 0..60 {

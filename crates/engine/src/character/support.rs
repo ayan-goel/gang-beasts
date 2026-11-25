@@ -6,6 +6,10 @@ use rapier3d::prelude::*;
 #[path = "support_tests.rs"]
 mod tests;
 
+#[cfg(test)]
+#[path = "support_normal_tests.rs"]
+mod normal_tests;
+
 fn current_pose(world: &PhysicsWorld, collider: &Collider) -> Isometry<Real> {
     match collider.parent() {
         Some(body) => world.bodies[body].position() * collider.position_wrt_parent().unwrap(),
@@ -13,8 +17,43 @@ fn current_pose(world: &PhysicsWorld, collider: &Collider) -> Isometry<Real> {
     }
 }
 
+fn contact_normal(
+    surface: &Collider,
+    pose: &Isometry<Real>,
+    point: Point<Real>,
+    query_normal: Vector<Real>,
+) -> Vector<Real> {
+    let Some(cuboid) = surface.shape().as_cuboid() else {
+        return query_normal;
+    };
+    let local = pose.inverse_transform_point(&point);
+    let gaps = cuboid.half_extents - local.coords.abs();
+    // Near touching, the generic rounded-shape query can return a tilted normal
+    // inside a flat face. Use that face's current orientation, not a cached manifold.
+    let coordinate_scale = cuboid
+        .half_extents
+        .max()
+        .max(pose.translation.vector.abs().max())
+        .max(point.coords.abs().max())
+        .max(1.0);
+    let tolerance = 32.0 * f32::EPSILON * coordinate_scale;
+    for axis in 0..3 {
+        // Include world-coordinate subtraction error in this margin. At edges
+        // and corners the contact normal may combine several face directions.
+        if gaps[axis].abs() <= tolerance
+            && (0..3).all(|other| other == axis || gaps[other] > tolerance)
+        {
+            let mut normal = Vector::zeros();
+            normal[axis] = if local[axis] >= 0.0 { 1.0 } else { -1.0 };
+            return pose.rotation * normal;
+        }
+    }
+    query_normal
+}
+
 #[derive(Clone, Copy, Debug)]
 pub(super) struct FootSupport {
+    pub body: Option<RigidBodyHandle>,
     pub velocity: Vector<Real>,
     pub angular_velocity: Vector<Real>,
     pub linear_velocity: Vector<Real>,
@@ -80,16 +119,18 @@ pub(super) fn foot_support(
             }
             // Cached normals alone survive a sideways departure from a finite ledge.
             // Re-query current shapes; unsupported shape queries conservatively give no assistance.
+            let surface_pose = current_pose(world, other);
             let Ok(Some(contact)) = rapier3d::parry::query::contact(
                 &current_pose(world, foot_collider),
                 foot_collider.shape(),
-                &current_pose(world, other),
+                &surface_pose,
                 other.shape(),
                 config.maximum_contact_distance_m,
             ) else {
                 continue;
             };
-            if contact.normal2.y < config.minimum_normal_y {
+            let normal = contact_normal(other, &surface_pose, contact.point2, *contact.normal2);
+            if normal.y < config.minimum_normal_y {
                 continue;
             }
             let surface_velocity = other.parent().map_or(Vector::zeros(), |body| {
@@ -97,8 +138,9 @@ pub(super) fn foot_support(
             });
             let relative_velocity =
                 world.bodies[foot].velocity_at_point(&contact.point1) - surface_velocity;
-            if relative_velocity.dot(&contact.normal2) <= config.maximum_separation_speed_m_s {
+            if relative_velocity.dot(&normal) <= config.maximum_separation_speed_m_s {
                 let candidate = FootSupport {
+                    body: other.parent(),
                     friction: pair
                         .manifolds
                         .iter()
@@ -115,7 +157,7 @@ pub(super) fn foot_support(
                     angular_velocity: other
                         .parent()
                         .map_or(Vector::zeros(), |body| *world.bodies[body].angvel()),
-                    normal: *contact.normal2,
+                    normal,
                     collider: other_handle,
                     distance: contact.dist,
                 };

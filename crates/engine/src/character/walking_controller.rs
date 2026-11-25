@@ -45,8 +45,12 @@ pub(super) struct WalkingController {
     config: LocomotionConfig,
     support: BalanceConfig,
     intent: Vector<Real>,
+    swing_completion: super::swing_completion::SwingCompletion,
+    pose_motion: super::pose_motion::PoseMotion,
     support_motion: SupportMotion,
     reversal: super::reversal::ReversalBrake,
+    stumbled: bool,
+    sampled_motion: bool,
     running: bool,
     blend: f32,
     braking_ticks: u32,
@@ -59,8 +63,12 @@ impl WalkingController {
             config,
             support: BalanceConfig::bundled().expect("bundled support config"),
             intent: Vector::zeros(),
+            swing_completion: Default::default(),
+            pose_motion: Default::default(),
             support_motion: SupportMotion::default(),
             reversal: Default::default(),
+            stumbled: false,
+            sampled_motion: false,
             running: false,
             blend: 0.0,
             braking_ticks: 0,
@@ -69,8 +77,12 @@ impl WalkingController {
     }
     pub fn reset(&mut self) {
         self.intent = Vector::zeros();
+        self.swing_completion.finish();
+        self.pose_motion = Default::default();
         self.support_motion = SupportMotion::default();
         self.reversal = Default::default();
+        self.sampled_motion = false;
+        self.stumbled = false;
         self.running = false;
         self.blend = 0.0;
         self.braking_ticks = 0;
@@ -85,7 +97,11 @@ impl WalkingController {
         let vector = vector![direction[0] / scale, 0.0, direction[1] / scale];
         if vector.norm_squared() == 0.0 && self.intent.norm_squared() > 0.0 {
             self.braking_ticks = self.config.braking_ticks;
+            if self.sampled_motion {
+                self.swing_completion.arm(self.state.phase);
+            }
         } else if vector.norm_squared() > 0.0 {
+            self.swing_completion.finish();
             self.braking_ticks = 0;
         }
         let next = vector / vector.norm().max(1.0);
@@ -98,6 +114,7 @@ impl WalkingController {
         Ok(())
     }
     pub fn advance(&mut self, rig: &mut PassiveRagdoll, enabled: bool) -> [Rotation<Real>; 14] {
+        self.sampled_motion = false;
         let idle = self.intent.norm_squared() == 0.0 && self.braking_ticks == 0;
         self.braking_ticks = self.braking_ticks.saturating_sub(1);
         let strength = if enabled {
@@ -106,12 +123,15 @@ impl WalkingController {
             0.0
         };
         let phase = self.state.phase;
+        let previous_targets = self.state.targets;
         self.state = LocomotionState {
             motor_strength: strength,
             phase,
             ..LocomotionState::default()
         };
         if !enabled {
+            self.swing_completion.finish();
+            self.pose_motion = Default::default();
             return [Rotation::identity(); 14];
         }
         let supports = [BodyPart::LeftFoot, BodyPart::RightFoot].map(|part| {
@@ -125,13 +145,39 @@ impl WalkingController {
         self.state.feet = supports.map(|support| support.is_some());
         let count = supports.iter().flatten().count();
         let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
-        let upright = (root.rotation() * Vector::y()).y > self.config.minimum_upright_y;
+        let trunk_up = [BodyPart::Pelvis, BodyPart::Chest, BodyPart::Head]
+            .map(|p| (rig.world.bodies[rig.bodies[p.index()]].rotation() * Vector::y()).y)
+            .into_iter()
+            .fold(1.0_f32, f32::min);
+        // A folded trunk can briefly cross the entry threshold during a fall.
+        // Resume ground drive only once the whole trunk recovers its standing posture.
+        if trunk_up <= self.config.minimum_upright_y {
+            self.stumbled = true;
+        } else if trunk_up >= self.config.settle_minimum_up_y {
+            self.stumbled = false;
+        }
+        let upright = !self.stumbled;
         if count == 0 || !upright {
+            self.swing_completion.finish();
+            self.pose_motion = Default::default();
             self.support_motion = SupportMotion::default();
             self.reversal = Default::default();
-            self.blend = 0.0;
             self.state.motor_strength =
                 (strength - TICK_SECONDS / self.config.motor_release_s).max(0.0);
+            self.blend = 0.0;
+            if upright {
+                // Losing support must stop world drive without snapping the legs
+                // straight during landing. Only internal pose targets fade here.
+                self.state.targets = super::pose_release::toward_bind(
+                    previous_targets,
+                    &rig.definition,
+                    self.config.motor_release_s,
+                );
+                return self
+                    .state
+                    .targets
+                    .map(|[x, y, z]| Rotation::from_euler_angles(x, y, z));
+            }
             return [Rotation::identity(); 14];
         }
         if !idle {
@@ -144,31 +190,34 @@ impl WalkingController {
             / count as f32;
         self.state.support_velocity = surface.into();
         let mut velocity = Vector::zeros();
+        let mut center = Vector::zeros();
         let mut mass = 0.0;
         for handle in rig.bodies {
             let body = &rig.world.bodies[handle];
             velocity += body.linvel() * body.mass();
+            center += body.center_of_mass().coords * body.mass();
             mass += body.mass();
         }
         velocity /= mass;
-        // Settling is relative to the support: riding a turning deck must not
-        // keep stopping actuators engaged solely because world-space yaw persists.
-        let surface_spin = supports
+        center /= mass;
+        // COM feedback needs the deck velocity at COM, not at a moving foot
+        // witness. Otherwise rigid co-motion can produce persistent idle drive.
+        let surface_at_com = supports
             .iter()
             .flatten()
-            .fold(Vector::zeros(), |sum, support| {
-                sum + support.angular_velocity
-            })
+            .map(|s| s.velocity + s.angular_velocity.cross(&(center - s.contact_point.coords)))
+            .sum::<Vector<Real>>()
             / count as f32;
+        let relative_spin = self.pose_motion.sample_supported(rig, supports);
         if idle
-            && (velocity - surface).norm() < self.config.settle_speed_m_s
-            && (root.angvel() - surface_spin).norm() < self.config.settle_spin_rad_s
-            && (root.rotation() * Vector::y()).y > self.config.settle_minimum_up_y
+            && (velocity - surface_at_com).norm() < self.config.settle_speed_m_s
+            && relative_spin.norm() < self.config.settle_spin_rad_s
+            && trunk_up > self.config.settle_minimum_up_y
         {
             self.state.motor_strength =
                 (self.state.motor_strength - TICK_SECONDS / self.config.motor_release_s).max(0.0);
         }
-        let relative_velocity = velocity - surface;
+        let relative_velocity = velocity - surface_at_com;
         let reversal_weight = self.reversal.advance(
             self.intent,
             relative_velocity,
@@ -181,18 +230,18 @@ impl WalkingController {
         } else {
             self.config.walk_speed_m_s
         };
-        let desired = intent * speed + surface;
+        let desired = intent * speed + surface_at_com;
         let mut acceleration = (desired - velocity) / self.config.velocity_response_s;
         acceleration.y = 0.0;
         // A short release brake gives way to weaker velocity damping. Neither
         // stage stores a desired position, so no force pulls the rig back to a point.
         if idle {
-            acceleration = ((surface - velocity) / self.config.idle_response_s)
+            acceleration = ((surface_at_com - velocity) / self.config.idle_response_s)
                 .cap_magnitude(self.config.idle_maximum_acceleration_m_s2);
             acceleration.y = 0.0;
         }
         let carry = self.support_motion.advance(
-            surface,
+            surface_at_com,
             velocity + acceleration * TICK_SECONDS,
             self.config.maximum_acceleration_m_s2 * TICK_SECONDS,
         );
@@ -265,7 +314,7 @@ impl WalkingController {
             Some(super::stopping_drive::allocate(
                 rig,
                 acceleration,
-                relative_velocity,
+                velocity - surface,
                 supports,
                 self.state.motor_strength,
                 &self.config,
@@ -285,6 +334,7 @@ impl WalkingController {
             velocity,
             acceleration,
             base_foot,
+            self.intent.norm_squared() > 0.0,
             &self.config,
         );
         let drive = if let Some(support) = support_drive {
@@ -331,6 +381,7 @@ impl WalkingController {
         if self.blend > 0.001 {
             self.state.phase = (phase + std::f32::consts::TAU * frequency * TICK_SECONDS)
                 .rem_euclid(std::f32::consts::TAU);
+            self.sampled_motion = intent.norm_squared() > 0.0 && self.state.phase != phase;
         }
         self.state.targets = super::gait::targets(
             &rig.definition,
@@ -346,6 +397,18 @@ impl WalkingController {
             self.blend,
             &mut self.state.targets,
         );
+        if !idle && self.intent.norm_squared() == 0.0 && self.state.motor_strength > 0.0 {
+            self.swing_completion.advance(
+                rig,
+                supports,
+                relative_velocity,
+                &self.config,
+                std::f32::consts::TAU * frequency * TICK_SECONDS,
+                &mut self.state.targets,
+            );
+        } else {
+            self.swing_completion.finish();
+        }
         self.state
             .targets
             .map(|[x, y, z]| Rotation::from_euler_angles(x, y, z))

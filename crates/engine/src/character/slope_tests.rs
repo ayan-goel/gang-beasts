@@ -7,19 +7,35 @@ mod turning;
 #[path = "stopping_tests.rs"]
 mod stopping;
 
+#[path = "transverse_slope_tests.rs"]
+mod transverse;
+
+#[path = "pose_release_slope_tests.rs"]
+mod pose_release;
+
 use super::*;
 use rapier3d::na::ComplexField;
 use rapier3d::prelude::*;
 
 fn slope(degrees: f32, yaw: f32) -> (LocomotionRagdoll, Vector<Real>, Vector<Real>) {
+    slope_with_headings(degrees, yaw, yaw)
+}
+
+fn slope_with_headings(
+    degrees: f32,
+    character_yaw: f32,
+    terrain_yaw: f32,
+) -> (LocomotionRagdoll, Vector<Real>, Vector<Real>) {
     let mut rig = LocomotionRagdoll::new(
         PhysicsConfig::default(),
         LocomotionConfig::bundled().unwrap(),
         [0.0, 0.08, 0.0],
     )
     .unwrap();
-    let heading = Rotation::from_axis_angle(&Vector::y_axis(), yaw);
-    let rotation = heading * Rotation::from_axis_angle(&Vector::x_axis(), degrees.to_radians());
+    let heading = Rotation::from_axis_angle(&Vector::y_axis(), character_yaw);
+    let terrain_heading = Rotation::from_axis_angle(&Vector::y_axis(), terrain_yaw);
+    let rotation =
+        terrain_heading * Rotation::from_axis_angle(&Vector::x_axis(), degrees.to_radians());
     let normal = rotation * Vector::y();
     let world = &mut rig.pose.rig.world;
     for handle in rig.pose.rig.bodies {
@@ -72,6 +88,7 @@ fn bounded(rig: &LocomotionRagdoll, normal: Vector<Real>) {
     assert!(Vector::from(rig.state().acceleration).norm() <= 12.0001);
     assert_eq!(rig.state().acceleration[1], 0.0);
     assert!(rig.state().turn_torque.abs() <= 20.0001);
+    assert!(Vector::from(rig.state().support_moment).norm() <= 120.001);
     assert!(
         Vector::from(rig.state().stopping_moment).norm()
             <= 120.0 * rig.state().motor_strength + 0.001
@@ -197,11 +214,26 @@ fn removed_slope_supplies_no_remaining_drive_or_world_torque() {
         }
     }
     let before = rig.pose.rig.body_states();
+    let previous_targets = rig.state().targets;
     let targets = rig.controller.advance(&mut rig.pose.rig, true);
     assert_eq!(rig.state().feet, [false; 2]);
     assert_eq!(rig.state().acceleration, [0.0; 3]);
     assert_eq!(rig.state().turn_torque, 0.0);
-    assert_eq!(targets, [Rotation::identity(); 14]);
+    assert_eq!(rig.state().stopping_moment, [0.0; 3]);
+    assert_eq!(rig.state().support_moment, [0.0; 3]);
+    let release = LocomotionConfig::bundled().unwrap().motor_release_s;
+    for (index, joint) in rig.pose.rig.definition.joints.iter().enumerate() {
+        let [x, y, z] = previous_targets[index];
+        let previous = Rotation::from_euler_angles(x, y, z);
+        let maximum_change = joint
+            .angular_limits
+            .iter()
+            .map(|[lo, hi]| hi - lo)
+            .sum::<f32>()
+            * crate::TICK_SECONDS
+            / release;
+        assert!(previous.angle_to(&targets[index]) <= maximum_change + 0.00001);
+    }
     assert_eq!(rig.pose.rig.body_states(), before);
 }
 

@@ -33,6 +33,7 @@ fn pair(
         &mut joint,
         Rotation::from_scaled_axis(vector![0.2, 0.0, 0.0]),
         Rotation::identity(),
+        Vector::zeros(),
         [true; 3],
         gains,
     );
@@ -74,7 +75,7 @@ fn saturated_effort_and_diagnostics_use_substep_duration() {
         damping_nm_s_per_rad: 0.3,
         max_torque_nm: 3.0,
     };
-    let cap = 3.0 / 3.0_f32.sqrt();
+    let cap = 3.0;
     for iterations in [1, 8, 16] {
         let (mut world, parent, child, joint) = pair(iterations, &gains);
         world.step();
@@ -102,6 +103,7 @@ fn a_nonzero_target_reverses_the_physical_correction_toward_that_pose() {
         &mut world.impulse_joints.get_mut(joint, true).unwrap().data,
         Rotation::from_scaled_axis(vector![0.2, 0.0, 0.0]),
         Rotation::from_scaled_axis(vector![0.4, 0.0, 0.0]),
+        Vector::zeros(),
         [true; 3],
         &gains,
     );
@@ -115,4 +117,112 @@ fn a_nonzero_target_reverses_the_physical_correction_toward_that_pose() {
             .angle_to(world.bodies[child].rotation())
             > 0.2
     );
+}
+
+#[test]
+fn isolated_axis_load_can_use_the_joint_budget_without_lateral_effort() {
+    let gains = JointMotorConfig {
+        child: super::super::BodyPart::Chest,
+        stiffness_nm_per_rad: 200.0,
+        damping_nm_s_per_rad: 0.3,
+        max_torque_nm: 3.0,
+    };
+    for axis in [Vector::x(), Vector::y(), Vector::z()] {
+        for (angle, speed) in [(0.2, 0.0), (0.0, 30.0)] {
+            let (mut world, _, child, joint) = pair(8, &gains);
+            let rotation = Rotation::from_scaled_axis(axis * angle);
+            world.bodies[child].set_rotation(rotation, true);
+            world.bodies[child].set_angvel(axis * speed, true);
+            configure_joint(
+                &mut world.impulse_joints.get_mut(joint, true).unwrap().data,
+                rotation,
+                Rotation::identity(),
+                axis * speed,
+                [true; 3],
+                &gains,
+            );
+            world.step();
+            let effort = last_substep_effort(&world.impulse_joints.get(joint).unwrap().data, 8);
+            assert!(
+                (effort + axis * 3.0).norm() < 0.00001,
+                "unused axis budget: {effort:?}"
+            );
+            assert!(effort.norm() <= 3.00001);
+        }
+    }
+}
+
+#[test]
+fn simultaneous_axis_loads_remain_within_one_vector_effort_budget() {
+    let gains = JointMotorConfig {
+        child: super::super::BodyPart::Chest,
+        stiffness_nm_per_rad: 200.0,
+        damping_nm_s_per_rad: 0.3,
+        max_torque_nm: 3.0,
+    };
+    for free in [[true; 3], [true, false, true], [false, true, false]] {
+        for spin in [Vector::zeros(), vector![4.0, -3.0, 2.0]] {
+            for iterations in [1, 8, 16] {
+                let (mut world, parent, child, joint) = pair(iterations, &gains);
+                let rotation = Rotation::from_euler_angles(0.2, -0.15, 0.1);
+                world.bodies[child].set_rotation(rotation, true);
+                world.bodies[child].set_angvel(spin, true);
+                let data = &mut world.impulse_joints.get_mut(joint, true).unwrap().data;
+                data.motor_axes = JointAxesMask::empty();
+                configure_joint(data, rotation, Rotation::identity(), spin, free, &gains);
+                let ceiling_norm = AXES
+                    .iter()
+                    .map(|axis| {
+                        data.motor(*axis)
+                            .map_or(0.0, |motor| motor.max_force.powi(2))
+                    })
+                    .sum::<f32>()
+                    .sqrt();
+                assert!(ceiling_norm <= gains.max_torque_nm + 0.00001);
+                world.step();
+                let effort =
+                    last_substep_effort(&world.impulse_joints.get(joint).unwrap().data, iterations);
+                assert!(effort.norm() <= 3.00001, "effort {effort:?}");
+                for axis in 0..3 {
+                    if !free[axis] {
+                        assert_eq!(effort[axis], 0.0);
+                    }
+                }
+                // Equal spherical inertias make total angular momentum observable
+                // without confusing local solver axes with world torque diagnostics.
+                assert!(
+                    (world.bodies[parent].angvel() + world.bodies[child].angvel() - spin).norm()
+                        < 0.0001
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn zero_predicted_demand_keeps_damping_capacity_for_new_impacts() {
+    let gains = JointMotorConfig {
+        child: super::super::BodyPart::Chest,
+        stiffness_nm_per_rad: 200.0,
+        damping_nm_s_per_rad: 0.3,
+        max_torque_nm: 3.0,
+    };
+    for axis in [Vector::x(), Vector::y(), Vector::z()] {
+        let (mut world, _, child, joint) = pair(8, &gains);
+        world.bodies[child].set_rotation(Rotation::identity(), true);
+        configure_joint(
+            &mut world.impulse_joints.get_mut(joint, true).unwrap().data,
+            Rotation::identity(),
+            Rotation::identity(),
+            Vector::zeros(),
+            [true; 3],
+            &gains,
+        );
+        world.bodies[child].set_angvel(axis * 4.0, true);
+        world.step();
+        let effort = last_substep_effort(&world.impulse_joints.get(joint).unwrap().data, 8);
+        assert!(effort.dot(&axis) < 0.0);
+        assert!(world.bodies[child].angvel().dot(&axis) < 4.0);
+        assert!(effort.norm() <= 3.00001);
+    }
 }
