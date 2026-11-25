@@ -1,0 +1,81 @@
+use crate::WorkerPool;
+use axum::{
+    Json, Router,
+    extract::State,
+    http::{StatusCode, header},
+    routing::get,
+};
+use brawler_engine::{CharacterError, ENGINE_HASH, MapDefinition};
+use serde::Serialize;
+use std::sync::Arc;
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MapInfo {
+    id: String,
+    display_name: &'static str,
+    content_version: u32,
+    content_hash: String,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Catalog {
+    protocol_version: u8,
+    engine_hash: &'static str,
+    maps: [MapInfo; 1],
+}
+
+#[derive(Clone)]
+struct ApiState {
+    pool: Arc<WorkerPool>,
+    catalog: Catalog,
+}
+
+#[derive(Serialize)]
+struct Health {
+    status: &'static str,
+}
+#[derive(Serialize)]
+struct Readiness {
+    ready: bool,
+}
+
+pub fn api(pool: Arc<WorkerPool>) -> Result<Router, CharacterError> {
+    let map = MapDefinition::skyline()?;
+    let state = ApiState {
+        pool,
+        catalog: Catalog {
+            protocol_version: brawler_protocol::VERSION,
+            engine_hash: ENGINE_HASH,
+            maps: [MapInfo {
+                id: map.id,
+                display_name: "Skyline",
+                content_version: map.content_version,
+                content_hash: MapDefinition::skyline_hash(),
+            }],
+        },
+    };
+    Ok(Router::new()
+        .route("/healthz", get(|| async { Json(Health { status: "ok" }) }))
+        .route("/readyz", get(readiness))
+        .route(
+            "/api/maps",
+            get(|State(s): State<ApiState>| async move { Json(s.catalog) }),
+        )
+        .with_state(state))
+}
+
+async fn readiness(State(s): State<ApiState>) -> impl axum::response::IntoResponse {
+    let ready = s.pool.available() != 0;
+    let status = if ready {
+        StatusCode::OK
+    } else {
+        StatusCode::SERVICE_UNAVAILABLE
+    };
+    (
+        status,
+        [(header::CACHE_CONTROL, "no-store")],
+        Json(Readiness { ready }),
+    )
+}

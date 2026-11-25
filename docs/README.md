@@ -27,6 +27,7 @@
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
 - [Playable asset provenance](asset-provenance.md) identifies the source of the current arena, fighter geometry and interface.
+- [Running the server](server.md) documents listener configuration, health, admission readiness and map compatibility.
 - [Dedicated room workers](slices/14c-worker.md) describes fixed-step scheduling, admission and bounded input and snapshot delivery.
 - [Headless Skyline room](slices/14a-room-input.md) covers native room ownership, input expiry, acknowledgements and round fences.
 - [Realtime protocol](protocol.md) records wire contracts and compatibility evidence.

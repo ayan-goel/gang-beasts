@@ -14,6 +14,10 @@ If a walkway falls, keep a hand held within reach of the main roof to catch the 
 
 For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open the printed local address with `/play/` appended. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
 
+## Native server
+
+Run `cargo run --release --locked -p brawler-server` for the HTTP service. The [server guide](docs/server.md) lists the available endpoints and configuration.
+
 ## Native development
 
 Install Rust using rustup. The repository pins Rust 1.88.0 with rustfmt and Clippy.

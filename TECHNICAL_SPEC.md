@@ -1026,7 +1026,7 @@ Use six-character human-readable random room codes with collision checks and rat
 | WS upgrade | `/ws` | Authenticated/versioned gameplay session |
 | GET | `/metrics` | Internal/protected monitoring endpoint |
 
-Use bounded JSON for low-rate HTTP control requests; binary protocol for realtime gameplay. Standard error codes include invalid input, unavailable/full room, expired session, incompatible version and rate limit. Create requests need request IDs/idempotency handling so an HTTP retry does not silently create duplicate rooms.
+The [native service](docs/server.md) implements liveness, worker admission readiness and a compatibility catalog built from the bundled engine and Skyline map. Use bounded JSON for low-rate HTTP control requests; binary protocol for realtime gameplay. Standard error codes include invalid input, unavailable/full room, expired session, incompatible version and rate limit. Create requests need request IDs/idempotency handling so an HTTP retry does not silently create duplicate rooms.
 
 Browsers cannot set arbitrary WebSocket authorization headers. Choose either secure same-site cookie authentication with Origin/CSRF protections or an HTTPS-issued short-lived one-use connection ticket, sent in a bounded initial `Connect` record over WSS. Do not place reusable secrets in URLs/access logs. Unauthenticated sockets get a short handshake timeout and tiny resource allowance. Reconnect credentials are rotated/expired according to one documented policy.
 

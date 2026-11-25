@@ -7,3 +7,10 @@ rust-version.workspace = true
 [dependencies]
 brawler-engine = { path = "../engine" }
 brawler-protocol = { path = "../protocol" }
+axum = { version = "=0.8.9", default-features = false, features = ["http1", "json", "tokio"] }
+tokio = { version = "=1.54.1", features = ["macros", "net", "rt-multi-thread", "signal"] }
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+tower = { version = "=0.5.3", features = ["util"] }

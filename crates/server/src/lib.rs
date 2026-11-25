@@ -12,3 +12,6 @@ pub use snapshot::RoomFrame;
 
 mod worker;
 pub use worker::{DispatchError, RoomClient, WorkerPool};
+
+mod api;
+pub use api::api;
