@@ -48,6 +48,14 @@ impl Skyline {
             );
             bodies.push(body);
         }
+        let core = &definition.foundation;
+        let [x, y, z] = core.half;
+        let local = Vector::from(core.center) - Vector::from(definition.objects[0].center);
+        world.colliders.insert_with_parent(
+            ColliderBuilder::cuboid(x, y, z).translation(local),
+            bodies[0],
+            &mut world.bodies,
+        );
         let fall_sensor = world.colliders.insert(
             ColliderBuilder::cuboid(40., 2., 40.)
                 .translation(vector![0., definition.fall_y - 2., 0.])
@@ -138,7 +146,7 @@ mod tests {
         let arena = Skyline::insert(&mut world).unwrap();
         let body = world
             .bodies
-            .insert(RigidBodyBuilder::dynamic().translation(vector![0., -11.9, 0.]));
+            .insert(RigidBodyBuilder::dynamic().translation(vector![13., -11.9, 0.]));
         world
             .colliders
             .insert_with_parent(ColliderBuilder::ball(0.5), body, &mut world.bodies);

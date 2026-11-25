@@ -44,6 +44,7 @@ pub struct Schedule {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MapDefinition {
+    pub foundation: Foundation,
     pub schema_version: u8,
     pub content_version: u32,
     pub id: String,
@@ -51,6 +52,13 @@ pub struct MapDefinition {
     pub schedule: Schedule,
     pub spawns: [Spawn; 8],
     pub objects: Vec<ArenaObject>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Foundation {
+    pub center: [f32; 3],
+    pub half: [f32; 3],
 }
 
 impl MapDefinition {
@@ -127,6 +135,16 @@ impl MapDefinition {
         let deck = &self.objects[0];
         if (deck.center[1] + deck.half[1]).abs() > 0.001 {
             return Err(CharacterError::Invalid("roof top must be at zero"));
+        }
+        let core = &self.foundation;
+        if !core.half.iter().all(|v| (0.1..=30.).contains(v))
+            || !core.center.iter().all(|v| v.is_finite() && v.abs() <= 32.)
+            || (core.center[1] + core.half[1] - (deck.center[1] - deck.half[1])).abs() > 0.001
+            || [0, 2]
+                .iter()
+                .any(|&i| (core.center[i] - deck.center[i]).abs() + core.half[i] > deck.half[i])
+        {
+            return Err(CharacterError::Invalid("invalid rooftop foundation"));
         }
         for obj in &self.objects[1..] {
             let [x, y, z] = obj.center;

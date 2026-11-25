@@ -1,9 +1,19 @@
+import { GroupCamera } from './GroupCamera';
+import { SkylineView, type SkylineMap, type MatchView } from './SkylineView';
 import * as THREE from 'three';
 import type { RigDefinition } from '../game/rigDefinition';
 import { PracticeTargetView } from './PracticeTargetView';
 import { RagdollView } from './RagdollView';
 import { fixtureTerrain } from './fixtureTerrain';
 import { JointOverlay } from './JointOverlay';
+
+interface SceneOptions {
+  focusHeight?: number;
+  followRig?: boolean;
+  terrainBoxes?: Float32Array;
+  target?: Float32Array;
+  map?: SkylineMap;
+}
 
 export class FixtureScene {
   private readonly renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -19,11 +29,16 @@ export class FixtureScene {
   );
   private readonly resizeObserver?: ResizeObserver;
   private opponent?: RagdollView;
+  private skyline?: SkylineView;
+  private groupCamera?: GroupCamera;
   private readonly practice?: PracticeTargetView;
   private readonly rig?: RagdollView;
   private readonly joints?: JointOverlay;
 
-  constructor(private readonly container: HTMLElement, definition?: RigDefinition, rigFocusHeight = 1.7, private readonly followRig = false, terrainBoxes?: Float32Array, target?: Float32Array) {
+  private readonly followRig: boolean;
+  constructor(private readonly container: HTMLElement, definition?: RigDefinition, options: SceneOptions = {}) {
+    const { focusHeight = 1.7, terrainBoxes, target, map } = options;
+    this.followRig = options.followRig ?? false;
     try {
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       this.renderer.shadowMap.enabled = true;
@@ -39,7 +54,7 @@ export class FixtureScene {
         this.scene.add(this.rig.root, this.joints.root);
         this.cube.visible = false;
         this.camera.position.set(4, 3.8, 6);
-        this.camera.lookAt(0, rigFocusHeight, 0);
+        this.camera.lookAt(0, focusHeight, 0);
         this.renderer.domElement.setAttribute('aria-label', terrainBoxes && terrainBoxes.length > 6 ? 'Live physical ragdoll on low stairs' : 'Live fifteen-body physical ragdoll on a platform');
       }
 
@@ -49,13 +64,23 @@ export class FixtureScene {
         this.renderer.domElement.setAttribute('aria-label', 'Live ragdoll and suspended target in strike practice');
       }
       this.cube.castShadow = true;
-      this.scene.add(fixtureTerrain(terrainBoxes), this.cube);
+      this.scene.add(this.cube);
+      if (map) {
+        this.skyline = new SkylineView(map);
+        this.groupCamera = new GroupCamera();
+        this.scene.add(this.skyline.root);
+        this.renderer.setClearColor(0xb8cfce);
+        this.scene.fog = new THREE.FogExp2(0xb8cfce,0.013);
+      } else this.scene.add(fixtureTerrain(terrainBoxes));
       this.colliders.frustumCulled = false;
       this.colliders.renderOrder = 1;
       this.scene.add(this.colliders);
-      const grid = new THREE.GridHelper(12, 12, '#b0d1c5', '#8aada5');
-      grid.position.y = 0.005;
-      this.scene.add(grid, new THREE.HemisphereLight('#e1f4ff', '#38463b', 2.3));
+      if (!map) {
+        const grid = new THREE.GridHelper(12, 12, '#b0d1c5', '#8aada5');
+        grid.position.y = 0.005;
+        this.scene.add(grid);
+      }
+      this.scene.add(new THREE.HemisphereLight('#e1f4ff', '#38463b', 2.3));
       const sun = new THREE.DirectionalLight('#fff0d9', 3);
       sun.position.set(-5, 12, 6);
       sun.castShadow = true;
@@ -78,7 +103,17 @@ export class FixtureScene {
   addOpponent(definition: RigDefinition): void {
     this.opponent = new RagdollView(definition, '#559ed8');
     this.scene.add(this.opponent.root);
-    this.renderer.domElement.setAttribute('aria-label', 'Two fighters on the local sparring platform');
+    this.renderer.domElement.setAttribute('aria-label', this.skyline ? 'Two fighters on the Skyline rooftop' : 'Two fighters on the local sparring platform');
+  }
+
+  renderSkyline(first:Float32Array, second:Float32Array, props:Float32Array, match:MatchView, dt:number):void {
+    this.skyline!.update(props,match.hazard);
+    this.rig!.root.visible=match.visible[0];
+    this.opponent!.root.visible=match.visible[1];
+    this.opponent!.update(second,-1);
+    const present=[first,second].filter((_,id)=>match.visible[id]);
+    this.groupCamera!.update(this.camera,present,match.phase==='countdown' || match.phase==='match_results',dt);
+    this.render(first,undefined,undefined,-1);
   }
 
   renderDuel(first: Float32Array, second: Float32Array): void {

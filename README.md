@@ -1,8 +1,14 @@
 # Physics brawler
 
-A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Development is at the foundation stage; there is no playable MVP yet.
+A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline Melee is playable locally with two people on one keyboard. Online private rooms and several release gates remain in development.
 
 The [technical specification](TECHNICAL_SPEC.md) is canonical. See the [documentation index](docs/README.md) for implementation order, decisions, and acceptance evidence.
+
+## Play Skyline Melee
+
+Start the browser project using the setup below and open `/play/`, or select **Play Skyline Melee** from the playground. The match is first to three rooftop ring-outs. A countdown starts each round, and rematch is available after the winning round. Coral uses WASD and J/K, Blue uses the arrow keys and comma/period. The start and pause screens show the full bindings.
+
+For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open the printed local address with `/play/` appended. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
 
 ## Native development
 
@@ -45,7 +51,7 @@ npm --prefix web run test:e2e
 npm --prefix web run build
 ```
 
-Browser integration tests start their own local server if needed. They compare a 600-tick WASM trace against the native release fixture and test canvas resize containment. The production static bundle is in `web/dist`; it is a diagnostic fixture, not an online game.
+Browser integration tests start their own local server if needed. They compare a 600-tick WASM trace against the native release fixture and test canvas resize containment. The production static bundle is in `web/dist`; it includes the diagnostic playground and the local game at `play/index.html`.
 
 ## Playground controls
 

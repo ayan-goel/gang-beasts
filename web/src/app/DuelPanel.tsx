@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { startDuel, type DuelState } from '../game/startDuel';
 
-const phases = { active: 'Active', knocked_out: 'Knocked out', recovering: 'Recovering' };
+const phases = { active: 'Active', knocked_out: 'Knocked out', recovering: 'Recovering', eliminated: 'Out' };
 const colors = ['Coral', 'Blue'] as const;
 
 export function DuelPanel({ viewport }: { viewport: RefObject<HTMLDivElement | null> }) {

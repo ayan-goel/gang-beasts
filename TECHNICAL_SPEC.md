@@ -6,7 +6,7 @@
 **Target platform:** Desktop web browsers  
 **Core:** Rust + Rapier 3D, compiled natively and to WebAssembly  
 **Presentation:** Three.js + TypeScript  
-**Status:** Foundation implemented and fixture-tested natively and in Chromium/WASM; the playable MVP, performance targets, and playtests remain incomplete. See `docs/verification/acceptance.md`.  
+**Status:** Two-player Skyline melee is playable locally in the browser. Native and Chromium/WASM fixtures cover combat, knockout recovery, rooftop hazards, elimination, scoring and rematch. The online MVP, performance measurements and human playtests remain incomplete. See `docs/verification/acceptance.md`.
 **Intended location:** `TECHNICAL_SPEC.md` at the project root.
 
 Build a browser multiplayer brawler that feels as close to Gang Beasts as practicable: persistent physical characters, independent hands, struggling grips, momentum-driven throws, recoverable knockouts, precarious climbing, hazardous arenas and a readable group camera. Friends should open a link and play. Use original branding, characters, models, sounds, music and level layouts. Gameplay fidelity is the product goal; the MVP is a milestone toward the full game, not permission to replace physical interaction with a generic animated fighter.

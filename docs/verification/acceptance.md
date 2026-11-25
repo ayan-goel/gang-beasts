@@ -13,12 +13,12 @@ No release criteria have passed yet. Update each row with a slice, build/config 
 | Knockout/recovery | [Local punch-driven knockouts](../slices/10b-consciousness.md) cover bounded duration, grip release, wake-up torque and return to standing. Online replication and human playability remain open. |
 | Ledge rescue | Pending |
 | Skyline mechanics/reset | [Native Skyline fixtures](../slices/11a-skyline-physics.md) exercise movable crates, timed panel failure, sensor versus root crossing, and full reconstruction. Ledge gameplay and online acceptance remain open. |
-| Camera readability | Pending |
+| Camera readability | [Local group framing](../slices/12b-play-skyline.md) checks portrait/landscape view bounds and follows both visible fighters. Occlusion, spectating and human readability remain open. |
 | Server authority | Pending |
 | Smooth multiplayer/latency | Pending |
-| Round/match scoring | [Local melee](../slices/12a-local-rounds.md) verifies three real ring-outs, simultaneous eliminations and deadline draws. Online client agreement pending. |
+| Round/match scoring | [Local melee](../slices/12a-local-rounds.md) verifies three real ring-outs, simultaneous eliminations and deadline draws. [The browser match](../slices/12b-play-skyline.md) exercises keyboard ring-outs and rematch. Online client agreement pending. |
 | Disconnect/reconnect/host transfer | Pending |
 | Repeated rematch | [Local round fixtures](../slices/12a-local-rounds.md) verify score, body, prop and round identity reset. Endurance and network baselines pending. |
 | Measured eight-player performance | Pending |
 | Endurance/stability | Pending |
-| Original assets/provenance | Pending |
+| Original assets/provenance | [Playable content inventory](../asset-provenance.md) covers the current roof, scene dressing, diagnostic fighters and interface. Final fighter art and audio remain open. |

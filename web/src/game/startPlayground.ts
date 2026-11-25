@@ -23,7 +23,12 @@ export function startPlayground(container: HTMLElement, publish: (state: Playgro
     finally { try { scene?.dispose(); } finally { simulation.free(); } }
   };
   try {
-    scene = new FixtureScene(container, simulation.rig?.definition, scenario !== 'ragdoll' ? 0.85 : 1.7, !!simulation.rig?.movement, simulation.rig?.terrainBoxes, simulation.rig?.practiceState?.());
+    scene = new FixtureScene(container, simulation.rig?.definition, {
+      focusHeight: scenario !== 'ragdoll' ? 0.85 : 1.7,
+      followRig: !!simulation.rig?.movement,
+      terrainBoxes: simulation.rig?.terrainBoxes,
+      target: simulation.rig?.practiceState?.(),
+    });
     const liveScene = scene;
     const playground = new Playground(simulation);
     if (simulation.rig) playground.setPaused(true);

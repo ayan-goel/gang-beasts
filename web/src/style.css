@@ -71,3 +71,5 @@ dd { margin: 0; font-family: ui-monospace, monospace; }
   .viewport:has(.movement-controls) .scene-canvas { position: relative; min-height: 55dvh; }
   .movement-controls { position: relative; left: auto; bottom: auto; width: calc(100% - 2rem); margin: 0 1rem 1rem; }
 }
+
+.play-link { color: var(--accent); font-size: 0.85rem; font-weight: 700; }

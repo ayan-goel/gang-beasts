@@ -132,3 +132,6 @@ impl LocalDuel {
         Some(serde_json::to_string(&records).expect("finite physical hit records"))
     }
 }
+
+#[path = "skyline.rs"]
+mod skyline;
