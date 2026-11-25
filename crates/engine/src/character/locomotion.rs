@@ -14,6 +14,10 @@ mod tests;
 mod jump_tests;
 
 #[cfg(test)]
+#[path = "recovery_tests.rs"]
+mod recovery_tests;
+
+#[cfg(test)]
 #[path = "moving_support_tests.rs"]
 mod moving_support_tests;
 

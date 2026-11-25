@@ -13,6 +13,7 @@ pub struct RagdollBodyState {
 pub struct PassiveRagdoll {
     pub(super) world: PhysicsWorld,
     pub(super) bodies: [RigidBodyHandle; 15],
+    pub(super) joints: [ImpulseJointHandle; 14],
     pub(super) definition: CharacterDefinition,
     physics: PhysicsConfig,
     spawn: [f32; 3],
@@ -44,10 +45,11 @@ impl PassiveRagdoll {
         world
             .colliders
             .insert(ColliderBuilder::cuboid(6.0, 0.5, 6.0).translation(vector![0.0, -0.5, 0.0]));
-        let bodies = insert_rig(&mut world, &definition, spawn);
+        let (bodies, joints) = insert_rig(&mut world, &definition, spawn);
         Ok(Self {
             world,
             bodies,
+            joints,
             definition,
             physics,
             spawn,
@@ -117,23 +119,20 @@ impl PassiveRagdoll {
     }
 
     pub fn joint_states(&self) -> Vec<RagdollJointState> {
-        self.world
-            .impulse_joints
+        self.joints
             .iter()
-            .map(|(_, joint)| {
+            .zip(&self.definition.joints)
+            .map(|(&handle, definition)| {
+                let joint = self
+                    .world
+                    .impulse_joints
+                    .get(handle)
+                    .expect("owned anatomical joint");
                 let frame1 = self.world.bodies[joint.body1].position() * joint.data.local_frame1;
                 let frame2 = self.world.bodies[joint.body2].position() * joint.data.local_frame2;
                 RagdollJointState {
-                    parent: BodyPart::ALL[self
-                        .bodies
-                        .iter()
-                        .position(|handle| *handle == joint.body1)
-                        .expect("owned anatomical body")],
-                    child: BodyPart::ALL[self
-                        .bodies
-                        .iter()
-                        .position(|handle| *handle == joint.body2)
-                        .expect("owned anatomical body")],
+                    parent: definition.parent,
+                    child: definition.child,
                     parent_anchor: frame1.translation.vector.into(),
                     child_anchor: frame2.translation.vector.into(),
                     parent_rotation: frame1.rotation.coords.into(),

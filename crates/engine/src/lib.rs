@@ -9,6 +9,7 @@ mod recording;
 mod session;
 mod simulation;
 
+pub use character::RecoveryConfig;
 pub use character::{
     BalanceConfig, BalanceState, BodyDefinition, BodyPart, BodyShape, CharacterDefinition,
     CharacterError, JointDefinition, JointMotorConfig, JumpConfig, LocomotionConfig,

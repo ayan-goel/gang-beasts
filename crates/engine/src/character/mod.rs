@@ -18,6 +18,10 @@ mod passive;
 mod pose;
 mod pose_motion;
 mod pose_release;
+mod recovery;
+mod recovery_config;
+mod recovery_drive;
+pub use recovery_config::RecoveryConfig;
 mod reversal;
 mod rig;
 #[cfg(test)]

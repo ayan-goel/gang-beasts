@@ -525,6 +525,8 @@ Air steering after an intentional jump has two limits. At bundled settings the c
 
 Detect torso orientation and contacts; select face-up, face-down or side recovery; move limbs toward support poses; gradually regain balance. A blocked or held character must struggle physically rather than clip through the captor/floor. Resume normal gait when posture and support are sufficient. Retain controllable wobble, not a compulsory canned animation.
 
+The local locomotion rig initiates get-up after 18 consecutive eligible ticks with low pelvis speed relative to a fixed or kinematic supporting surface and a fallen trunk. Shoulder reach changes with the direction the character faces relative to gravity. Knees tuck and then extend as the pelvis rises. Joint targets stay within the authored angular limits. Recovery effort ramps over 30 ticks. A grounded force pair acts on the upper and lower body with equal and opposite total linear impulses. Its default limits are 600 N per side and 360 N·m for the resulting moment. Drive permission ends immediately on loss of suitable contact or disable. A time limit and rest period bound obstructed attempts. Normal gait takes over after both feet support an upright trunk for twelve ticks. These limits and recovery-specific loads are separate from ordinary standing balance and walking assistance. Character actuators and diagnostic buffers address the fourteen owned anatomical joints, leaving independent constraints intact. [Design and verification](docs/slices/07b-recovery.md)
+
 ## 13. Combat system
 
 ### 13.1 Controls

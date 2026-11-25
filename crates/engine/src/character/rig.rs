@@ -6,7 +6,7 @@ pub(crate) fn insert_rig(
     world: &mut PhysicsWorld,
     definition: &CharacterDefinition,
     spawn: [f32; 3],
-) -> [RigidBodyHandle; 15] {
+) -> ([RigidBodyHandle; 15], [ImpulseJointHandle; 14]) {
     let bodies = std::array::from_fn(|index| {
         let body = &definition.bodies[index];
         let position = Vector::from(body.position) + Vector::from(spawn);
@@ -24,7 +24,8 @@ pub(crate) fn insert_rig(
         );
         handle
     });
-    for joint in &definition.joints {
+    let joints = std::array::from_fn(|index| {
+        let joint = &definition.joints[index];
         let mut locked = JointAxesMask::LOCKED_SPHERICAL_AXES;
         for (axis, limits) in [
             JointAxesMask::ANG_X,
@@ -65,7 +66,7 @@ pub(crate) fn insert_rig(
             bodies[joint.child.index()],
             builder,
             true,
-        );
-    }
-    bodies
+        )
+    });
+    (bodies, joints)
 }

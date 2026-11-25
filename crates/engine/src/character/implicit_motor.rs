@@ -14,7 +14,14 @@ pub(super) fn configure(
     targets: &[Rotation<Real>; 14],
     enabled: bool,
 ) {
-    for (index, (_, joint)) in rig.world.impulse_joints.iter_mut().enumerate() {
+    // Grip and world constraints can share this joint set. Only anatomical handles
+    // may receive pose targets or have their solver writeback cleared.
+    for (index, handle) in rig.joints.into_iter().enumerate() {
+        let joint = rig
+            .world
+            .impulse_joints
+            .get_mut(handle, false)
+            .expect("owned anatomical joint");
         joint.data.motor_axes = JointAxesMask::empty();
         // A sleeping island may skip solving; never retain an earlier tick's effort.
         for axis in AXES {
@@ -92,7 +99,12 @@ fn last_substep_effort(joint: &GenericJoint, iterations: usize) -> Vector<Real> 
 
 pub(super) fn local_efforts(rig: &PassiveRagdoll) -> [[f32; 3]; 14] {
     let mut output = [[0.0; 3]; 14];
-    for (index, (_, joint)) in rig.world.impulse_joints.iter().enumerate() {
+    for (index, handle) in rig.joints.into_iter().enumerate() {
+        let joint = rig
+            .world
+            .impulse_joints
+            .get(handle)
+            .expect("owned anatomical joint");
         output[index] =
             last_substep_effort(&joint.data, rig.configuration().solver_iterations).into();
     }
@@ -101,7 +113,12 @@ pub(super) fn local_efforts(rig: &PassiveRagdoll) -> [[f32; 3]; 14] {
 
 pub(super) fn targets(rig: &PassiveRagdoll) -> [[f32; 3]; 14] {
     let mut output = [[0.0; 3]; 14];
-    for (index, (_, joint)) in rig.world.impulse_joints.iter().enumerate() {
+    for (index, handle) in rig.joints.into_iter().enumerate() {
+        let joint = rig
+            .world
+            .impulse_joints
+            .get(handle)
+            .expect("owned anatomical joint");
         output[index] =
             AXES.map(|axis| joint.data.motor(axis).map_or(0.0, |motor| motor.target_vel));
     }
@@ -110,7 +127,12 @@ pub(super) fn targets(rig: &PassiveRagdoll) -> [[f32; 3]; 14] {
 
 pub(super) fn torques(rig: &PassiveRagdoll) -> [[f32; 3]; 14] {
     let mut output = local_efforts(rig);
-    for (index, (_, joint)) in rig.world.impulse_joints.iter().enumerate() {
+    for (index, handle) in rig.joints.into_iter().enumerate() {
+        let joint = rig
+            .world
+            .impulse_joints
+            .get(handle)
+            .expect("owned anatomical joint");
         // Display local solver effort on the completed frame. Rapier's solve-time
         // frame precedes integration, so this is not a measured world impulse vector.
         let frame = rig.world.bodies[joint.body1].rotation() * joint.data.local_frame1.rotation;

@@ -27,7 +27,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 06c2b4b — shared native/browser fixture verified, ascent failing | Low stairs and terrain transitions | Ascend three physical treads, cross flat/slope boundaries and handle distinct support normals |
 | 06c3 | Browser terrain and human movement assessment | Matching scenes/traces, visible contact transitions and human playability |
 | 07a — verified local fixtures | Jump, flight and landing | Single bounded takeoff, coyote and buffer boundaries, finite air control, native/WASM agreement and accessible controls |
-| 07b | Fallen recovery | Face-up, face-down and side get-up using bounded physical actuation |
+| 07b — verified local fixtures | Fallen recovery | Face-up, face-down and side get-up, obstruction and restraint, clear handoff to supported standing, native/WASM shove trace |
 | 08 | Independent strikes and contact damage | Real contact, attack deduplication, no resting damage |
 | 09 | Grips, stamina and release | Per-hand constraints, valid anchors, load failure, cyclic stress cleanup |
 | 10 | Lift, throw, knockout and rescue | Momentum preserved; bounded assistance; KO and ledge cases verified |

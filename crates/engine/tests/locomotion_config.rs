@@ -126,3 +126,24 @@ fn jump_defaults_preserve_earlier_schema_three_documents_and_reject_unsafe_tunin
         );
     }
 }
+
+#[test]
+fn recovery_tuning_preserves_defaults_and_bounds_physical_assistance() {
+    let base = serde_json::to_value(LocomotionConfig::bundled().unwrap()).unwrap();
+    let mut original = base.clone();
+    original.as_object_mut().unwrap().remove("recovery");
+    let restored = LocomotionConfig::from_json(&original.to_string()).unwrap();
+    assert_eq!(
+        serde_json::to_value(restored.recovery).unwrap(),
+        base["recovery"]
+    );
+    for (field, value) in [
+        ("force_cap_n", 600.1),
+        ("moment_cap_nm", 360.1),
+        ("response_s", 0.0),
+    ] {
+        let mut invalid = base.clone();
+        invalid["recovery"][field] = serde_json::json!(value);
+        assert!(LocomotionConfig::from_json(&invalid.to_string()).is_err());
+    }
+}

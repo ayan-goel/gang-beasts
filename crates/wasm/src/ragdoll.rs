@@ -79,6 +79,13 @@ impl LocalRagdoll {
             .walking()
             .map_or_else(Vec::new, |rig| rig.state().to_buffer().to_vec())
     }
+    pub fn recovery_state(&self) -> Vec<f32> {
+        self.rig.walking().map_or_else(Vec::new, |rig| {
+            let state = rig.state();
+            let [force, moment] = state.recovery_loads;
+            vec![state.recovery_strength, force, moment]
+        })
+    }
     pub fn stopping_moment(&self) -> Vec<f32> {
         self.rig
             .walking()

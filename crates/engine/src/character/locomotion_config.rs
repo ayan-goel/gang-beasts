@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 pub struct LocomotionConfig {
     #[serde(default)]
     pub jump: super::JumpConfig,
+    #[serde(default)]
+    pub recovery: super::RecoveryConfig,
     pub schema_version: u32,
     pub walk_speed_m_s: f32,
     pub run_speed_m_s: f32,
@@ -49,6 +51,7 @@ impl LocomotionConfig {
     }
     pub fn validate(&self) -> Result<(), CharacterError> {
         self.jump.validate()?;
+        self.recovery.validate()?;
         if self.schema_version != 3
             || self.run_speed_m_s < self.walk_speed_m_s
             || self.braking_ticks > 120

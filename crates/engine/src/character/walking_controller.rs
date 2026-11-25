@@ -19,6 +19,8 @@ pub struct LocomotionState {
     pub phase: f32,
     pub turn_torque: f32,
     pub stopping_moment: [f32; 3],
+    pub recovery_loads: [f32; 2],
+    pub recovery_strength: f32,
     pub support_moment: [f32; 3],
     pub targets: [[f32; 3]; 14],
 }
@@ -50,6 +52,7 @@ pub(super) struct WalkingController {
     support_motion: SupportMotion,
     reversal: super::reversal::ReversalBrake,
     jump: super::jump::Jump,
+    recovery: super::recovery::Recovery,
     stumbled: bool,
     sampled_motion: bool,
     running: bool,
@@ -69,6 +72,7 @@ impl WalkingController {
             support_motion: SupportMotion::default(),
             reversal: Default::default(),
             jump: Default::default(),
+            recovery: Default::default(),
             stumbled: false,
             sampled_motion: false,
             running: false,
@@ -84,6 +88,7 @@ impl WalkingController {
         self.jump.clear_input();
     }
     pub fn reset(&mut self) {
+        self.recovery = Default::default();
         self.jump = Default::default();
         self.intent = Vector::zeros();
         self.swing_completion.finish();
@@ -163,6 +168,19 @@ impl WalkingController {
             self.stumbled = true;
         } else if trunk_up >= self.config.settle_minimum_up_y {
             self.stumbled = false;
+        }
+        if let Some(step) =
+            self.recovery
+                .advance(rig, trunk_up, self.state.feet, &self.support, &self.config)
+        {
+            self.jump.takeoff(false, false, &self.config.jump);
+            self.state.motor_strength = step.strength;
+            self.state.recovery_strength = step.strength;
+            self.state.recovery_loads = step.loads;
+            self.state.targets = step.targets;
+            return step
+                .targets
+                .map(|[x, y, z]| Rotation::from_euler_angles(x, y, z));
         }
         let upright = !self.stumbled;
         let launch = self.jump.takeoff(count > 0, upright, &self.config.jump);

@@ -6,7 +6,7 @@ use rapier3d::prelude::*;
 fn anatomical_constraints_have_authored_limits_and_no_motors() {
     let definition = CharacterDefinition::bundled().unwrap();
     let mut world = PhysicsWorld::new(&PhysicsConfig::default());
-    let bodies = insert_rig(&mut world, &definition, [0.0, 0.0, 0.0]);
+    let (bodies, _) = insert_rig(&mut world, &definition, [0.0, 0.0, 0.0]);
     for (_, joint) in world.impulse_joints.iter() {
         let child = BodyPart::ALL[bodies
             .iter()
@@ -51,8 +51,8 @@ fn adjacent_contacts_are_suppressed_but_self_and_opponent_contacts_survive() {
     world
         .colliders
         .insert(ColliderBuilder::cuboid(6.0, 0.5, 6.0).translation(vector![0.0, -0.5, 0.0]));
-    let first = insert_rig(&mut world, &definition, [-0.2, 1.0, 0.0]);
-    let second = insert_rig(&mut world, &definition, [0.2, 1.3, 0.0]);
+    let (first, _) = insert_rig(&mut world, &definition, [-0.2, 1.0, 0.0]);
+    let (second, _) = insert_rig(&mut world, &definition, [0.2, 1.3, 0.0]);
     let mut own_contact = false;
     let mut opponent_contact = false;
     for _ in 0..600 {
