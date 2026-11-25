@@ -26,6 +26,7 @@
 - [Settling and support velocity](verification/settling-and-support-velocity.md): completed-rotation feedback, whole-trunk recovery, rotating drag and rejected stride history.
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
+- [Grip stamina and load failure](slices/09c-grip-stamina.md) gives the force measurement, tuning and calibration fixtures.
 - [Browser grips](slices/09b-browser-grips.md) records the two-player controls, target readout and shared grip trace.
 - [Opponent grips](slices/09a-opponent-grips.md) covers geometry, joint limits, reciprocal holds and release.
 - [Local sparring](slices/08b2-browser-sparring.md) covers shared-keyboard controls, hit inspection, lifecycle and native/WASM playback.

@@ -650,6 +650,8 @@ A grip breaks at zero stamina, excessive sustained load, owner knockout, invalid
 
 The source playground's **250 N** grip threshold is illustrative. A 40 kg character weighs approximately **392.4 N**; one-hand hanging at 250 N would fail without assistance. Calibrate one-/two-hand hanging tests before selecting release thresholds. Do not silently weaken gravity to make an inconsistent grip preset work.
 
+The local preset samples each grip’s last solver-substep force at 60 Hz, smooths it over a 0.08 s time constant, and accumulates overload at 650 N with an eight-tick break threshold. Subthreshold or released ticks reduce accumulated strain by one tick. Additional drain sums across attached hands and caps at 12 points/s per fighter. The acquisition tick incurs base drain. A failed grip needs a fresh hand press. [Calibration, sampling units and verified scope](docs/slices/09c-grip-stamina.md).
+
 ### 13.8 Lifting and throwing
 
 Lift raises gripping-arm targets and applies bounded torso assistance. Opponent mass, posture, active resistance and environment contacts affect success. An awake opponent remains able to move, grab and strike with a free hand.

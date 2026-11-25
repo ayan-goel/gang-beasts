@@ -40,6 +40,7 @@ test('native and WASM agree on both rigs, reciprocal grips and hit events at eac
       }
       const frames: number[][][] = [];
       const hits: (string | number)[][] = [];
+      const stamina: number[][] = [];
       const grips: (number | null)[][][] = [];
       const saved = duel.body_states(0);
       for (let tick = 0; tick <= 240; tick++) {
@@ -60,22 +61,27 @@ test('native and WASM agree on both rigs, reciprocal grips and hit events at eac
         if (tick === 205) duel.clear_hands(0);
         if (tick === 220) duel.set_hand(1, 0, false);
         if (tick) duel.step();
+        stamina.push([duel.stamina(0), duel.stamina(1)]);
         grips.push([0, 1].map(id => [0, 1].map(hand => duel.grip_region(id, hand) ?? null)));
         frames.push([Array.from(duel.body_states(0)), Array.from(duel.body_states(1))]);
         for (const h of JSON.parse(duel.hits_json() ?? '[]')) {
           hits.push([h.tick, h.attacker, h.defender, h.attackId, h.hand, h.region, h.damage, h.energyJ, h.closingSpeed]);
         }
       }
-      return { frames, hits, grips, rejected, saved: Array.from<number>(saved) };
+      return { frames, hits, grips, stamina, rejected, saved: Array.from<number>(saved) };
     } finally { duel.free(); }
   });
   const { execFileSync } = await import('node:child_process');
-  const native: { grips: (number | null)[][][]; frames: number[][][]; hits: (string | number)[][] } = JSON.parse(execFileSync('cargo',
+  const native: { stamina: number[][]; grips: (number | null)[][][]; frames: number[][][]; hits: (string | number)[][] } = JSON.parse(execFileSync('cargo',
     ['run', '--release', '--quiet', '--locked', '-p', 'brawler-engine', '--example', 'duel_trace'],
     { cwd: '..', encoding: 'utf8', maxBuffer: 4*1024*1024 }));
   expect(result.rejected).toBe(3);
   expect(result.saved).toEqual(result.frames[0]![0]);
   expect(result.grips).toEqual(native.grips);
+  expect(native.stamina).toHaveLength(result.stamina.length);
+  for (const [tick, players] of result.stamina.entries()) {
+    for (const [id, value] of players.entries()) expect(value).toBeCloseTo(native.stamina[tick]![id]!, 4);
+  }
   expect(result.grips[200]!.every(player => player[0] != null)).toBe(true);
   expect(result.grips[205]![0]![0]).toBeNull();
   expect(result.grips[205]![1]![0]).not.toBeNull();

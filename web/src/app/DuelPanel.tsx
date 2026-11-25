@@ -31,6 +31,9 @@ export function DuelPanel({ viewport }: { viewport: RefObject<HTMLDivElement | n
       {colors.map((name, id) => <div key={name}>
         <dt>{name} grips</dt><dd aria-label={`${name} grips`}>{state.grips[id]!.join(' · ') || 'Hands free'}</dd>
       </div>)}
+      {colors.map((name, id) => <div key={name}>
+        <dt>{name} stamina</dt><dd aria-label={`${name} stamina`}>{Math.round(state.stamina[id]!)}</dd>
+      </div>)}
       <div><dt>Completed tick</dt><dd id="duel-tick">{state.tick}</dd></div>
     </dl>
     <h3>Last hit</h3>

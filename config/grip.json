@@ -3,5 +3,17 @@
   "reach_gap_m": 0.025,
   "stiffness_n_m": 4200.0,
   "damping_n_s_m": 95.0,
-  "maximum_force_n": 1200.0
+  "maximum_force_n": 1200.0,
+  "costs": {
+    "maximum_stamina": 100.0,
+    "one_hand_per_s": 4.0,
+    "two_hand_per_s": 7.0,
+    "regeneration_per_s": 18.0,
+    "reference_force_n": 392.4,
+    "load_rate": 4.0,
+    "maximum_extra_per_s": 12.0,
+    "break_force_n": 650.0,
+    "break_after_ticks": 8,
+    "smoothing_s": 0.08
+  }
 }

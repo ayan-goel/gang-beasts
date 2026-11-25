@@ -36,7 +36,8 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 08c | Target selection and headbutts | Reachable directional targets, wall obstruction, head contact and independent cooldown |
 | 09a — verified native fixture | Opponent grips | Surface proximity, occlusion, reciprocal holds and momentum-preserving release |
 | 09b — verified browser fixture | Playable opponent grips | Both rigs and all four grip slots agree across native and WASM, with keyboard release and blur cleanup |
-| 09 | Grips, stamina and release | Per-hand constraints, valid anchors, load failure, cyclic stress cleanup |
+| 09c — verified local fixtures | Grip stamina and overload | Owner-specific stamina, calibrated suspended weights, exhaustion, sustained overload and release |
+| 09d | World grip targets and lifecycle | Props and fixed holds, reverse lookup on destruction, multi-party stress and cleanup |
 | 10 | Lift, throw, knockout and rescue | Momentum preserved; bounded assistance; KO and ledge cases verified |
 | 11 | Skyline and group camera | Spawns, props, panels, warnings, camera bounds and local round |
 | 12 | Melee match lifecycle | Simultaneous elimination, scoring, full reset and rematch |

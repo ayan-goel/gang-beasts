@@ -82,6 +82,9 @@ impl LocalDuel {
         );
         Ok(())
     }
+    pub fn stamina(&self, who: JsValue) -> Result<f32, JsValue> {
+        Ok(self.duel.stamina(fighter(who)?))
+    }
     pub fn grip_region(&self, who: JsValue, side: JsValue) -> Result<Option<u8>, JsValue> {
         let grip = self
             .duel

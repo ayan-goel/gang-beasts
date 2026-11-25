@@ -92,13 +92,14 @@ impl Duel {
                 &self.presets,
             );
         }
-        self.grips.retract(&mut self.world, &self.fighters);
         let contacts = super::duel_contacts::ContactFrame::capture(&self.world, &self.fighters);
         self.world.step();
         self.tick += 1;
         self.hits.clear();
         self.grips
             .acquire(&mut self.world, &self.fighters, self.tick);
+        self.grips
+            .settle(&mut self.world, self.physics.solver_iterations);
         if let Some(frame) = contacts {
             frame.resolve(
                 &self.world,
@@ -123,6 +124,11 @@ impl Duel {
         self.fighters[who as usize].walking.set_jump(held);
     }
     pub fn set_hand(&mut self, who: FighterId, hand: Hand, held: bool) {
+        // A fall can switch the arm to its get-up pose while the grip persists.
+        // A repeated held input cannot start a punch with that attached hand.
+        if held && self.grip(who, hand).is_some() {
+            return;
+        }
         if !held {
             self.grips.release(&mut self.world, who, hand);
         }
@@ -137,6 +143,9 @@ impl Duel {
             state.phase = crate::HandPhase::Gripping;
         }
         state
+    }
+    pub fn stamina(&self, who: FighterId) -> f32 {
+        self.grips.stamina(who)
     }
     pub fn grip(&self, who: FighterId, hand: Hand) -> Option<super::GripState> {
         self.grips.state(who, hand)

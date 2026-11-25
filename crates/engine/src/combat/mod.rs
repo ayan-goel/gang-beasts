@@ -1,3 +1,5 @@
+mod grip_budget;
+pub(crate) use grip_budget::GripBudget;
 mod grip_tuning;
 mod hands;
 pub(crate) use grip_tuning::GripTuning;

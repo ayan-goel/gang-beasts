@@ -156,3 +156,68 @@ fn a_grip_physically_restrains_the_retreating_opponent() {
         "held gap {held}; released gap {released}"
     );
 }
+
+#[test]
+fn physical_grip_costs_stamina_and_exhaustion_requires_a_fresh_press() {
+    let mut duel = settled();
+    let owner = FighterId::First;
+    let hand = Hand::Left;
+    assert_eq!(duel.stamina(owner), 100.);
+    duel.set_hand(owner, hand, true);
+    let mut exhausted = false;
+    for _ in 0..1650 {
+        duel.step();
+        if let Some(g) = duel.grip(owner, hand) {
+            assert!(duel.stamina(owner) < 100.);
+            assert!(g.load_n.is_finite() && (0.0..=1200.01).contains(&g.load_n));
+        }
+        if duel.stamina(owner) == 0. {
+            assert!(duel.grip(owner, hand).is_none());
+            exhausted = true;
+            break;
+        }
+    }
+    assert!(
+        exhausted,
+        "continuous attached hand exhausted the owner's stamina"
+    );
+    for _ in 0..360 {
+        duel.step();
+        assert!(duel.grip(owner, hand).is_none());
+    }
+    assert_eq!(duel.stamina(owner), 100.);
+    assert_eq!(duel.stamina(owner.opponent()), 100.);
+}
+
+#[test]
+fn one_fighter_can_hold_two_limbs_and_release_only_one() {
+    let owner = FighterId::First;
+    let mut duel = Duel::new(PhysicsConfig::default()).unwrap();
+    duel.set_input(owner, [-0.5, -1.], false).unwrap();
+    duel.set_hand(owner, Hand::Right, true);
+    for tick in 0..150 {
+        if tick == 25 {
+            duel.set_hand(owner, Hand::Left, true);
+        }
+        duel.step();
+        if duel.grip(owner, Hand::Left).is_some() && duel.grip(owner, Hand::Right).is_some() {
+            break;
+        }
+    }
+    let left = duel.grip(owner, Hand::Left).unwrap();
+    let right = duel.grip(owner, Hand::Right).unwrap();
+    assert_ne!(left.region, right.region);
+    let full = duel.stamina(owner);
+    duel.step();
+    assert!(full - duel.stamina(owner) >= 7. / 60. - 1e-5);
+    duel.set_hand(owner, Hand::Right, false);
+    assert!(duel.grip(owner, Hand::Right).is_none());
+    assert_eq!(
+        duel.grip(owner, Hand::Left).unwrap().created_tick,
+        left.created_tick
+    );
+    let one = duel.stamina(owner);
+    duel.step();
+    assert!(one - duel.stamina(owner) >= 4. / 60. - 1e-5);
+    assert_eq!(duel.stamina(owner.opponent()), 100.);
+}

@@ -6,6 +6,7 @@ fn main() {
     let players = [FighterId::First, FighterId::Second];
     let mut frames = Vec::new();
     let mut hits = Vec::new();
+    let mut stamina = Vec::new();
     let mut grips = Vec::new();
     for tick in 0..=240 {
         if tick == 61 {
@@ -34,6 +35,7 @@ fn main() {
         if tick > 0 {
             duel.step();
         }
+        stamina.push(players.map(|id| duel.stamina(id)));
         grips.push(players.map(|id| {
             [Hand::Left, Hand::Right].map(|hand| duel.grip(id, hand).map(|g| g.region.index()))
         }));
@@ -57,5 +59,8 @@ fn main() {
             ]));
         }
     }
-    println!("{}", json!({"frames":frames,"hits":hits,"grips":grips}));
+    println!(
+        "{}",
+        json!({"frames":frames,"hits":hits,"grips":grips,"stamina":stamina})
+    );
 }

@@ -11,12 +11,15 @@ test('a held sparring hand identifies its target and clears on key release or fo
     await expect.poll(async () => Number(await page.locator('#duel-tick').innerText())).toBeGreaterThan(59);
     await page.keyboard.down('j');
     await expect(grips).toContainText(/Left hand on Blue’s/);
+    await expect.poll(async () => Number(await page.getByLabel('Coral stamina').textContent())).toBeLessThan(100);
+    await expect(page.getByLabel('Blue stamina')).toHaveText('100');
     await page.keyboard.press('k');
     await expect(grips).toContainText(/Left hand on Blue’s/);
     if (release === 'blur') await page.getByLabel('Test scene').focus();
     else await page.keyboard.up('j');
     await expect(grips).toHaveText('Hands free');
     await page.keyboard.up('j');
+    await expect(page.getByLabel('Coral stamina')).toHaveText('100');
     await page.getByRole('button', { name: 'Reset encounter' }).click();
   }
 });

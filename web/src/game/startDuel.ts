@@ -16,6 +16,7 @@ export interface DuelState {
   paused: boolean;
   hits: [number, number];
   grips: [string[], string[]];
+  stamina: [number, number];
   latest?: DuelHit;
 }
 
@@ -60,6 +61,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     });
     const snapshot = () => publish({
       tick: duel.tick().toString(), hits: [...hits], latest, paused, grips: [readGrips(0), readGrips(1)],
+      stamina: [duel.stamina(0), duel.stamina(1)],
     });
     const render = () => renderer.renderDuel(duel.body_states(0), duel.body_states(1));
     const step = () => {
