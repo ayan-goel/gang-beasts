@@ -1,0 +1,41 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  --surface: #10222c;
+  --text: #eff4ef;
+  --muted: #adc1c6;
+  --accent: #f6ae7a;
+  --line: #304650;
+  color: var(--text);
+  background: var(--surface);
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.5rem 2rem; border-bottom: 1px solid var(--line); }
+h1 { font-size: 1.25rem; letter-spacing: -0.03em; margin: 0.25rem 0 0; }
+.eyebrow { margin: 0; font-size: 0.65rem; font-weight: 700; letter-spacing: 0.2em; color: var(--accent); text-transform: uppercase; }
+.badge { border: 1px solid var(--line); padding: 0.5rem 0.75rem; font: 0.7rem ui-monospace, monospace; color: var(--muted); }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) 17rem; min-height: calc(100dvh - 97px); }
+.viewport { min-height: 32rem; position: relative; }
+.viewport canvas { display: block; position: absolute; inset: 0; max-width: 100%; }
+.scene-label { position: absolute; left: 2rem; top: 1.5rem; z-index: 1; pointer-events: none; }
+.scene-label h2 { font-size: 0.9rem; margin: 0.5rem 0; }
+.scene-label p { color: var(--muted); font-size: 0.75rem; margin: 0; }
+aside { border-left: 1px solid var(--line); padding: 2rem 1.5rem; }
+aside h2 { font-size: 0.85rem; margin: 0 0 1.5rem; }
+dl { margin: 0; }
+dl div { display: flex; justify-content: space-between; gap: 1rem; padding: 0.8rem 0; border-bottom: 1px solid var(--line); font-size: 0.75rem; }
+dt { color: var(--muted); }
+dd { margin: 0; font-family: ui-monospace, monospace; }
+.note { color: var(--muted); line-height: 1.7; font-size: 0.75rem; margin-top: 2rem; }
+[role=status] { font-size: 0.75rem; color: var(--accent); }
+[role=alert] { padding: 2rem; color: var(--accent); }
+@media (max-width: 760px) {
+  header { padding: 1rem; }
+  .workspace { grid-template-columns: 1fr; }
+  .viewport { min-height: 55dvh; }
+  aside { border-left: 0; border-top: 1px solid var(--line); padding: 1.5rem; }
+  .scene-label { left: 1rem; }
+  .badge { display: none; }
+}

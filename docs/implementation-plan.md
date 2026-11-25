@@ -6,8 +6,8 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 
 | Slice | Deliverable | Exit evidence |
 | --- | --- | --- |
-| 01 | Validated fixed-tick native physics fixture | Falling body settles; reproducible reset; invalid config rejected; fmt/Clippy/tests |
-| 02 | Same fixture through WASM and Three.js | Browser loads actual WASM; native/browser fixture agreement; build and browser tests |
+| 01 — verified | Validated fixed-tick native physics fixture | Falling body settles; reproducible reset; invalid config rejected; fmt/Clippy/tests |
+| 02 — verified | Same fixture through WASM and Three.js | Browser loads actual WASM; native/browser fixture agreement; build and browser tests |
 | 03 | Playground controls and diagnostics | Pause, single step, reset, impulse and timing work; debug geometry is accurate |
 | 04 | Fifteen-body passive ragdoll | 40 kg/14 joints, collision filtering, finite falls and aligned anchors |
 | 05 | Bounded motors and standing | Upright controller yields to pushes; 60-second stand; visible motor targets |

@@ -4,7 +4,7 @@ No release criteria have passed yet. Update each row with a slice, build/config 
 
 | Requirement | Current evidence |
 | --- | --- |
-| Browser entry/download budget | Pending |
+| Browser entry/download budget | Foundation loads in Chromium; [fixture evidence](foundation.md). Final game, browser matrix and critical asset budget pending. |
 | 2–8 friend joining and ninth-player handling | Pending |
 | Active ragdoll/body/joint/mass | Pending |
 | Locomotion and human playability | Pending |

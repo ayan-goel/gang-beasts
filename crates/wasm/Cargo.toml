@@ -1,0 +1,15 @@
+[package]
+name = "brawler-wasm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+brawler-engine = { path = "../engine" }
+wasm-bindgen = "=0.2.100"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
