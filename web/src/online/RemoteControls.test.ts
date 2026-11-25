@@ -14,6 +14,7 @@ it('samples focused controls from network publications even when window timers n
   const world = readFileSync(new URL('../../../tests/fixtures/protocol/full-skyline-v1.bin', import.meta.url));
   const gameplay = 20 + 32 * world.readUInt16LE(16);
   const publish = (epoch: bigint, phase: number) => {
+    world.writeUInt32LE((world.readUInt32LE(4) + 2) >>> 0, 4);
     world[gameplay + 1] = phase;
     world.writeBigUInt64LE(epoch, gameplay + 8);
     feed.receive(world);

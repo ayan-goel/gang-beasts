@@ -60,3 +60,46 @@ test('only the host can start and both ready browsers see the live rooftop and r
     }
   } finally { await profile.close(); }
 });
+
+test('the arena reports a stalled stream and resumes after ordered snapshots arrive', async ({page, browser}) => {
+  let hold = false;
+  let resume = () => {};
+  let queued: Buffer[] = [];
+  await page.routeWebSocket(url => url.pathname === '/ws', client => {
+    const server = client.connectToServer();
+    server.onMessage(message => {
+      if (hold && Buffer.isBuffer(message) && message[0] === 2) queued.push(message);
+      else client.send(message);
+    });
+    resume = () => {
+      hold = false;
+      for (const record of queued) client.send(record);
+      queued = [];
+    };
+  });
+  await page.goto('/rooms/');
+  await page.getByLabel('Player name').fill('Coral');
+  await page.getByRole('button',{name:'Create room', exact:true}).click();
+  const profile = await browser.newContext();
+  try {
+    const guest = await profile.newPage();
+    await guest.goto(await page.getByLabel('Invite link').inputValue());
+    await guest.getByLabel('Player name').fill('Blue');
+    await guest.getByRole('button',{name:'Join room',exact:true}).click();
+    for (const p of [page,guest]) await p.getByRole('button',{name:'Ready up'}).click();
+    await page.getByRole('button',{name:'Start match'}).click();
+    await expect(page.getByLabel('Round phase')).toHaveText('Playing', {timeout:15000});
+    await expect(page.getByRole('heading',{name:'Playing as Coral'})).toBeVisible();
+    hold = true;
+    await expect(page.getByText('Waiting for the server…')).toBeVisible();
+    await expect.poll(() => queued.length).toBeGreaterThan(8);
+    await expect(guest.getByLabel('Round phase')).toHaveText('Playing');
+    resume();
+    await expect(page.getByText('Waiting for the server…')).toHaveCount(0);
+    await expect(page.getByLabel('Round number')).toHaveText('Round 1');
+    for (const p of [guest,page]) await p.getByRole('button',{name:'Leave room'}).click();
+  } finally {
+    resume();
+    await profile.close();
+  }
+});

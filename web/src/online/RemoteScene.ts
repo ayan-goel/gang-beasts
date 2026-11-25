@@ -1,3 +1,5 @@
+import { writePose } from './samplePose';
+import type { StreamStatus } from './SnapshotTimeline';
 import { bindRemoteControls } from './RemoteControls';
 import { FixtureScene } from '../rendering/FixtureScene';
 import type { MatchView } from '../rendering/SkylineView';
@@ -18,33 +20,31 @@ export function matchView(frame: Snapshot, content: SkylineContent): MatchView {
     hazard: t >= s.gust_tick ? 'gust' : t >= s.east_tick ? 'gust_warning' : t >= s.west_tick ? 'east_warning' : t >= s.warn_tick ? 'west_warning' : 'quiet'};
 }
 
-export function startRemoteScene(container: HTMLElement, content: SkylineContent, feed: MatchFeed, update: (match: MatchView) => void) {
+export function startRemoteScene(container: HTMLElement, content: SkylineContent, feed: MatchFeed, update: (match: MatchView) => void, status: (value: StreamStatus) => void) {
   const scene = new FixtureScene(container, content.fighter, {map: content.map, color: colors[feed.fighters[0].color]});
   const bodies = [new Float32Array(15*14), new Float32Array(15*14)] as const;
   const objects = new Float32Array(8*content.map.objects.length);
   let animation = 0, priorTime = performance.now(), prior: Snapshot | null = null, match: MatchView | null = null;
+  let previousStatus: StreamStatus | undefined;
   let unbind: (() => void) | undefined;
   try {
     scene.addOpponent(content.fighter, colors[feed.fighters[1].color]);
     unbind = bindRemoteControls(container.querySelector('canvas')!, feed);
     function render(now: number) {
-      const frame = feed.latest;
-      if (frame && frame !== prior) {
+      const sample = feed.timeline.sample(now);
+      if (sample) {
         for (const [slot, buffer] of bodies.entries()) {
-          for (let i=0; i<15; i++) {
-            const pose = frame.bodies.get(1+slot*16+i)!;
-            buffer.set(pose.position, i*14);
-            buffer.set(pose.rotation, i*14+3);
-          }
+          for (let i = 0; i < 15; i++) writePose(sample, 1 + slot*16 + i, buffer, i*14);
         }
         content.map.objects.forEach(({id}, i) => {
-          const pose = frame.bodies.get(65536+id);
-          objects[i*8+7] = Number(!!pose);
-          if (pose) { objects.set(pose.position,i*8); objects.set(pose.rotation,i*8+3); }
+          objects[i*8+7] = Number(writePose(sample, 65536+id, objects, i*8));
         });
-        match = matchView(frame, content);
-        update(match);
-        prior = frame;
+        if (sample.state !== prior) {
+          match = matchView(sample.state, content);
+          update(match);
+          prior = sample.state;
+        }
+        if (sample.status !== previousStatus) { status(sample.status); previousStatus = sample.status; }
       }
       if (match) scene.renderSkyline(bodies[0],bodies[1],objects,match,(now-priorTime)/1000);
       priorTime = now;

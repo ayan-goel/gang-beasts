@@ -1,9 +1,12 @@
 import { decodeSnapshot, type Snapshot } from '../net/snapshot';
 
+import { SnapshotTimeline } from './SnapshotTimeline';
+
 export interface Fighter { slot: number; color: number; name: string }
 
 export class MatchFeed {
   latest: Snapshot | null = null;
+  readonly timeline = new SnapshotTimeline();
   onRoundChange?: () => void;
   onSnapshot?: () => void;
   readonly fighters: [Fighter, Fighter];
@@ -26,6 +29,7 @@ export class MatchFeed {
 
   receive(packet: Uint8Array) {
     const frame = decodeSnapshot(packet);
+    if (!this.timeline.push(frame, performance.now())) return;
     if (this.latest?.round !== frame.round) {
       this.onRoundChange?.();
       const ack = new Uint8Array(10);

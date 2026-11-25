@@ -27,6 +27,7 @@
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
 - [Playable asset provenance](asset-provenance.md) identifies the source of the current arena, fighter geometry and interface.
+- [Online movement interpolation](slices/15c-interpolation.md) documents smooth poses, jitter, freezes, round boundaries and test coverage.
 - [Online fighter controls](slices/15b-online-input.md) covers keyboard and mouse input, socket ownership, round acknowledgements and cross-browser scoring.
 - [Online match startup](slices/15a-online-start.md) covers host authorization, worker reservation and live views.
 - [Skyline compatibility](slices/16d-map-loading.md) covers loading, fingerprints, retry and readiness.

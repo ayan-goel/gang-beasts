@@ -12,6 +12,6 @@ The Chromium test first failed when the browsers displayed a live match but keyb
 
 A concurrent Chromium run showed the original interval sampler advancing about one input sequence per second while the native room kept ticking. The server repeatedly expired the held run command. Trace samples showed the host eventually reaching the lip after twenty seconds. The client now uses arriving snapshots as its sampling clock. A unit test disables the window timer and verifies directional input across two rounds. The browser test records bounded native pose, input-axis and acknowledgement history when a score check fails.
 
-The current release path supports two controlling players. Live fighter transforms use full authoritative snapshots. Interpolation, more active fighters, timed disconnect elimination, independent latency measurements and human testing remain open.
+The current release path supports two controlling players. Live fighter transforms use full authoritative snapshots. The [interpolation slice](15c-interpolation.md) smooths these snapshots. More active fighters, timed disconnect elimination, independent latency measurements and human testing remain open.
 
 The final release workspace run had 265 passing Rust tests and the two known low-stair failures. Formatting, Clippy, the production build, all 32 TypeScript tests and all 65 Chromium tests passed. Two more independent Chromium profiles on the local production preview created a room, played until a physical ring-out, saw the same point and left.

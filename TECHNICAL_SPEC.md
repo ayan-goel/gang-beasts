@@ -916,7 +916,7 @@ Reusable estimator: `B = (15P + E) × record_bytes × snapshot_rate × changed_f
 
 Maintain snapshots keyed by round epoch and server tick. Render at estimated server time minus a **67–100 ms initial interpolation delay**. Interpolate positions linearly and orientations with shortest-path SLERP. Use consistent time for all limbs so a character does not tear apart across mixed ticks.
 
-Adapt buffering to measured jitter with bounded changes. On missing future state, extrapolate for a short capped interval (initial candidate 100 ms), then freeze/fade appropriately and show connection status. Do not allow indefinite extrapolation. Spawn, deletion, teleport/reset and round boundaries are discontinuities, not poses to blend through.
+The [initial browser implementation](docs/slices/15c-interpolation.md) uses one delayed tick for every limb and arena object and checks bounded extrapolation, stall recovery and epoch discontinuities. Adapt buffering to measured jitter with bounded changes. On missing future state, extrapolate for a short capped interval (initial candidate 100 ms), then freeze/fade appropriately and show connection status. Do not allow indefinite extrapolation. Spawn, deletion, teleport/reset and round boundaries are discontinuities, not poses to blend through.
 
 ### 17.8 Local prediction and fidelity gate
 
