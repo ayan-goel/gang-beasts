@@ -13,6 +13,7 @@ use rapier3d::prelude::*;
 pub(super) enum Control<'a> {
     Active {
         lifting: [bool; 2],
+        attached: [bool; 2],
         arena: Option<&'a crate::arena::Skyline>,
     },
     Incapacitated {
@@ -78,8 +79,12 @@ impl Fighter {
             parts: self.parts(definition, physics, tick),
             world,
         };
-        let (lifting, arena) = match control {
-            Control::Active { lifting, arena } => (lifting, arena),
+        let (lifting, attached, arena) = match control {
+            Control::Active {
+                lifting,
+                attached,
+                arena,
+            } => (lifting, attached, arena),
             Control::Incapacitated { effort } => {
                 // Only internal pose motors wake during the ramp. Ground assistance
                 // and player actions resume after the timed transition completes.
@@ -101,6 +106,7 @@ impl Fighter {
             true,
         );
         if let Some(map) = arena {
+            super::ledge_reach::aim(&mut rig, map, &self.hands, attached, &mut self.motors);
             super::prop_reach::aim(rig.read(), map, &self.hands, &mut targets);
         }
         if lifting.contains(&true) {

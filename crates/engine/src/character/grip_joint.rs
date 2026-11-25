@@ -17,10 +17,19 @@ pub(super) fn spring(hand: Point<Real>, target: Point<Real>, tuning: &GripTuning
     joint.build()
 }
 
+pub(super) fn limit_slip(joint: &mut GenericJoint, slack: f32) {
+    // A palm can roll against the edge, but an attached wrist cannot stretch metres away from it.
+    for axis in AXES {
+        joint.set_limits(axis, [-slack, slack]);
+    }
+}
+
 pub(super) fn force(joint: &GenericJoint, iterations: usize) -> f32 {
     // Rapier writes the final solver substep's impulse. Scale by its duration
     // to sample the transmitted force once per tick. New motors start at zero.
-    let impulse = Vector::from(AXES.map(|a| joint.motors[a as usize].impulse));
+    let impulse = Vector::from(
+        AXES.map(|a| joint.motors[a as usize].impulse + joint.limits[a as usize].impulse),
+    );
     impulse.norm() * iterations as f32 / TICK_SECONDS
 }
 
@@ -29,7 +38,12 @@ mod tests {
     use super::*;
     use crate::{PhysicsConfig, combat::GripBudget, physics::PhysicsWorld};
 
-    fn suspend(mass: f32, count: usize, iterations: usize) -> (Vec<f32>, Option<usize>) {
+    fn suspend(
+        mass: f32,
+        count: usize,
+        iterations: usize,
+        ledge: bool,
+    ) -> (Vec<f32>, Option<usize>) {
         let config = PhysicsConfig {
             solver_iterations: iterations,
             ..PhysicsConfig::default()
@@ -50,9 +64,11 @@ mod tests {
             .map(|i| {
                 let x = (i as f32 - (count - 1) as f32 * 0.5) * 0.3;
                 let anchor = point![x, 0., 0.];
-                world
-                    .impulse_joints
-                    .insert(fixed, weight, spring(anchor, anchor, &tuning), true)
+                let mut joint = spring(anchor, anchor, &tuning);
+                if ledge {
+                    limit_slip(&mut joint, tuning.reach_gap_m);
+                }
+                world.impulse_joints.insert(fixed, weight, joint, true)
             })
             .collect();
         let mut last = Vec::new();
@@ -63,7 +79,10 @@ mod tests {
                 .map(|&j| force(&world.impulse_joints.get(j).unwrap().data, iterations))
                 .collect();
             let loads = [last.first().copied(), last.get(1).copied()];
-            if budget.advance(loads, &tuning.costs).contains(&true) {
+            if budget
+                .advance(loads, &tuning.costs, [ledge; 2])
+                .contains(&true)
+            {
                 return (last, Some(tick));
             }
         }
@@ -74,7 +93,7 @@ mod tests {
     fn forty_kg_weight_settles_on_one_or_two_grips_across_solver_settings() {
         for iterations in [2, 4, 8] {
             for count in [1, 2] {
-                let (loads, failed) = suspend(40., count, iterations);
+                let (loads, failed) = suspend(40., count, iterations, false);
                 assert_eq!(failed, None);
                 for load in loads {
                     let expected = 40. * 9.81 / count as f32;
@@ -88,8 +107,17 @@ mod tests {
     }
 
     #[test]
+    fn roof_lips_support_one_hanging_fighter_and_release_a_sustained_double_load() {
+        let (normal, broke) = suspend(40., 1, 4, true);
+        assert_eq!(broke, None);
+        assert!((normal[0] - 392.4).abs() < 4.);
+        let (_, broke) = suspend(80., 1, 4, true);
+        assert!(matches!(broke, Some(24..=90)), "break tick {broke:?}");
+    }
+
+    #[test]
     fn overweight_attachment_builds_sustained_force_before_breaking() {
-        let (_, failed) = suspend(140., 1, 4);
+        let (_, failed) = suspend(140., 1, 4, false);
         assert!(matches!(failed, Some(8..=100)), "break tick {failed:?}");
     }
 }

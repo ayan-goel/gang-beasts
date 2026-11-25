@@ -3,6 +3,13 @@ use crate::physics::PhysicsWorld;
 use rapier3d::prelude::*;
 
 impl Skyline {
+    pub(crate) fn is_lip(&self, id: u16) -> bool {
+        matches!(
+            self.definition.objects[usize::from(id - 1)].kind,
+            ArenaKind::Deck | ArenaKind::Panel
+        )
+    }
+
     pub(crate) fn grip_surfaces<'a>(
         &'a self,
         world: &'a PhysicsWorld,
@@ -29,7 +36,7 @@ impl Skyline {
     ) -> bool {
         let idx = usize::from(id - 1);
         let obj = &self.definition.objects[idx];
-        if matches!(obj.kind, ArenaKind::Vent | ArenaKind::Crate) {
+        if !self.is_lip(id) {
             return true;
         }
         let body = &world.bodies[self.bodies[idx]];

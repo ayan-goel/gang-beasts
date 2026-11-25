@@ -14,4 +14,4 @@ Decks and walkways only accept contact within one palm radius of an exposed uppe
 - The native edge tests exercise deck interiors, low walls, exposed lips and the shared seam before and after panel failure. A separately positioned physical rig catches the west lip, keeps its grip at detachment and loses it when the panel retires.
 - The Chromium keyboard test starts a normal match, grabs the crate on foot, holds through the lift input and checks the grip display clears on release.
 
-Pulling the pelvis back onto the roof and climbing under obstruction have separate acceptance tests.
+The subsequent [ledge catch slice](10c2-ledge-catch.md) adds limited slip and fall-arrest overload calibration for roof and walkway lips. Pulling the pelvis back onto the roof and climbing under obstruction remain open acceptance criteria.

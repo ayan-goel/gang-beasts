@@ -23,6 +23,8 @@ pub(crate) struct GripCosts {
     pub load_rate: f32,
     pub maximum_extra_per_s: f32,
     pub break_force_n: f32,
+    pub ledge_break_force_n: f32,
+    pub ledge_break_after_ticks: u16,
     pub break_after_ticks: u16,
     pub smoothing_s: f32,
 }
@@ -37,6 +39,8 @@ impl GripCosts {
             && (0.0..=100.).contains(&self.load_rate)
             && (0.0..=100.).contains(&self.maximum_extra_per_s)
             && (self.reference_force_n..=ceiling).contains(&self.break_force_n)
+            && (self.break_force_n..=ceiling).contains(&self.ledge_break_force_n)
+            && (self.break_after_ticks..=60).contains(&self.ledge_break_after_ticks)
             && (2..=120).contains(&self.break_after_ticks)
             && (0.001..=1.0).contains(&self.smoothing_s)
     }

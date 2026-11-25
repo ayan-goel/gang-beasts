@@ -126,6 +126,7 @@ impl Duel {
                 crate::Consciousness::Eliminated => continue,
                 crate::Consciousness::Active => Control::Active {
                     lifting,
+                    attached: [Hand::Left, Hand::Right].map(|h| self.grips.attached(id, h)),
                     arena: self.arena.as_ref(),
                 },
                 crate::Consciousness::KnockedOut => Control::Incapacitated { effort: 0. },
@@ -238,3 +239,7 @@ mod map;
 
 #[path = "duel_match.rs"]
 mod rounds;
+
+#[cfg(test)]
+#[path = "ledge_tests.rs"]
+mod ledge_tests;

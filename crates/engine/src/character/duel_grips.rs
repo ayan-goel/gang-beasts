@@ -25,6 +25,7 @@ struct Attachment {
     joint: ImpulseJointHandle,
     target: Target,
     target_body: RigidBodyHandle,
+    ledge: bool,
     created_tick: u64,
     load_n: f32,
     hand_anchor: [f32; 3],
@@ -63,7 +64,10 @@ impl Grips {
                     .expect("owned grip joint");
                 Some(super::grip_joint::force(&joint.data, iterations))
             });
-            let broken = self.budgets[id].advance(loads, &self.tuning.costs);
+            let ledges = self.slots[id]
+                .each_ref()
+                .map(|a| a.as_ref().is_some_and(|g| g.ledge));
+            let broken = self.budgets[id].advance(loads, &self.tuning.costs, ledges);
             for hand in [Hand::Left, Hand::Right] {
                 let side = hand as usize;
                 if broken[side] {
@@ -156,13 +160,21 @@ impl Grips {
                 let b = world.bodies[c.body]
                     .position()
                     .inverse_transform_point(&c.point);
-                let joint = super::grip_joint::spring(a, b, &self.tuning);
+                let ledge = match c.target {
+                    Target::Arena(id) => arena.is_some_and(|a| a.is_lip(id)),
+                    Target::Fighter(..) => false,
+                };
+                let mut joint = super::grip_joint::spring(a, b, &self.tuning);
+                if ledge {
+                    super::grip_joint::limit_slip(&mut joint, self.tuning.reach_gap_m);
+                }
                 let handle = world.impulse_joints.insert(fist, c.body, joint, true);
                 *slot = Some(Attachment {
                     attack_id: state.attack_id,
                     joint: handle,
                     target: c.target,
                     target_body: c.body,
+                    ledge,
                     created_tick: tick,
                     load_n: 0.,
                     hand_anchor: a.coords.into(),

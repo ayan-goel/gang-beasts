@@ -636,7 +636,7 @@ Use a soft positional grip with bounded effort and permissive angular movement; 
 
 The local opponent-grip fixture uses a 25 mm maximum gap between collider surfaces, checks intervening solids, and stores the midpoint in each body’s local frame. The three linear spring motors share a bounded force budget and leave relative rotation free. [Native implementation and verification](docs/slices/09a-opponent-grips.md).
 
-Skyline uses the same constraint and stamina rules for crates, vents and exposed upper roof or walkway edges. Reach motors angle toward lower props during approach. Grips remain attached to a falling panel until release, failure or debris retirement. [Surface eligibility and verification](docs/slices/10c1-arena-grips.md).
+Skyline uses compliant constraints and per-hand stamina accounting for crates, vents and exposed upper roof or walkway edges. Solid lips also limit slip and use the fall-arrest overload calibration in §13.7. Reach motors angle toward lower props during approach. Grips remain attached to a falling panel until release, failure or debris retirement. [Surface eligibility and verification](docs/slices/10c1-arena-grips.md).
 
 ### 13.7 Stamina and grip failure
 
@@ -654,7 +654,9 @@ A grip breaks at zero stamina, excessive sustained load, owner knockout, invalid
 
 The source playground's **250 N** grip threshold is illustrative. A 40 kg character weighs approximately **392.4 N**; one-hand hanging at 250 N would fail without assistance. Calibrate one-/two-hand hanging tests before selecting release thresholds. Do not silently weaken gravity to make an inconsistent grip preset work.
 
-The local preset samples each grip’s last solver-substep force at 60 Hz, smooths it over a 0.08 s time constant, and accumulates overload at 650 N with an eight-tick break threshold. Subthreshold or released ticks reduce accumulated strain by one tick. Additional drain sums across attached hands and caps at 12 points/s per fighter. The acquisition tick incurs base drain. A failed grip needs a fresh hand press. [Calibration, sampling units and verified scope](docs/slices/09c-grip-stamina.md).
+The local simulation samples each grip’s last solver-substep force at 60 Hz and smooths it over a 0.08 s time constant. Opponent, crate and vent grips accumulate overload at 650 N with an eight-tick break threshold. Subthreshold or released ticks reduce accumulated strain by one tick. Additional drain sums across attached hands and caps at 12 points/s per fighter. The acquisition tick incurs base drain. A failed grip needs a fresh hand press. [Calibration, sampling units and verified scope](docs/slices/09c-grip-stamina.md).
+
+A Skyline lip permits up to 25 mm travel per linear axis before its constraint limit engages. The solver reaction from both the spring and the limit counts toward load. For an arrested fall the lip overload preset is 740 N for 24 accumulated ticks. One hand supports the 40 kg fixture and releases a sustained 80 kg load. [Ledge catch calibration](docs/slices/10c2-ledge-catch.md).
 
 ### 13.8 Lifting and throwing
 
@@ -671,6 +673,8 @@ Basic sequence: grab a ledge → press/hold pull input → drive elbow/shoulder 
 Require a valid grip, remaining stamina and plausible ledge/surface geometry. A mantle needs pelvis clearance, obstacle clearance and a reachable support surface. Assistance cannot lift against an arbitrary ceiling indefinitely. Grip anchors move with their target bodies. Release only after support/clearance permits or the player chooses; do not automatically drop a recovering player into a fall.
 
 MVP: simple Skyline edges, both one- and two-hand rescue cases. Full game: vertical surfaces, moving holds and alternating hand-over-hand climbing. Tests must include occupied ledges, low ceilings, broken panels, high latency and a second player hanging from the climber.
+
+The local Skyline controller can aim a reaching hand at an exposed lip within anatomical reach and hang from it as the floor falls away. The physical catch and release are covered by a normal-input round fixture. Mantling and obstruction acceptance remain pending. [Catch and release evidence](docs/slices/10c2-ledge-catch.md).
 
 ## 14. Map engine and environment system
 
