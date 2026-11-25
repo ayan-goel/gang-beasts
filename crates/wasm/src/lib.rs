@@ -1,5 +1,7 @@
 use brawler_engine::{FixtureSession, PhysicsConfig};
 use wasm_bindgen::prelude::*;
+mod duel;
+pub use duel::LocalDuel;
 mod ragdoll;
 mod ragdoll_fixture;
 pub use ragdoll::LocalRagdoll;

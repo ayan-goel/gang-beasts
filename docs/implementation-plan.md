@@ -32,7 +32,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 08a2 — verified local fixture | Strike practice scene | Either fist swings a suspended target through physical contact, with matching native/WASM traces, reset and tuning replacement |
 | 08a3 — verified native | Two independently controlled physical fighters | One solver, reciprocal fist contact, independent movement/jump and full reset |
 | 08b1 — verified native | Physical punch damage events | Positive fist contact, pre-solve normal point speed, region scaling, attack ownership, whiffs and simultaneous punches |
-| 08b2 | Playable two-fighter sparring | Both fighters visible and controllable, native/WASM agreement, hit diagnostics |
+| 08b2 — verified local fixture | Playable two-fighter sparring | Both fighters visible and controllable, native/WASM agreement, hit diagnostics |
 | 08c | Target selection and headbutts | Reachable directional targets, wall obstruction, head contact and independent cooldown |
 | 09 | Grips, stamina and release | Per-hand constraints, valid anchors, load failure, cyclic stress cleanup |
 | 10 | Lift, throw, knockout and rescue | Momentum preserved; bounded assistance; KO and ledge cases verified |

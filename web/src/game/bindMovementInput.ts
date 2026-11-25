@@ -1,13 +1,23 @@
 import type { MovementInput } from './MovementInput';
 
-export function bindMovementInput(canvas: HTMLCanvasElement, input: MovementInput) {
+const secondPlayerKeys: Record<string, string> = {
+  ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight',
+  Comma: 'KeyJ', Period: 'KeyK', Enter: 'Space', ShiftRight: 'ShiftRight',
+};
+
+export function bindMovementInput(canvas: HTMLCanvasElement, input: MovementInput, second?: MovementInput) {
   canvas.tabIndex = 0;
   canvas.setAttribute('aria-description', 'Use WASD or arrow keys to move, Shift to run, Space to jump, and J or K for the left or right hand.');
+  const key = (code: string, down: boolean, repeat = false) => {
+    const mapped = secondPlayerKeys[code];
+    return second && mapped ? second.key(mapped, down, repeat) : input.key(code, down, repeat);
+  };
+  if (second) canvas.setAttribute('aria-description', 'Coral uses WASD, J and K, Space and left Shift. Blue uses arrows, comma and period, Enter and right Shift.');
   const keydown = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if (input.key(event.code, true, event.repeat)) event.preventDefault();
+    if (key(event.code, true, event.repeat)) event.preventDefault();
   };
-  const keyup = (event: KeyboardEvent) => { if (input.key(event.code, false)) event.preventDefault(); };
+  const keyup = (event: KeyboardEvent) => { if (key(event.code, false)) event.preventDefault(); };
   const mouse = (event: MouseEvent) => {
     if (event.button !== 0 && event.button !== 2) return;
     const down = event.type === 'mousedown';
@@ -21,7 +31,7 @@ export function bindMovementInput(canvas: HTMLCanvasElement, input: MovementInpu
   canvas.addEventListener('mousedown', mouse);
   window.addEventListener('mouseup', mouse);
   canvas.addEventListener('contextmenu', context);
-  const clear = () => input.clear();
+  const clear = () => { input.clear(); second?.clear(); };
   const visibility = () => { if (document.hidden) clear(); };
   canvas.addEventListener('keydown', keydown); canvas.addEventListener('keyup', keyup);
   canvas.addEventListener('blur', clear); window.addEventListener('blur', clear);

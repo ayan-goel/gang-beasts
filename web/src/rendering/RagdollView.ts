@@ -18,10 +18,10 @@ export class RagdollView {
   readonly root = new THREE.Group();
   private readonly meshes: THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>[];
 
-  constructor(definition: RigDefinition) {
+  constructor(definition: RigDefinition, color = '#f58465') {
     this.meshes = definition.bodies.map(body => {
       const mesh = new THREE.Mesh(geometryForBody(body.shape), new THREE.MeshStandardMaterial({
-        color: body.part.includes('hand') || body.part.includes('foot') ? '#bad8d2' : '#f58465', roughness: 0.7,
+        color: body.part.includes('hand') || body.part.includes('foot') ? '#bad8d2' : color, roughness: 0.7,
       }));
       mesh.name = body.part;
       mesh.castShadow = true;

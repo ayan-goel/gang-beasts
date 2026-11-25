@@ -18,6 +18,7 @@ export class FixtureScene {
     new THREE.MeshStandardMaterial({ color: '#f58465', roughness: 0.65 }),
   );
   private readonly resizeObserver?: ResizeObserver;
+  private opponent?: RagdollView;
   private readonly practice?: PracticeTargetView;
   private readonly rig?: RagdollView;
   private readonly joints?: JointOverlay;
@@ -72,6 +73,24 @@ export class FixtureScene {
       this.dispose();
       throw error;
     }
+  }
+
+  addOpponent(definition: RigDefinition): void {
+    this.opponent = new RagdollView(definition, '#559ed8');
+    this.scene.add(this.opponent.root);
+    this.renderer.domElement.setAttribute('aria-label', 'Two fighters on the local sparring platform');
+  }
+
+  renderDuel(first: Float32Array, second: Float32Array): void {
+    this.opponent!.update(second, -1);
+    const x = (first[28]! + second[28]!) / 2;
+    const y = Math.max(0.9, (first[29]! + second[29]!) / 2);
+    const z = (first[30]! + second[30]!) / 2;
+    const spread = Math.hypot(first[28]! - second[28]!, first[29]! - second[29]!, first[30]! - second[30]!);
+    const distance = 2.4 + spread / Math.min(1, this.camera.aspect);
+    this.camera.position.set(x + distance, y + distance * 0.45, z + distance * 0.48);
+    this.camera.lookAt(x, y, z);
+    this.render(first, undefined, undefined, -1);
   }
 
   render(state: Float32Array, lines?: Float32Array, jointStates?: Float32Array, selectedBody = 0, poseTargets?: Float32Array, target?: Float32Array): void {

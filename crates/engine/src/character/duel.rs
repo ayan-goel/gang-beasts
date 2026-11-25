@@ -63,6 +63,15 @@ impl Duel {
     pub fn hits(&self) -> &[super::StrikeHit] {
         &self.hits
     }
+    pub fn definition(&self) -> &CharacterDefinition {
+        &self.definition
+    }
+    pub fn clear_hands(&mut self, who: FighterId) {
+        self.fighters[who as usize].hands.release_inputs();
+    }
+    pub fn clear_jump(&mut self, who: FighterId) {
+        self.fighters[who as usize].walking.clear_jump_input();
+    }
     pub fn tick(&self) -> u64 {
         self.tick
     }

@@ -55,6 +55,8 @@ Choose **Locomotion**, resume and focus the canvas to walk with WASD/arrows and 
 
 With Locomotion running, click the canvas with either mouse button to punch with the corresponding hand. Hold to keep reaching after the punch. J and K and the two hand buttons provide the same controls. The inspector shows each hand’s phase.
 
+Choose **Local sparring** for a two-fighter encounter on one keyboard. Resume to focus the canvas. Coral uses WASD, left Shift, Space and J/K or mouse buttons. Blue uses arrows, right Shift, Enter and comma/period. Both fighters can move and punch simultaneously. The panel counts qualifying hits and displays the latest hit region and points. Reset encounter starts both fighters at their original spawns and pauses the simulation.
+
 Choose **Strike practice** to punch a suspended 2 kg pad. Resume, then use either hand. The pad can swing and twist. The displacement readout measures horizontal distance from its resting line. Reset hangs the pad at rest again.
 
 Choose **Low stairs** to inspect the same three 10 cm risers as the native traversal test. Resume and walk forward with W or ↑. The current controller trips on the second riser in the scripted approach. [Fixture and reproduction](docs/slices/06c2b4b-stairs.md)
