@@ -20,6 +20,7 @@ mod rig_tests;
 mod shape;
 mod stopping_drive;
 mod support;
+mod support_drive;
 mod support_motion;
 mod terrain_gait;
 mod walking_controller;

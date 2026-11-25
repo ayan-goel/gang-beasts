@@ -43,7 +43,8 @@ fn stop_on_deck(spawn: f32, rotating: bool, running: bool, ticks: usize, directi
         assert!(rig.pose.rig.body_states()[0].state.position[1] > 1.1);
     }
     rig.set_input([0.0; 2], false).unwrap();
-    for release_tick in 0..360 {
+    // Twenty seconds catches idle drift that the earlier six-second check missed.
+    for release_tick in 0..1200 {
         rig.step();
         assert!(
             rig.pose.rig.body_states()[0].state.position[1] > 1.1,
@@ -53,6 +54,7 @@ fn stop_on_deck(spawn: f32, rotating: bool, running: bool, ticks: usize, directi
             assert!(body.state.to_buffer().iter().all(|v| v.is_finite()));
         }
         assert!(Vector::from(rig.state().acceleration).norm() <= 12.0001);
+        assert!(Vector::from(rig.state().support_moment).norm() <= 120.001);
         assert!(
             Vector::from(rig.state().stopping_moment).norm()
                 <= 120.0 * rig.state().motor_strength + 0.001
@@ -88,7 +90,6 @@ fn supported_deck_stops_relax_both_motors_and_stopping_moment() {
 }
 
 #[test]
-#[ignore = "Known rotating-deck traversal failure also occurs with input held; blocks movement acceptance (terrain-gaps.md)"]
 fn longer_rotating_deck_runs_keep_posture_when_released() {
     for direction in [Vector::x(), -Vector::x(), Vector::z(), -Vector::z()] {
         stop_on_deck(0.0, true, true, 60, direction);

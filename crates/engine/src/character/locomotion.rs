@@ -21,6 +21,10 @@ mod slope_tests;
 #[path = "stopping_support_tests.rs"]
 mod stopping_support_tests;
 
+#[cfg(test)]
+#[path = "rotating_traversal_tests.rs"]
+mod rotating_traversal_tests;
+
 pub struct LocomotionRagdoll {
     pose: PoseRagdoll,
     controller: WalkingController,

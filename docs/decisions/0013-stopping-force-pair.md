@@ -41,3 +41,7 @@ Raw relative spin alone left one radius-2 stop at strength .3 indefinitely. Esti
 ## Remaining gates
 
 The existing long rotating-deck traversal failure is preserved as an explicitly ignored reproduction and remains a movement-acceptance blocker. The baseline also falls with input held, so changing stopping forces alone does not resolve it. See the exact scenario and command in `docs/verification/terrain-gaps.md`. Cross-slope travel, steps, terrain transitions, backward slope travel, and human movement/impact assessment remain open. Full regression and source review are recorded in the slice record.
+
+## Subsequent correction
+
+[Slice 06c2b3](../slices/06c2b3-rotating-traversal.md) resolves the formerly ignored rotating-traversal regression and extends short deck stops to twenty seconds. Its schema-3 support compensation and moment diagnostic are recorded separately; the evidence above describes this earlier slice.

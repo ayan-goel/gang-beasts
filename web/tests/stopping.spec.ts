@@ -57,6 +57,7 @@ test('visible stopping effort rises during braking and clears after settling and
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('locomotion');
   await expect(page.locator('#stopping-moment')).toHaveText('0.00 N·m');
+  await expect(page.locator('#support-moment')).toHaveText('0.00 N·m');
   await page.getByRole('button',{name:'Resume',exact:true}).click();
   await expect.poll(async()=>Number(await page.locator('#tick').textContent())).toBeGreaterThan(60);
   await page.getByRole('button',{name:'Focus movement controls'}).click();
@@ -67,7 +68,9 @@ test('visible stopping effort rises during braking and clears after settling and
   await expect.poll(async()=>parseFloat((await page.locator('#stopping-moment').textContent())!)).toBeGreaterThan(1);
   await expect(page.locator('#movement-strength')).toHaveText('0%',{timeout:15_000});
   await expect(page.locator('#stopping-moment')).toHaveText('0.00 N·m');
+  await expect(page.locator('#support-moment')).toHaveText('0.00 N·m');
   await page.getByRole('button',{name:'Pause',exact:true}).click();
   await page.getByRole('button',{name:'Reset fixture',exact:true}).click();
   await expect(page.locator('#stopping-moment')).toHaveText('0.00 N·m');
+  await expect(page.locator('#support-moment')).toHaveText('0.00 N·m');
 });

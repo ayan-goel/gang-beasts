@@ -11,6 +11,7 @@ export function MovementInspector({state}: InspectorProps) {
       <div><dt>Position X / Z</dt><dd><span id="position-x">{state.rig!.position[0]!.toFixed(2)}</span> / <span id="position-z">{state.rig!.position[1]!.toFixed(2)}</span> m</dd></div>
       <div><dt>Pelvis speed</dt><dd>{state.rig!.speed.toFixed(2)} m/s</dd></div>
       <div><dt>Commanded acceleration</dt><dd>{movement.acceleration.toFixed(2)} m/s²</dd></div>
+      <div><dt>Support moment</dt><dd id="support-moment">{movement.supportMoment.toFixed(2)} N·m</dd></div>
       <div><dt>Stopping moment</dt><dd id="stopping-moment">{movement.stoppingMoment.toFixed(2)} N·m</dd></div>
       <div><dt>Active motor strength</dt><dd id="movement-strength">{(movement.strength*100).toFixed(0)}%</dd></div>
     </dl>

@@ -19,6 +19,7 @@ pub struct LocomotionState {
     pub phase: f32,
     pub turn_torque: f32,
     pub stopping_moment: [f32; 3],
+    pub support_moment: [f32; 3],
     pub targets: [[f32; 3]; 14],
 }
 
@@ -277,12 +278,30 @@ impl WalkingController {
             acceleration = drive.net;
             self.state.stopping_moment = drive.moment.into();
         }
+        let base_foot = stop_drive.map_or(acceleration * fraction, |drive| drive.foot);
+        let support_drive = super::support_drive::allocate(
+            rig,
+            supports,
+            velocity,
+            acceleration,
+            base_foot,
+            &self.config,
+        );
+        let drive = if let Some(support) = support_drive {
+            acceleration = support.net;
+            self.state.support_moment = support.moment.into();
+            self.state.stopping_moment =
+                (Vector::from(self.state.stopping_moment) * support.scale).into();
+            Some((support.net, support.foot))
+        } else {
+            stop_drive.map(|drive| (drive.net, drive.foot))
+        };
         self.state.acceleration = acceleration.into();
         // Tick-scoped assistance preserves the total linear impulse budget.
         for handle in rig.bodies {
             let body = &mut rig.world.bodies[handle];
-            let impulse = if let Some(drive) = stop_drive {
-                (drive.net - drive.foot) * body.mass() * TICK_SECONDS
+            let impulse = if let Some((net, foot)) = drive {
+                (net - foot) * body.mass() * TICK_SECONDS
             } else {
                 acceleration * body.mass() * TICK_SECONDS * (1.0 - fraction)
             };
@@ -293,8 +312,8 @@ impl WalkingController {
             .enumerate()
         {
             if supports[index].is_some() {
-                let impulse = if let Some(drive) = stop_drive {
-                    drive.foot * mass * TICK_SECONDS / count as f32
+                let impulse = if let Some((_, foot)) = drive {
+                    foot * mass * TICK_SECONDS / count as f32
                 } else {
                     acceleration * mass * TICK_SECONDS * fraction / count as f32
                 };

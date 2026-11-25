@@ -32,14 +32,14 @@ On the 30 m half-extent flat fixture with spawn elevation 0.08 m, settle 60 tick
 
 Diagnostics showed speed nearly reaching zero with both feet behind the pelvis, followed by forward tipping. [Slice 06c2b2](../slices/06c2b2-stopping.md) and [ADR 0013](../decisions/0013-stopping-force-pair.md) add a horizontal force pair with separately measured/capped moment. The original cases, 32 phase cases and 84 broader flat/forward-slope cases retain posture, speed, finite-state and force/effort gates. Sixty-four short deck cases additionally require motor and moment release. This evidence does not certify arbitrary terrain or human feel.
 
-## Rotating-deck traversal: open
+## Rotating-deck traversal: addressed within recorded native fixtures
 
-The tracked `longer_rotating_deck_runs_keep_posture_when_released` test is explicitly ignored by default because it remains a known movement-acceptance failure; it is not a passed or waived release gate. Spawn at [0,0,0] on a kinematic velocity-driven deck with half extents [6,.5,6], center [0,-.5,0], angular velocity [0,.4,0]. Settle 60, run each world cardinal for 60 ticks, then release 360. Require head >1.1 m, finite state, bounded command/moment, anchor error <.05 m and supported relaxation. Current +X fails head clearance at release tick 11.
+The original `longer_rotating_deck_runs_keep_posture_when_released` regression was initially ignored and failing. [Slice 06c2b3](../slices/06c2b3-rotating-traversal.md) now enables it in the default suite with bounded support-moment compensation. The following describes the original failure: Spawn at [0,0,0] on a kinematic velocity-driven deck with half extents [6,.5,6], center [0,-.5,0], angular velocity [0,.4,0]. Settle 60, run each world cardinal for 60 ticks, then release 360. Require head >1.1 m, finite state, bounded command/moment, anchor error <.05 m and supported relaxation. Baseline `c4f2c7f` +X failed head clearance at release tick 11.
 
-Independent comparison against `d9e6533` reproduced failure at release tick 10. Keeping run input held instead of releasing also failed after another 10/11/10/15 ticks for the four directions. This is an existing moving traversal deficiency that appears around the same motion phase, not caused by the new settling predicate. Shorter stops do not establish general moving traversal. Continue this regression before closing movement acceptance.
+Independent comparison against `d9e6533` reproduced failure at release tick 10. Keeping run input held instead of releasing also failed after another 10/11/10/15 ticks for the four directions. This is an existing moving traversal deficiency that appears around the same motion phase, not caused by the new settling predicate. Shorter stops do not establish general moving traversal. The subsequent correction also retains 32 sustained four-second traversals, six-second post-traversal stops and 64 short-stop cases extended to twenty seconds. These finite fixtures do not establish arbitrary moving terrain or human acceptance.
 
 ```sh
-cargo test --locked --release -p brawler-engine --lib longer_rotating_deck_runs -- --ignored --nocapture
+cargo test --locked --release -p brawler-engine --lib longer_rotating_deck_runs -- --nocapture
 ```
 
 Independent backward-slope probes also retain failures, including some during movement before release. They remain distinct from the verified forward uphill/downhill cases; do not describe these as general slope support.

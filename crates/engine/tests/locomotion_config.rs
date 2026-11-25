@@ -1,32 +1,35 @@
 use brawler_engine::{LocomotionConfig, MotorConfig};
 
 #[test]
-fn locomotion_schema_two_requires_an_explicit_stopping_moment_limit() {
+fn locomotion_schema_three_requires_explicit_stopping_and_support_moment_limits() {
     let config = serde_json::to_value(LocomotionConfig::bundled().unwrap()).unwrap();
-    assert_eq!(config["schema_version"], 2);
+    assert_eq!(config["schema_version"], 3);
+    assert_eq!(config["support_moment_cap_nm"], 120.0);
     assert_eq!(config["stopping_moment_cap_nm"], 120.0);
     let mut legacy = config.clone();
-    legacy["schema_version"] = serde_json::json!(1);
+    legacy["schema_version"] = serde_json::json!(2);
     assert!(LocomotionConfig::from_json(&legacy.to_string()).is_err());
-    let mut missing = config.clone();
-    missing
-        .as_object_mut()
-        .unwrap()
-        .remove("stopping_moment_cap_nm");
-    assert!(LocomotionConfig::from_json(&missing.to_string()).is_err());
-    for value in [0.0, 120.0] {
-        let mut valid = LocomotionConfig::bundled().unwrap();
-        valid.stopping_moment_cap_nm = value;
-        valid.validate().unwrap();
+    for key in ["stopping_moment_cap_nm", "support_moment_cap_nm"] {
+        let mut missing = config.clone();
+        missing.as_object_mut().unwrap().remove(key);
+        assert!(LocomotionConfig::from_json(&missing.to_string()).is_err());
+        for value in [0.0, 120.0] {
+            let mut valid = config.clone();
+            valid[key] = serde_json::json!(value);
+            LocomotionConfig::from_json(&valid.to_string()).unwrap();
+        }
+        let mut excessive = config.clone();
+        excessive[key] = serde_json::json!(120.01);
+        assert!(LocomotionConfig::from_json(&excessive.to_string()).is_err());
     }
     for value in [f32::NAN, f32::INFINITY] {
         let mut invalid = LocomotionConfig::bundled().unwrap();
         invalid.stopping_moment_cap_nm = value;
         assert!(invalid.validate().is_err());
+        let mut invalid = LocomotionConfig::bundled().unwrap();
+        invalid.support_moment_cap_nm = value;
+        assert!(invalid.validate().is_err());
     }
-    let mut excessive = config;
-    excessive["stopping_moment_cap_nm"] = serde_json::json!(120.01);
-    assert!(LocomotionConfig::from_json(&excessive.to_string()).is_err());
 }
 
 #[test]

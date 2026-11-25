@@ -54,3 +54,7 @@ npm --prefix web run test:e2e -- stopping.spec.ts locomotion-contract.spec.ts --
 ```
 
 The known failing reproduction has its own command in the terrain-gap record. No §33 release gate is closed by this slice.
+
+## Subsequent correction
+
+[Slice 06c2b3](../slices/06c2b3-rotating-traversal.md) resolves the formerly ignored rotating-traversal regression and extends short deck stops to twenty seconds. Its schema-3 support compensation and moment diagnostic are recorded separately; the evidence above describes this earlier slice.

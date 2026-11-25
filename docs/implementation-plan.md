@@ -22,7 +22,8 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 06c2a — verified | Native uphill/downhill gait and braking | 60-second slope stands, walk/run/stop, impacts, bounded targets and absolute impulse budget |
 | 06c2b1 — verified | Reversal braking and keyboard transitions | Eight alternating walk/run legs, bounded effort, neutral gaps, lifecycle and native/WASM traces |
 | 06c2b2 — verified fixtures | Varied stopping phases and support-frame cleanup | Bounded force/moment accounting, flat/forward-slope phase grid, short deck stops, impact compliance and native/WASM traces |
-| 06c2b3 | Remaining terrain and moving traversal | Long rotating-deck movement, backward/cross-slope traversal, tread clearance and terrain transitions |
+| 06c2b3 — verified native fixtures | Rotating-support traversal and carry moment | Held/stop grids, twenty-second idle observation, measured force/moment limits, lifecycle and diagnostics |
+| 06c2b4 | Remaining terrain traversal | Backward/cross-slope traversal, tread clearance and terrain transitions |
 | 06c3 | Browser terrain and human movement assessment | Matching scenes/traces, visible contact transitions and human playability |
 | 07 | Jump, fall and recovery | Buffered edge consumed once; total impulse bounded; physical get-up |
 | 08 | Independent strikes and contact damage | Real contact, attack deduplication, no resting damage |

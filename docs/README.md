@@ -17,7 +17,8 @@
 - [Moving-support transitions](slices/06c1-moving-supports.md): bounded native deck response, impact compliance and support removal.
 - [Native slope gait](slices/06c2a-native-slopes.md): supported leg/sole targets and bounded braking on inclined planes.
 - [Reversal braking](slices/06c2b1-reversals.md): tick-sampled direction changes, bounded braking, neutral key gaps and native/WASM evidence.
-- [Stopping phases](slices/06c2b2-stopping.md): explicit moment-limited stopping, support-frame corrections, verification and remaining traversal failures.
+- [Stopping phases](slices/06c2b2-stopping.md): explicit moment-limited stopping, support-frame corrections, verification and historical traversal failures.
+- [Rotating-support traversal](slices/06c2b3-rotating-traversal.md): bounded carry compensation, longer idle checks and separate moment diagnostics.
 - [Open terrain scenarios](verification/terrain-gaps.md): remaining slope, stair and stop-phase reproductions.
 - [Foundation evidence](verification/foundation.md): native/WASM tests, build identity and browser smoke.
 - [Decisions](decisions/): numbered records of context, alternatives, and consequences.
