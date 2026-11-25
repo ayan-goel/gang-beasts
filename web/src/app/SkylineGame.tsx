@@ -29,7 +29,7 @@ export function SkylineGame() {
   return <main className="skyline-shell">
     <header className="skyline-header">
       <a className="roof-brand" href="/play/"><span aria-hidden="true" className="roof-mark">▰</span> Skyline Melee</a>
-      <span>Local multiplayer</span><a href="/">Physics playground ↗</a>
+      <span>Local multiplayer</span><a href="/rooms/">Private rooms</a><a href="/">Physics playground ↗</a>
     </header>
     <div className={menu ? 'skyline-layout has-menu' : 'skyline-layout'}>
       {menu && <section className="skyline-menu">

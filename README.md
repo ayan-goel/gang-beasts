@@ -1,6 +1,6 @@
 # Physics brawler
 
-A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline Melee is playable locally with two people on one keyboard. Online private rooms and several release gates remain in development.
+A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline Melee is playable locally with two people on one keyboard. Friends can create and join private lobbies. Online matches are in development.
 
 The [technical specification](TECHNICAL_SPEC.md) is canonical. See the [documentation index](docs/README.md) for implementation order, decisions, and acceptance evidence.
 
@@ -13,6 +13,10 @@ Hold a hand control near a crate, vent or exposed roof edge to grab it. The HUD 
 If a walkway falls, keep a hand held within reach of the main roof to catch the lip. Hold Space (Coral) or Enter (Blue) to pull onto a clear roof. Release jump to stop pulling. Releasing your last hand lets you fall. [Catch behavior](docs/slices/10c2-ledge-catch.md) and [pull-up controls](docs/slices/10c3-mantling.md).
 
 For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open the printed local address with `/play/` appended. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
+
+## Open a private room
+
+Start the API and web app in separate terminals using `cargo run --release --locked -p brawler-server` and `npm --prefix web run dev`. Open [Private rooms](http://127.0.0.1:5173/rooms/) and create a room. Copy the invite into a separate browser profile to try joining as a second player on the same machine. Reloading retains your seat. The host role passes to the next occupied slot when the host leaves. [Lobby design and tests](docs/slices/16b-browser-lobby.md)
 
 ## Native server
 

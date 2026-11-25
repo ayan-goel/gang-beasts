@@ -60,6 +60,17 @@ impl Lobby {
             players: self.members.iter().flatten().count(),
         }
     }
+    pub fn update_host(&mut self, now: Instant) {
+        if self.members[self.host].is_some() {
+            return;
+        }
+        if let Some(next) = self.members.iter().position(Option::is_some) {
+            self.host = next;
+        } else {
+            self.empty_since.get_or_insert(now);
+        }
+    }
+
     pub fn slot(&self, session: SessionId) -> Option<usize> {
         self.members
             .iter()

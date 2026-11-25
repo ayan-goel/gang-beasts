@@ -44,7 +44,11 @@ async fn request(
     let raw = to_bytes(res.into_body(), 4096).await.unwrap();
     (
         status,
-        serde_json::from_slice(&raw).expect("JSON API response"),
+        if status == StatusCode::NO_CONTENT {
+            Value::Null
+        } else {
+            serde_json::from_slice(&raw).expect("JSON API response")
+        },
         cookie,
     )
 }
@@ -183,4 +187,46 @@ async fn eight_anonymous_sessions_can_join_and_a_ninth_receives_room_full() {
             assert_eq!(s, StatusCode::CONFLICT);
         }
     }
+}
+
+#[tokio::test]
+async fn a_room_code_cannot_read_names_and_leaving_cannot_replay_the_create_request() {
+    let app = api(Arc::new(WorkerPool::new(1).unwrap())).unwrap();
+    let creator = session(&app).await;
+    let outsider = session(&app).await;
+    let (_, made, _) = request(&app, "/api/rooms", Some(create()), &creator, ORIGIN).await;
+    let path = format!("/api/rooms/{}", made["code"].as_str().unwrap());
+    let lobby = format!("{path}/lobby");
+    assert_eq!(
+        request(&app, &lobby, None, "", ORIGIN).await.0,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        request(&app, &lobby, None, &outsider, ORIGIN).await.0,
+        StatusCode::FORBIDDEN
+    );
+    let (_, roster, _) = request(&app, &lobby, None, &creator, ORIGIN).await;
+    assert_eq!(roster["players"][0]["name"], "Coral");
+    assert_eq!(
+        request(
+            &app,
+            &format!("{path}/leave"),
+            Some(json!({})),
+            &creator,
+            ORIGIN
+        )
+        .await
+        .0,
+        StatusCode::NO_CONTENT
+    );
+    assert_eq!(
+        request(&app, &lobby, None, &creator, ORIGIN).await.0,
+        StatusCode::FORBIDDEN
+    );
+    assert_eq!(
+        request(&app, "/api/rooms", Some(create()), &creator, ORIGIN)
+            .await
+            .0,
+        StatusCode::CONFLICT
+    );
 }

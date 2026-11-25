@@ -51,6 +51,8 @@ pub(crate) fn routes(origin: &str) -> Result<Router, CharacterError> {
         .route("/api/session", post(session))
         .route("/api/rooms", post(create))
         .route("/api/rooms/{code}", get(metadata))
+        .route("/api/rooms/{code}/lobby", get(roster))
+        .route("/api/rooms/{code}/leave", post(leave))
         .route("/api/rooms/{code}/join", post(join))
         .layer(DefaultBodyLimit::max(4096))
         .route_layer(middleware::from_fn_with_state(state.clone(), guard))
@@ -94,6 +96,7 @@ fn body<T>(result: Result<Json<T>, JsonRejection>) -> Result<T, Fault> {
 #[derive(Serialize)]
 struct SessionInfo {
     active: bool,
+    room: Option<String>,
 }
 
 async fn session(
@@ -104,8 +107,10 @@ async fn session(
     body(data)?;
     let mut d = s.directory.lock().unwrap();
     let now = Instant::now();
-    let mut res = Json(SessionInfo { active: true }).into_response();
-    if d.sessions.authenticate(&headers, now).is_err() {
+    let current = d.sessions.authenticate(&headers, now).ok();
+    let room = current.and_then(|id| d.current(id));
+    let mut res = Json(SessionInfo { active: true, room }).into_response();
+    if current.is_none() {
         let cookie = d.sessions.issue(now)?;
         res.headers_mut().insert(
             header::SET_COOKIE,
@@ -158,3 +163,26 @@ async fn metadata(
 
 #[cfg(test)]
 mod tests;
+
+async fn roster(
+    State(s): State<Admission>,
+    Path(raw): Path<String>,
+    headers: HeaderMap,
+) -> Result<Json<types::Roster>, Fault> {
+    let mut d = s.directory.lock().unwrap();
+    let id = d.sessions.authenticate(&headers, Instant::now())?;
+    Ok(Json(d.roster(id, &code(&raw)?)?))
+}
+async fn leave(
+    State(s): State<Admission>,
+    Path(raw): Path<String>,
+    headers: HeaderMap,
+    data: Result<Json<Empty>, JsonRejection>,
+) -> Result<StatusCode, Fault> {
+    body(data)?;
+    let mut d = s.directory.lock().unwrap();
+    let now = Instant::now();
+    let id = d.sessions.authenticate(&headers, now)?;
+    d.leave(id, &code(&raw)?, now)?;
+    Ok(StatusCode::NO_CONTENT)
+}

@@ -8,10 +8,12 @@ All mutations require the configured public Origin and a JSON body of at most 40
 
 | Route | Input and result |
 | --- | --- |
-| POST /api/session | Send an empty JSON object. Issues a session cookie or refreshes the existing session's server-side expiry. The response is identical for both paths. |
+| POST /api/session | Send an empty JSON object. Issues a session cookie or refreshes the existing session's server-side expiry. Returns `active: true` and the session’s current room code or null. |
 | POST /api/rooms | Send name, optional color (0–7), optional capacity (2–8, default 8) and requestId (32 hex characters). Returns 201 with code, slot, host, name and color. Repeating the same request under the same session returns 200 and the same seat. A changed request or a second active room returns 409. |
 | POST /api/rooms/{code}/join | Send name and optional color. Returns the player's seat, including their assigned color. A retry returns the same seat. Full rooms and occupied requested colors return 409. Codes accept either case. |
 | GET /api/rooms/{code} | Returns code, phase, capacity and player count. Unknown or malformed codes return 404. |
+| GET /api/rooms/{code}/lobby | Requires a member session. Returns the roster, capacity and viewer slot. |
+| POST /api/rooms/{code}/leave | Send an empty JSON object. Releases this session’s seat and transfers host if needed. Repeated leave requests succeed with 204. |
 
 Names are trimmed, limited to 24 Unicode scalar values and reject control characters. A session occupies one stable slot in one lobby. A collision when generating a code retries without touching the existing lobby. Idempotency keys are scoped to the authenticated creator. Authentication and mutation happen under one directory lock, with no physics work or I/O waits inside it.
 

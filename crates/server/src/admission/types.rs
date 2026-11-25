@@ -86,3 +86,11 @@ pub(super) struct Seat {
     pub name: String,
     pub color: u8,
 }
+
+#[derive(Serialize)]
+pub(super) struct Roster {
+    pub code: String,
+    pub capacity: u8,
+    pub you: u8,
+    pub players: Vec<Seat>,
+}

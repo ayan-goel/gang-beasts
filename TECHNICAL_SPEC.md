@@ -1005,6 +1005,8 @@ Elimination cancels input, motors and all affected gameplay grips. It is permane
 
 Open site → create private room → share link/code → friends join → choose name/color → ready → host starts → play rounds → results → rematch. No required account, installation, command line or exposed implementation settings.
 
+The [private lobby](docs/slices/16b-browser-lobby.md) lives at `/rooms/`. Its share link carries the room code in `?code=`. Opening an invite while seated preserves the new destination until the player chooses to leave their current room.
+
 Show actionable states for unavailable server, full room, wrong code, incompatible version, loading timeout and reconnect failure. A browser tab becoming hidden is not permission to pause everyone else's game.
 
 ### 19.2 Room configuration and identity
@@ -1024,6 +1026,8 @@ Use six-character human-readable random room codes with collision checks and rat
 | POST | `/api/rooms` | Validated create request; returns room/session info |
 | POST | `/api/rooms/:code/join` | Join or obtain new session after validation |
 | GET | `/api/rooms/:code` | Minimal allowed metadata; never session secrets |
+| GET | `/api/rooms/:code/lobby` | Member-only roster, capacity and viewer slot |
+| POST | `/api/rooms/:code/leave` | Release the authenticated seat and transfer lobby host |
 | WS upgrade | `/ws` | Authenticated/versioned gameplay session |
 | GET | `/metrics` | Internal/protected monitoring endpoint |
 
@@ -1643,7 +1647,7 @@ Each change has a small behavioral test or observable fixture and a reviewable r
 Retain all 18 original completion checks, with explicit evidence expectations:
 
 - [ ] **Browser entry:** Opens directly in supported desktop browsers; critical load fits the defined download budget or a documented approved revision.
-- [ ] **Friend joining:** Two to eight players join a private room link/code without accounts; ninth player is handled safely.
+- [x] **Friend joining:** Two to eight players join a private room link/code without accounts; ninth player is handled safely. [Browser lobby evidence](docs/slices/16b-browser-lobby.md#verification)
 - [ ] **Active ragdolls:** Characters use the physical rig and motors; body/joint/mass checks pass.
 - [ ] **Locomotion:** Walking, running, jumping and recovery are controllable in human playtests.
 - [ ] **Independent hands:** Either hand can punch/grab while the other performs a different permitted action.

@@ -53,13 +53,7 @@ impl Directory {
                     *seat = None;
                 }
             }
-            if r.members[r.host].is_none() {
-                if let Some(next) = r.members.iter().position(Option::is_some) {
-                    r.host = next;
-                } else {
-                    r.empty_since.get_or_insert(now);
-                }
-            }
+            r.update_host(now);
             r.empty_since
                 .is_none_or(|t| now.duration_since(t) < Duration::from_secs(60))
         });
@@ -73,6 +67,12 @@ impl Directory {
             return Err(Fault::INVALID);
         }
         for room in self.rooms.values() {
+            if room.creator == session
+                && room.request == req.request_id
+                && room.slot(session).is_none()
+            {
+                return Err(Fault::CONFLICT);
+            }
             if let Some(slot) = room.slot(session) {
                 if room.creator == session
                     && room.request == req.request_id
@@ -122,6 +122,39 @@ impl Directory {
             .get_mut(code)
             .ok_or(Fault::MISSING)?
             .join(session, name, req.color)
+    }
+    pub fn current(&self, session: SessionId) -> Option<String> {
+        self.rooms
+            .values()
+            .find(|r| r.slot(session).is_some())
+            .map(|r| r.code.clone())
+    }
+
+    pub fn roster(&self, session: SessionId, code: &str) -> Result<super::types::Roster, Fault> {
+        let r = self.rooms.get(code).ok_or(Fault::MISSING)?;
+        let you = r
+            .slot(session)
+            .ok_or(Fault(StatusCode::FORBIDDEN, "not_a_member"))?;
+        Ok(super::types::Roster {
+            code: r.code.clone(),
+            capacity: r.capacity,
+            you: you as u8,
+            players: r
+                .members
+                .iter()
+                .enumerate()
+                .filter_map(|(i, m)| m.as_ref().map(|_| r.seat(i)))
+                .collect(),
+        })
+    }
+
+    pub fn leave(&mut self, session: SessionId, code: &str, now: Instant) -> Result<(), Fault> {
+        let r = self.rooms.get_mut(code).ok_or(Fault::MISSING)?;
+        if let Some(slot) = r.slot(session) {
+            r.members[slot] = None;
+            r.update_host(now);
+        }
+        Ok(())
     }
     pub fn metadata(&self, code: &str) -> Result<PublicRoom, Fault> {
         Ok(self.rooms.get(code).ok_or(Fault::MISSING)?.metadata())
