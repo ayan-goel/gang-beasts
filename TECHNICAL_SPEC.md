@@ -864,6 +864,8 @@ Use little-endian multibyte integers and explicit encoding/decoding. Never seria
 | 16 | Released buttons | u16 LE | 2 |
 | | **Total** | | **18** |
 
+The implemented input kind is 0x01 and the protocol version is 0x01. A lone edge must agree with the final held state. The browser sampler preserves up to four ordered records per sample interval. [Codec and conformance evidence](docs/protocol.md).
+
 Arithmetic: `1+1+4+4+1+1+2+2+2 = 18`. The final field ends at byte 18 exclusive. No additional game-message header is prepended to this record in protocol v1. WebSocket framing, masking, TLS and network overhead are additional. At 60 records/s this is **1,080 application bytes/s per client** before overhead.
 
 Movement components encode `[-127,127]`; reject −128, dequantize, and clamp vector magnitude to one so diagonals do not move faster. Reserve button bits: 0 jump, 1 run, 2 left hand, 3 right hand, 4 lift, 5 headbutt, 6 kick, 7 crouch, 8 emote, 9 interact; bits 10–15 must be zero in v1. Future actions require compatible version negotiation. Camera/menu/scoreboard inputs are local.

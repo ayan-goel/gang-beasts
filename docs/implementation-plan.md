@@ -48,6 +48,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 12a — verified native local match | Two-player Skyline melee | Countdown, physical eliminations, draws, first-to-three, full reset and rematch |
 | 12b — playable browser match | Local Skyline game screen | Group framing, hazard warnings, keyboard ring-out, three rounds and rematch |
 | 12 | Melee match lifecycle | Simultaneous elimination, scoring, full reset and rematch |
+| 13a — input wire contract | Browser sampling and native codec | Shared 18-byte golden record, edge ordering, malformed input, bounded burst and wraparound |
 | 13 | Rust/TS binary contracts | Golden inputs/snapshots, malformed records, sequence wrap and lifecycle |
 | 14 | Dedicated room server | Single owner, bounded queues, authoritative inputs, scheduling tests |
 | 15 | Two-to-eight online clients | Interpolation, resync, backpressure and latency matrix |

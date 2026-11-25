@@ -27,6 +27,7 @@
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
 - [Playable asset provenance](asset-provenance.md) identifies the source of the current arena, fighter geometry and interface.
+- [Realtime protocol](protocol.md) records wire contracts and compatibility evidence.
 - [Pulling onto the roof](slices/10c3-mantling.md) covers climbing controls, support transfer and obstruction tests.
 - [Ledge catches](slices/10c2-ledge-catch.md) documents falling-hand targeting, physical slip and break loads.
 - [Arena grips](slices/10c1-arena-grips.md) covers physical interaction with rooftop props and edges.
