@@ -18,7 +18,9 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 05b2 — verified | Driven WASM rig and motor inspection | Native/WASM standing trace; visible motor targets, support/effort readings and browser controls |
 | 06a — verified | Native assisted walking/running | Direction/speed, repeated alternating swings, bounded impulse/effort, stop, wall, moving-support and ledge fixtures |
 | 06b — verified | Locomotion WASM/playground | Native/browser trace agreement, movement controls and visible gait/turn/stop inspection |
-| 06c | Terrain and locomotion transitions | Slopes, steps, rotating/moving supports, rapid reversals and human playability |
+| 06c1 — verified | Native moving-support transitions | Rotation/translation start and stop, partial transfer, impact response and departure momentum |
+| 06c2 | Native slope, step and reversal control | Supported sole targets, swing clearance, repeated direction changes and preserved flat-ground behavior |
+| 06c3 | Browser terrain and human movement assessment | Matching scenes/traces, visible contact transitions and human playability |
 | 07 | Jump, fall and recovery | Buffered edge consumed once; total impulse bounded; physical get-up |
 | 08 | Independent strikes and contact damage | Real contact, attack deduplication, no resting damage |
 | 09 | Grips, stamina and release | Per-hand constraints, valid anchors, load failure, cyclic stress cleanup |

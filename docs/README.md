@@ -14,6 +14,8 @@
 - [Browser standing](slices/05b2-standing-browser.md): driven WASM ownership, motor targets, support/effort inspection and 60-second browser verification.
 - [Native locomotion](slices/06a-native-locomotion.md): bounded movement assistance, procedural gait, support velocity, braking and motor relaxation.
 - [Browser locomotion](slices/06b-browser-locomotion.md): movement input, native/WASM parity, live gait targets and input/resource lifecycle.
+- [Moving-support transitions](slices/06c1-moving-supports.md): bounded native deck response, impact compliance and support removal.
+- [Open terrain scenarios](verification/terrain-gaps.md): remaining slope, stair and reversal reproductions.
 - [Foundation evidence](verification/foundation.md): native/WASM tests, build identity and browser smoke.
 - [Decisions](decisions/): numbered records of context, alternatives, and consequences.
 - [Slices](slices/): behavior, contracts, tests, and remaining work for each completed increment.

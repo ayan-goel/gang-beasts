@@ -140,3 +140,37 @@ fn support_uses_the_solver_friction_material_combination() {
         assert!((support.friction - expected).abs() < 1e-6);
     }
 }
+
+#[test]
+fn disabling_a_foot_or_surface_cannot_reuse_cached_support_before_the_next_solve() {
+    let config = BalanceConfig::bundled().unwrap();
+    for disable_foot in [false, true] {
+        for disable_body in [false, true] {
+            let (mut world, foot, platform) = fixture(floor(), true);
+            let target = if disable_foot { foot } else { platform };
+            if disable_body {
+                world.bodies[target].set_enabled(false);
+            } else {
+                let collider = world.bodies[target].colliders()[0];
+                world.colliders[collider].set_enabled(false);
+            }
+            assert!(
+                !foot_supported(&world, foot, &[foot], &config),
+                "foot={disable_foot},body={disable_body}"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_foot_changed_to_a_sensor_cannot_reuse_its_previous_solid_contact() {
+    let (mut world, foot, _) = fixture(floor(), true);
+    let collider = world.bodies[foot].colliders()[0];
+    world.colliders[collider].set_sensor(true);
+    assert!(!foot_supported(
+        &world,
+        foot,
+        &[foot],
+        &BalanceConfig::bundled().unwrap()
+    ));
+}

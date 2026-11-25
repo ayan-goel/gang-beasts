@@ -9,6 +9,10 @@ use crate::{CommandError, PhysicsConfig};
 #[path = "locomotion_tests.rs"]
 mod tests;
 
+#[cfg(test)]
+#[path = "moving_support_tests.rs"]
+mod moving_support_tests;
+
 pub struct LocomotionRagdoll {
     pose: PoseRagdoll,
     controller: WalkingController,

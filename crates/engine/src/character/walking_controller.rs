@@ -1,6 +1,6 @@
 use super::{
     BalanceConfig, BodyPart, CharacterError, LocomotionConfig, PassiveRagdoll,
-    support::foot_support,
+    support::foot_support, support_motion::SupportMotion,
 };
 use crate::TICK_SECONDS;
 use rapier3d::na::RealField;
@@ -39,6 +39,7 @@ pub(super) struct WalkingController {
     config: LocomotionConfig,
     support: BalanceConfig,
     intent: Vector<Real>,
+    support_motion: SupportMotion,
     running: bool,
     blend: f32,
     braking_ticks: u32,
@@ -51,6 +52,7 @@ impl WalkingController {
             config,
             support: BalanceConfig::bundled().expect("bundled support config"),
             intent: Vector::zeros(),
+            support_motion: SupportMotion::default(),
             running: false,
             blend: 0.0,
             braking_ticks: 0,
@@ -59,6 +61,7 @@ impl WalkingController {
     }
     pub fn reset(&mut self) {
         self.intent = Vector::zeros();
+        self.support_motion = SupportMotion::default();
         self.running = false;
         self.blend = 0.0;
         self.braking_ticks = 0;
@@ -110,6 +113,7 @@ impl WalkingController {
         let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
         let upright = (root.rotation() * Vector::y()).y > self.config.minimum_upright_y;
         if count == 0 || !upright {
+            self.support_motion = SupportMotion::default();
             self.blend = 0.0;
             self.state.motor_strength =
                 (strength - TICK_SECONDS / self.config.motor_release_s).max(0.0);
@@ -154,6 +158,14 @@ impl WalkingController {
             acceleration = ((surface - velocity) / self.config.idle_response_s)
                 .cap_magnitude(self.config.idle_maximum_acceleration_m_s2);
             acceleration.y = 0.0;
+        }
+        let carry = self.support_motion.advance(
+            surface,
+            velocity + acceleration * TICK_SECONDS,
+            self.config.maximum_acceleration_m_s2 * TICK_SECONDS,
+        );
+        if idle {
+            acceleration += carry / TICK_SECONDS;
         }
         acceleration = acceleration.cap_magnitude(self.config.maximum_acceleration_m_s2);
         self.state.acceleration = acceleration.into();

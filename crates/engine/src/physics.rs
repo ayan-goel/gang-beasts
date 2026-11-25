@@ -19,6 +19,12 @@ pub(crate) struct PhysicsWorld {
 }
 
 impl PhysicsWorld {
+    #[cfg(test)]
+    pub fn remove_collider(&mut self, handle: ColliderHandle) -> Option<Collider> {
+        self.colliders
+            .remove(handle, &mut self.islands, &mut self.bodies, true)
+    }
+
     pub fn new(config: &PhysicsConfig) -> Self {
         Self {
             bodies: RigidBodySet::new(),

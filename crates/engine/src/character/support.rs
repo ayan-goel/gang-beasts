@@ -37,9 +37,15 @@ pub(super) fn foot_support(
     own_bodies: &[RigidBodyHandle],
     config: &BalanceConfig,
 ) -> Option<FootSupport> {
+    if !world.bodies[foot].is_enabled() {
+        return None;
+    }
     let mut selected: Option<FootSupport> = None;
     for handle in world.bodies[foot].colliders() {
         let foot_collider = &world.colliders[*handle];
+        if !foot_collider.is_enabled() || foot_collider.is_sensor() {
+            continue;
+        }
         for pair in world.narrow_phase.contact_pairs_with(*handle) {
             if !pair.has_any_active_contact
                 || !pair.manifolds.iter().any(|manifold| {
@@ -56,11 +62,16 @@ pub(super) fn foot_support(
             } else {
                 pair.collider1
             };
-            let other = &world.colliders[other_handle];
-            if other.is_sensor()
-                || other
-                    .parent()
-                    .is_some_and(|body| own_bodies.contains(&body))
+            let Some(other) = world.colliders.get(other_handle) else {
+                continue;
+            };
+            // Enabled flags change before Rapier rebuilds cached contact pairs.
+            // Removed support must not supply one final tick of balance or drive.
+            if !other.is_enabled()
+                || other.is_sensor()
+                || other.parent().is_some_and(|body| {
+                    own_bodies.contains(&body) || !world.bodies[body].is_enabled()
+                })
             {
                 continue;
             }
