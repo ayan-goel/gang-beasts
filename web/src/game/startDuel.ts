@@ -83,7 +83,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     });
     const render = (dt = 0) => {
       const first = duel.body_states(0), second = duel.body_states(1);
-      if (match) renderer.renderSkyline(first, second, duel.arena_poses(), match, dt);
+      if (match) renderer.renderSkyline([first, second], duel.arena_poses(), match, dt);
       else renderer.renderDuel(first, second);
     };
     const step = () => {

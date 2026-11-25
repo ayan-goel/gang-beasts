@@ -37,14 +37,14 @@ export function useLiveRoom(code: string) {
     socket.onmessage = event => {
       try {
         const bytes = new Uint8Array(event.data);
-        if (bytes[0] === 23 && last && !feed) { feed = new MatchFeed(bytes, packet => {
+        if ((bytes[0] === 23 || bytes[0] === 26) && last && !feed) { feed = new MatchFeed(bytes, packet => {
           if (socket.readyState !== WebSocket.OPEN) return;
           if (socket.bufferedAmount > 16384) { socket.close(4008, 'Input queue stalled'); return; }
           socket.send(new Uint8Array(packet));
         }); setGame(feed); return; }
         if (bytes[0] === 2 && feed) { feed.receive(bytes); return; }
         if (bytes[0] === 25 && bytes.length === 3 && bytes[1] === 1) {
-          setStartError(bytes[2] === 2 ? 'All match servers are busy. Try again.' : 'Both players must be ready to start.');
+          setStartError(bytes[2] === 2 ? 'All match servers are busy. Try again.' : 'All players must be ready to start.');
           return;
         }
         if (bytes[0] === 21 && last) { content.acknowledge(bytes); return; }

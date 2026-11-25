@@ -7,8 +7,8 @@ export interface SkylineMap {
 }
 export interface MatchView {
   phase: 'countdown' | 'playing' | 'round_results' | 'match_results';
-  round: number; epoch: string; remaining: number; scores: [number, number]; winner: number | null;
-  timeLeft: number; visible: [boolean, boolean];
+  round: number; epoch: string; remaining: number; scores: number[]; winner: number | null;
+  timeLeft: number; visible: boolean[];
   hazard: 'quiet' | 'west_warning' | 'east_warning' | 'gust_warning' | 'gust';
 }
 

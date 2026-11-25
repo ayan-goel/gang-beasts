@@ -7,28 +7,28 @@ import type { SkylineContent } from '../lobby/content';
 import type { Snapshot } from '../net/snapshot';
 import type { MatchFeed } from './MatchFeed';
 
-const colors = ['#f38e66','#64b7dd','#e8bd59','#7dd3b1','#bd9ae6','#e69eb9','#b5d87e','#8cacc1'];
+const colors = ['#f38e66','#64b7dd','#e8bd59','#7dd3b1','#bd9ae6','#e69eb9','#bbd17e','#a7b4c9'];
 const phases = ['countdown','playing','round_results','match_results'] as const;
 
 export function matchView(frame: Snapshot, content: SkylineContent): MatchView {
   const t = frame.arenaTick;
   const s = content.map.schedule;
   return {phase: phases[frame.phase]!, round: frame.number, epoch: String(frame.round), remaining: frame.remaining,
-    scores: [frame.fighters[0]!.score, frame.fighters[1]!.score], winner: frame.winner,
-    visible: [frame.fighters[0]!.consciousness !== 3, frame.fighters[1]!.consciousness !== 3],
+    scores: frame.fighters.map(f => f.score), winner: frame.winner,
+    visible: frame.fighters.map(f => f.consciousness !== 3),
     timeLeft: Math.max(0, (t < s.gust_tick ? s.gust_tick : s.end_tick) - t),
     hazard: t >= s.gust_tick ? 'gust' : t >= s.east_tick ? 'gust_warning' : t >= s.west_tick ? 'east_warning' : t >= s.warn_tick ? 'west_warning' : 'quiet'};
 }
 
 export function startRemoteScene(container: HTMLElement, content: SkylineContent, feed: MatchFeed, update: (match: MatchView) => void, status: (value: StreamStatus) => void) {
-  const scene = new FixtureScene(container, content.fighter, {map: content.map, color: colors[feed.fighters[0].color]});
-  const bodies = [new Float32Array(15*14), new Float32Array(15*14)] as const;
+  const scene = new FixtureScene(container, content.fighter, {map: content.map, color: colors[feed.fighters[0]!.color]});
+  const bodies = feed.fighters.map(() => new Float32Array(15*14));
   const objects = new Float32Array(8*content.map.objects.length);
   let animation = 0, priorTime = performance.now(), prior: Snapshot | null = null, match: MatchView | null = null;
   let previousStatus: StreamStatus | undefined;
   let unbind: (() => void) | undefined;
   try {
-    scene.addOpponent(content.fighter, colors[feed.fighters[1].color]);
+    for (const fighter of feed.fighters.slice(1)) scene.addOpponent(content.fighter, colors[fighter.color]);
     unbind = bindRemoteControls(container.querySelector('canvas')!, feed);
     function render(now: number) {
       const sample = feed.timeline.sample(now);
@@ -46,7 +46,7 @@ export function startRemoteScene(container: HTMLElement, content: SkylineContent
         }
         if (sample.status !== previousStatus) { status(sample.status); previousStatus = sample.status; }
       }
-      if (match) scene.renderSkyline(bodies[0],bodies[1],objects,match,(now-priorTime)/1000);
+      if (match) scene.renderSkyline(bodies, objects, match, (now-priorTime)/1000);
       priorTime = now;
       animation = requestAnimationFrame(render);
     }

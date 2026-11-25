@@ -33,7 +33,7 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
     try { await leave(code); onLeave(); } catch (err) { setError(errorText(err)); setLeaving(false); }
   }
   if (game) return <Suspense fallback={<p role="status">Opening Skyline…</p>}><OnlineMatch feed={game} exit={exit}/>{error && <p role="alert">{error}</p>}</Suspense>;
-  const canStart = connection?.players.length === 2 && connection.occupied === connection.ready;
+  const canStart = connection && connection.players.length >= 2 && connection.occupied === connection.ready;
   return <section className="room-panel">
     <h1>Room lobby</h1>
     <div className="room-code"><span>Room code</span><strong>{code}</strong></div>
@@ -54,7 +54,7 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
       </button>}
     {connection?.host === mySlot && connection && <>
       <button className="room-primary" disabled={!canStart} onClick={start}>Start match</button>
-      {!canStart && <small>{connection.players.length !== 2 ? 'Online matches currently need two players.' : 'Waiting for both players to ready up.'}</small>}
+      {!canStart && <small>{connection.players.length < 2 ? 'Invite at least one more player.' : 'Waiting for all players to ready up.'}</small>}
     </>}
     {(error || load.error || startError) && <p role="alert">{error || load.error || startError}</p>}
     <button className="room-secondary" onClick={exit} disabled={leaving}>{leaving ? 'Leaving…' : 'Leave room'}</button>

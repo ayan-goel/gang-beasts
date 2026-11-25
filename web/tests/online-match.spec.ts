@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import { observeMatch } from './support/onlineTrace';
 
@@ -102,4 +102,53 @@ test('the arena reports a stalled stream and resumes after ordered snapshots arr
     resume();
     await profile.close();
   }
+});
+
+test('eight ready browsers share the rooftop and the eighth player can run off it', async ({browser}) => {
+  const contexts: BrowserContext[] = [];
+  const pages: Page[] = [];
+  const eliminated = new Set<number>();
+  let invite = '/rooms/';
+  try {
+    for (let slot = 0; slot < 8; slot++) {
+      const context = await browser.newContext({viewport:{width:480, height:460}, deviceScaleFactor:0.65});
+      contexts.push(context);
+      const player = await context.newPage();
+      pages.push(player);
+      player.on('websocket', socket => socket.on('framereceived', ({payload}) => {
+        if (!Buffer.isBuffer(payload) || payload[0] !== 2) return;
+        const gameplay = 20 + payload.readUInt16LE(16) * 32;
+        if (payload[gameplay+3] === 8 && payload[gameplay+24*8+1] === 3) eliminated.add(slot);
+      }));
+      await player.goto(invite);
+      await player.getByLabel('Player name').fill('Fighter ' + (slot+1));
+      await player.getByRole('button',{name:slot === 0 ? 'Create room' : 'Join room',exact:true}).click();
+      if (slot === 0) invite = await player.getByLabel('Invite link').inputValue();
+    }
+    const host = pages[0]!;
+    for (const player of pages.slice(0,7)) await player.getByRole('button',{name:'Ready up'}).click();
+    await expect(host.getByRole('button',{name:'Start match'})).toBeDisabled();
+    const eighth = pages[7]!;
+    await eighth.getByRole('button',{name:'Ready up'}).click();
+    await host.getByRole('button',{name:'Start match'}).click({timeout:10000});
+    for (const [slot, player] of pages.entries()) {
+      await expect(player.getByRole('heading',{name:'Playing as Fighter ' + (slot+1)})).toBeVisible();
+      await expect(player.getByLabel('8 fighters on the Skyline rooftop')).toBeVisible();
+      await expect(player.getByLabel('Fighter 8 score')).toHaveText('0');
+    }
+    await expect(eighth.getByLabel('Round phase')).toHaveText('Playing');
+    await eighth.bringToFront();
+    await eighth.locator('.online-scene canvas').focus();
+    await eighth.keyboard.down('ShiftLeft');
+    await eighth.keyboard.down('KeyD');
+    try {
+      await expect.poll(() => eliminated.size, {timeout:30000}).toBe(8);
+    } finally {
+      await eighth.keyboard.up('KeyD');
+      await eighth.keyboard.up('ShiftLeft');
+    }
+    for (const player of pages) await expect(player.getByLabel('Fighter 8 eliminated')).toHaveText('Out');
+    await expect(host.getByLabel('Round phase')).toHaveText('Playing');
+    for (const player of pages.slice().reverse()) await player.getByRole('button',{name:'Leave room'}).click();
+  } finally { await Promise.all(contexts.map(context => context.close())); }
 });

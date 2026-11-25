@@ -29,7 +29,7 @@ export class FixtureScene {
     new THREE.MeshStandardMaterial({ color: '#f58465', roughness: 0.65 }),
   );
   private readonly resizeObserver?: ResizeObserver;
-  private opponent?: RagdollView;
+  private readonly opponents: RagdollView[] = [];
   private skyline?: SkylineView;
   private groupCamera?: GroupCamera;
   private readonly practice?: PracticeTargetView;
@@ -102,23 +102,28 @@ export class FixtureScene {
   }
 
   addOpponent(definition: RigDefinition, color = '#559ed8'): void {
-    this.opponent = new RagdollView(definition, color);
-    this.scene.add(this.opponent.root);
-    this.renderer.domElement.setAttribute('aria-label', this.skyline ? 'Two fighters on the Skyline rooftop' : 'Two fighters on the local sparring platform');
+    const opponent = new RagdollView(definition, color);
+    this.opponents.push(opponent);
+    this.scene.add(opponent.root);
+    const count = this.opponents.length + 1;
+    const arena = this.skyline ? 'Skyline rooftop' : 'local sparring platform';
+    this.renderer.domElement.setAttribute('aria-label', (count === 2 ? 'Two' : count) + ' fighters on the ' + arena);
   }
 
-  renderSkyline(first:Float32Array, second:Float32Array, props:Float32Array, match:MatchView, dt:number):void {
-    this.skyline!.update(props,match.hazard);
-    this.rig!.root.visible=match.visible[0];
-    this.opponent!.root.visible=match.visible[1];
-    this.opponent!.update(second,-1);
-    const present=[first,second].filter((_,id)=>match.visible[id]);
-    this.groupCamera!.update(this.camera,present,match.phase==='countdown' || match.phase==='match_results',dt);
-    this.render(first,undefined,undefined,-1);
+  renderSkyline(players: Float32Array[], props: Float32Array, match: MatchView, dt: number): void {
+    this.skyline!.update(props, match.hazard);
+    this.rig!.root.visible = match.visible[0]!;
+    this.opponents.forEach((rig, i) => {
+      rig.root.visible = match.visible[i + 1]!;
+      if (rig.root.visible) rig.update(players[i + 1]!, -1);
+    });
+    const present = players.filter((_, slot) => match.visible[slot]);
+    this.groupCamera!.update(this.camera, present, match.phase === 'countdown' || match.phase === 'match_results', dt);
+    this.render(players[0]!, undefined, undefined, -1);
   }
 
   renderDuel(first: Float32Array, second: Float32Array): void {
-    this.opponent!.update(second, -1);
+    this.opponents[0]!.update(second, -1);
     const x = (first[28]! + second[28]!) / 2;
     const y = Math.max(0.9, (first[29]! + second[29]!) / 2);
     const z = (first[30]! + second[30]!) / 2;
