@@ -1,4 +1,5 @@
-use super::{BodyPart, LocomotionConfig, PassiveRagdoll, support::FootSupport};
+use super::rig_frame::ReadRig;
+use super::{BodyPart, LocomotionConfig, support::FootSupport};
 use rapier3d::prelude::*;
 
 pub(super) struct SupportDrive {
@@ -9,7 +10,7 @@ pub(super) struct SupportDrive {
 }
 
 pub(super) fn allocate(
-    rig: &PassiveRagdoll,
+    rig: ReadRig<'_>,
     supports: [Option<FootSupport>; 2],
     velocity: Vector<Real>,
     requested: Vector<Real>,
@@ -42,11 +43,13 @@ pub(super) fn allocate(
         extra = -direction * residual;
     }
     let mass = rig
+        .parts
         .bodies
         .iter()
         .map(|h| rig.world.bodies[*h].mass())
         .sum::<f32>();
     let center = rig
+        .parts
         .bodies
         .iter()
         .map(|h| {
@@ -56,7 +59,7 @@ pub(super) fn allocate(
         .sum::<Vector<Real>>()
         / mass;
     if steering {
-        let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+        let root = &rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]];
         let up = root.rotation() * Vector::y();
         let rate = root.angvel().cross(&up);
         let surface = supports
@@ -74,7 +77,7 @@ pub(super) fn allocate(
                 .norm()
                 .max(config.maximum_acceleration_m_s2 * crate::TICK_SECONDS)
                 .max(0.000001);
-        let g = rig.configuration().gravity_y.abs();
+        let g = rig.parts.physics.gravity_y.abs();
         let drag = supports
             .iter()
             .flatten()
@@ -119,7 +122,7 @@ pub(super) fn allocate(
         .zip(supports)
         .filter(|(_, support)| support.is_some())
         .map(|(part, _)| {
-            rig.world.bodies[rig.bodies[part.index()]]
+            rig.world.bodies[rig.parts.bodies[part.index()]]
                 .center_of_mass()
                 .coords
         })

@@ -1,4 +1,5 @@
-use super::{BodyPart, LocomotionConfig, PassiveRagdoll, support::FootSupport};
+use super::rig_frame::ReadRig;
+use super::{BodyPart, LocomotionConfig, support::FootSupport};
 use rapier3d::prelude::*;
 
 #[derive(Clone, Copy)]
@@ -9,7 +10,7 @@ pub(super) struct StoppingDrive {
 }
 
 pub(super) fn allocate(
-    rig: &PassiveRagdoll,
+    rig: ReadRig<'_>,
     requested: Vector<Real>,
     velocity: Vector<Real>,
     supports: [Option<FootSupport>; 2],
@@ -23,7 +24,7 @@ pub(super) fn allocate(
     );
     let mut mass = 0.0;
     let mut center = Vector::zeros();
-    for handle in rig.bodies {
+    for handle in rig.parts.bodies {
         let body = &rig.world.bodies[handle];
         mass += body.mass();
         center += body.center_of_mass().coords * body.mass();
@@ -46,10 +47,10 @@ pub(super) fn allocate(
     // Fade drag below one tick's velocity correction to avoid reversing a full
     // foot command when nearly stationary feedback changes sign.
     let fade = (horizontal.norm() / quantum.max(0.000001)).min(1.0);
-    let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+    let root = &rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]];
     let up = root.rotation() * Vector::y();
     let rate = root.angvel().cross(&up);
-    let gravity = rig.configuration().gravity_y.abs();
+    let gravity = rig.parts.physics.gravity_y.abs();
     let drag = supports
         .iter()
         .flatten()
@@ -70,7 +71,7 @@ pub(super) fn allocate(
     let mut foot = ((drag
         + vector![up.x, 0.0, up.z] * config.drive_tilt_gain
         + vector![rate.x, 0.0, rate.z] * config.drive_tilt_damping_s)
-        * rig.configuration().gravity_y.abs())
+        * rig.parts.physics.gravity_y.abs())
     .cap_magnitude(config.maximum_acceleration_m_s2 / 2.0)
         * strength;
     let mut feet = Vector::zeros();
@@ -79,7 +80,7 @@ pub(super) fn allocate(
         .enumerate()
     {
         if supports[index].is_some() {
-            feet += rig.world.bodies[rig.bodies[part.index()]]
+            feet += rig.world.bodies[rig.parts.bodies[part.index()]]
                 .center_of_mass()
                 .coords
                 / count;

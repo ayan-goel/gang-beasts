@@ -1,4 +1,5 @@
-use super::{BodyPart, LocomotionConfig, PassiveRagdoll, support::FootSupport};
+use super::rig_frame::ReadRig;
+use super::{BodyPart, LocomotionConfig, support::FootSupport};
 use rapier3d::na::{ComplexField, RealField};
 use rapier3d::prelude::*;
 
@@ -23,7 +24,7 @@ impl SwingCompletion {
 
     pub fn advance(
         &mut self,
-        rig: &PassiveRagdoll,
+        rig: ReadRig<'_>,
         supports: [Option<FootSupport>; 2],
         relative_velocity: Vector<Real>,
         config: &LocomotionConfig,
@@ -49,8 +50,8 @@ impl SwingCompletion {
             Some((side, remaining - phase_delta))
         };
 
-        let definition = &rig.definition;
-        let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+        let definition = rig.parts.definition;
+        let root = &rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]];
         let forward = root.rotation() * -Vector::z();
         let heading = Rotation::from_axis_angle(
             &Vector::y_axis(),
@@ -58,6 +59,7 @@ impl SwingCompletion {
         );
         let mass = definition.bodies.iter().map(|b| b.mass).sum::<f32>();
         let center = rig
+            .parts
             .bodies
             .iter()
             .map(|h| {
@@ -73,10 +75,10 @@ impl SwingCompletion {
             .sum::<Vector<Real>>()
             / mass;
         let feet = [BodyPart::LeftFoot, BodyPart::RightFoot];
-        let stance = &rig.world.bodies[rig.bodies[feet[1 - side].index()]];
+        let stance = &rig.world.bodies[rig.parts.bodies[feet[1 - side].index()]];
         let nominal = heading
             * (bind_center - Vector::from(definition.bodies[feet[1 - side].index()].position));
-        let gravity = rig.configuration().gravity_y.abs();
+        let gravity = rig.parts.physics.gravity_y.abs();
         if gravity <= f32::EPSILON {
             return;
         }
@@ -143,7 +145,7 @@ impl SwingCompletion {
             let mut candidate = original;
             candidate[hip] = clamp(hip, Rotation::from_axis_angle(&axis, angle * scale) * h);
             candidate[ankle] = clamp(ankle, (q(candidate[hip]) * k).inverse() * h * k * a);
-            if super::foot_target::separated(rig, &candidate) {
+            if super::foot_target::separated(rig.read(), &candidate) {
                 *targets = candidate;
                 return;
             }

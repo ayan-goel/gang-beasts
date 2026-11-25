@@ -2,6 +2,10 @@ mod arm_pose;
 mod balance;
 mod balance_config;
 mod definition;
+mod duel;
+mod duel_fighter;
+pub use duel::{Duel, FighterId};
+mod fighter_control;
 mod foot_target;
 mod gait;
 mod implicit_motor;
@@ -26,6 +30,7 @@ mod recovery_drive;
 pub use recovery_config::RecoveryConfig;
 mod reversal;
 mod rig;
+mod rig_frame;
 #[cfg(test)]
 mod rig_tests;
 mod shape;

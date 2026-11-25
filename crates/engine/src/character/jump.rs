@@ -1,4 +1,5 @@
-use super::{CharacterError, PassiveRagdoll};
+use super::CharacterError;
+use super::rig_frame::WriteRig;
 use crate::TICK_SECONDS;
 use rapier3d::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -103,9 +104,9 @@ impl Jump {
     }
 }
 
-pub(super) fn apply_velocity_change(rig: &mut PassiveRagdoll, delta: Vector<Real>) {
+pub(super) fn apply_velocity_change(rig: &mut WriteRig<'_>, delta: Vector<Real>) {
     // Mass weighting preserves limb-relative velocities and existing platform carry.
-    for handle in rig.bodies {
+    for handle in rig.parts.bodies {
         let body = &mut rig.world.bodies[handle];
         body.apply_impulse(delta * body.mass(), true);
     }

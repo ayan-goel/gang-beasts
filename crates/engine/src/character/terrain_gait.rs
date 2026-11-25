@@ -1,11 +1,12 @@
-use super::{BodyPart, LocomotionConfig, PassiveRagdoll, support::FootSupport};
+use super::rig_frame::ReadRig;
+use super::{BodyPart, LocomotionConfig, support::FootSupport};
 use rapier3d::na::{ComplexField, RealField};
 use rapier3d::prelude::*;
 
 const FLAT_NORMAL_TOLERANCE: f32 = 0.0001;
 
 pub(super) fn adapt(
-    rig: &PassiveRagdoll,
+    rig: ReadRig<'_>,
     supports: [Option<FootSupport>; 2],
     config: &LocomotionConfig,
     blend: f32,
@@ -14,7 +15,7 @@ pub(super) fn adapt(
     let Some(fallback) = supports.into_iter().flatten().next() else {
         return;
     };
-    let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+    let root = &rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]];
     let forward = root.rotation() * -Vector::z();
     // Use the desired upright frame, retaining heading only. Following actual
     // shin/root tilt would cancel the ankle's restoring action during a fall.
@@ -39,19 +40,20 @@ pub(super) fn adapt(
             continue;
         }
         let [hip, knee, ankle] = parts.map(|part| {
-            rig.definition
+            rig.parts
+                .definition
                 .joints
                 .iter()
                 .position(|joint| joint.child == part)
                 .unwrap()
         });
-        let joints = &rig.definition.joints;
+        let joints = &rig.parts.definition.joints;
         let upper = (Vector::from(joints[hip].anchor) - Vector::from(joints[knee].anchor)).norm();
         let lower = (Vector::from(joints[knee].anchor) - Vector::from(joints[ankle].anchor)).norm();
         let nominal = rotation(targets[hip])
             * (-Vector::y() * upper + rotation(targets[knee]) * -Vector::y() * lower);
         let hip_offset = Vector::from(joints[hip].anchor)
-            - Vector::from(rig.definition.bodies[BodyPart::Pelvis.index()].position);
+            - Vector::from(rig.parts.definition.bodies[BodyPart::Pelvis.index()].position);
         let mut desired = heading * nominal;
         let horizontal = heading * hip_offset + desired;
         // The linear angle envelope bounds sin(amplitude), reserving extension

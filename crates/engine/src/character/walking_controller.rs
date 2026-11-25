@@ -1,6 +1,9 @@
+#[cfg(test)]
+use super::PassiveRagdoll;
+use super::rig_frame::WriteRig;
 use super::{
-    BalanceConfig, BodyPart, CharacterError, LocomotionConfig, PassiveRagdoll,
-    support::foot_support, support_motion::SupportMotion,
+    BalanceConfig, BodyPart, CharacterError, LocomotionConfig, support::foot_support,
+    support_motion::SupportMotion,
 };
 use crate::TICK_SECONDS;
 use rapier3d::na::RealField;
@@ -127,7 +130,11 @@ impl WalkingController {
         }
         Ok(())
     }
+    #[cfg(test)]
     pub fn advance(&mut self, rig: &mut PassiveRagdoll, enabled: bool) -> [Rotation<Real>; 14] {
+        self.advance_frame(&mut rig.frame(), enabled)
+    }
+    pub fn advance_frame(&mut self, rig: &mut WriteRig<'_>, enabled: bool) -> [Rotation<Real>; 14] {
         self.sampled_motion = false;
         let idle = self.intent.norm_squared() == 0.0 && self.braking_ticks == 0;
         self.braking_ticks = self.braking_ticks.saturating_sub(1);
@@ -150,16 +157,16 @@ impl WalkingController {
         }
         let supports = [BodyPart::LeftFoot, BodyPart::RightFoot].map(|part| {
             foot_support(
-                &rig.world,
-                rig.bodies[part.index()],
-                &rig.bodies,
+                rig.world,
+                rig.parts.bodies[part.index()],
+                &rig.parts.bodies,
                 &self.support,
             )
         });
         self.state.feet = supports.map(|support| support.is_some());
         let count = supports.iter().flatten().count();
         let trunk_up = [BodyPart::Pelvis, BodyPart::Chest, BodyPart::Head]
-            .map(|p| (rig.world.bodies[rig.bodies[p.index()]].rotation() * Vector::y()).y)
+            .map(|p| (rig.world.bodies[rig.parts.bodies[p.index()]].rotation() * Vector::y()).y)
             .into_iter()
             .fold(1.0_f32, f32::min);
         // A folded trunk can briefly cross the entry threshold during a fall.
@@ -213,7 +220,7 @@ impl WalkingController {
                 // straight during landing. Only internal pose targets fade here.
                 self.state.targets = super::pose_release::toward_bind(
                     previous_targets,
-                    &rig.definition,
+                    rig.parts.definition,
                     self.config.motor_release_s,
                 );
                 return self
@@ -223,7 +230,7 @@ impl WalkingController {
             }
             return [Rotation::identity(); 14];
         }
-        let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+        let root = &rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]];
         if !idle {
             self.state.motor_strength = 1.0;
         }
@@ -236,7 +243,7 @@ impl WalkingController {
         let mut velocity = Vector::zeros();
         let mut center = Vector::zeros();
         let mut mass = 0.0;
-        for handle in rig.bodies {
+        for handle in rig.parts.bodies {
             let body = &rig.world.bodies[handle];
             velocity += body.linvel() * body.mass();
             center += body.center_of_mass().coords * body.mass();
@@ -252,7 +259,7 @@ impl WalkingController {
             .map(|s| s.velocity + s.angular_velocity.cross(&(center - s.contact_point.coords)))
             .sum::<Vector<Real>>()
             / count as f32;
-        let relative_spin = self.pose_motion.sample_supported(rig, supports);
+        let relative_spin = self.pose_motion.sample_supported(rig.read(), supports);
         if idle
             && (velocity - surface_at_com).norm() < self.config.settle_speed_m_s
             && relative_spin.norm() < self.config.settle_spin_rad_s
@@ -339,7 +346,7 @@ impl WalkingController {
                 })
                 .sum::<f32>()
                 / count as f32)
-                * rig.configuration().gravity_y.abs()
+                * rig.parts.physics.gravity_y.abs()
                 / acceleration.norm().max(0.001)
                 + self.config.drive_tilt_gain * lean
                 + self.config.drive_tilt_damping_s * lean_rate)
@@ -356,7 +363,7 @@ impl WalkingController {
         // Normalize both shares so their absolute sum keeps the original budget.
         let stop_drive = if self.intent.norm_squared() == 0.0 && self.state.motor_strength > 0.0 {
             Some(super::stopping_drive::allocate(
-                rig,
+                rig.read(),
                 acceleration,
                 velocity - surface,
                 supports,
@@ -373,7 +380,7 @@ impl WalkingController {
         }
         let base_foot = stop_drive.map_or(acceleration * fraction, |drive| drive.foot);
         let support_drive = super::support_drive::allocate(
-            rig,
+            rig.read(),
             supports,
             velocity,
             acceleration,
@@ -392,7 +399,7 @@ impl WalkingController {
         };
         self.state.acceleration = acceleration.into();
         // Tick-scoped assistance preserves the total linear impulse budget.
-        for handle in rig.bodies {
+        for handle in rig.parts.bodies {
             let body = &mut rig.world.bodies[handle];
             let impulse = if let Some((net, foot)) = drive {
                 (net - foot) * body.mass() * TICK_SECONDS
@@ -411,10 +418,10 @@ impl WalkingController {
                 } else {
                     acceleration * mass * TICK_SECONDS * fraction / count as f32
                 };
-                rig.world.bodies[rig.bodies[part.index()]].apply_impulse(impulse, true);
+                rig.world.bodies[rig.parts.bodies[part.index()]].apply_impulse(impulse, true);
             }
         }
-        rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]]
+        rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]]
             .apply_torque_impulse(Vector::y() * self.state.turn_torque * TICK_SECONDS, true);
         self.blend += (intent.norm() - self.blend) * (TICK_SECONDS / self.config.gait_blend_s);
         let frequency = if self.running {
@@ -428,14 +435,14 @@ impl WalkingController {
             self.sampled_motion = intent.norm_squared() > 0.0 && self.state.phase != phase;
         }
         self.state.targets = super::gait::targets(
-            &rig.definition,
+            rig.parts.definition,
             &self.config,
             local,
             self.state.phase,
             self.blend,
         );
         super::terrain_gait::adapt(
-            rig,
+            rig.read(),
             supports,
             &self.config,
             self.blend,
@@ -443,7 +450,7 @@ impl WalkingController {
         );
         if !idle && self.intent.norm_squared() == 0.0 && self.state.motor_strength > 0.0 {
             self.swing_completion.advance(
-                rig,
+                rig.read(),
                 supports,
                 relative_velocity,
                 &self.config,

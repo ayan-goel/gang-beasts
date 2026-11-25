@@ -575,6 +575,8 @@ Drive shoulder/elbow targets through anticipation, extension and retraction. Can
 
 Headbutts drive neck/upper-body motion with bounded counter-motion and their own cooldown. Later kicks/dropkicks/dive attacks use leg/body motor targets and physical contact; missing an airborne attack can leave the attacker vulnerable. Define each move in data: eligible states, effort envelope, timing, damage multiplier, stamina cost and recovery pose.
 
+The native two-fighter sparring fixture runs both complete character controllers before one world step. Each player owns its body and joint handles, hand timers, locomotion and balance state. A local fighter ID qualifies hand and body observations within the fixture. Both fighters can independently walk, jump and punch. Reset rebuilds both rigs and clears the shared contact history.
+
 ### 13.4 Impact and damage
 
 A proposed baseline approximation is:

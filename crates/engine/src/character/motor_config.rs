@@ -19,6 +19,25 @@ pub struct MotorConfig {
 }
 
 impl MotorConfig {
+    pub(super) fn blend_from(&mut self, idle: &MotorConfig, active: &MotorConfig, blend: f32) {
+        // The locomotion owner supplies validated compatible presets and a [0,1]
+        // weight. Convex interpolation preserves their finite caps and fixed wrists.
+        for motor in &mut self.joints {
+            let low = idle.joints.iter().find(|m| m.child == motor.child).unwrap();
+            let high = active
+                .joints
+                .iter()
+                .find(|m| m.child == motor.child)
+                .unwrap();
+            motor.stiffness_nm_per_rad = low.stiffness_nm_per_rad
+                + (high.stiffness_nm_per_rad - low.stiffness_nm_per_rad) * blend;
+            motor.damping_nm_s_per_rad = low.damping_nm_s_per_rad
+                + (high.damping_nm_s_per_rad - low.damping_nm_s_per_rad) * blend;
+            motor.max_torque_nm =
+                low.max_torque_nm + (high.max_torque_nm - low.max_torque_nm) * blend;
+        }
+    }
+
     pub fn bundled() -> Result<Self, CharacterError> {
         Self::from_json(include_str!("../../../../config/motors.json"))
     }

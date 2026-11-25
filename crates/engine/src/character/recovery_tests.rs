@@ -186,7 +186,8 @@ fn measured_recovery_pair_has_zero_net_impulse_and_respects_both_caps() {
     ));
     let config = LocomotionConfig::bundled().unwrap().recovery;
     let before = rig.pose.rig.body_states();
-    let [force, moment] = crate::character::recovery_drive::apply(&mut rig.pose.rig, 0.5, &config);
+    let [force, moment] =
+        crate::character::recovery_drive::apply(&mut rig.pose.rig.frame(), 0.5, &config);
     let mut net = Vector::zeros();
     let mut torque = Vector::zeros();
     let mut absolute = 0.;

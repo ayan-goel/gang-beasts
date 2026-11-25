@@ -1,3 +1,4 @@
+use super::rig_frame::WriteRig;
 use super::{JointMotorConfig, MotorConfig, PassiveRagdoll, motor::rotation_error};
 use crate::TICK_SECONDS;
 use rapier3d::prelude::*;
@@ -9,14 +10,14 @@ mod tests;
 const AXES: [JointAxis; 3] = [JointAxis::AngX, JointAxis::AngY, JointAxis::AngZ];
 
 pub(super) fn configure(
-    rig: &mut PassiveRagdoll,
+    rig: &mut WriteRig<'_>,
     motors: &MotorConfig,
     targets: &[Rotation<Real>; 14],
     enabled: bool,
 ) {
     // Grip and world constraints can share this joint set. Only anatomical handles
     // may receive pose targets or have their solver writeback cleared.
-    for (index, handle) in rig.joints.into_iter().enumerate() {
+    for (index, handle) in rig.parts.joints.into_iter().enumerate() {
         let joint = rig
             .world
             .impulse_joints
@@ -30,7 +31,7 @@ pub(super) fn configure(
         if !enabled {
             continue;
         }
-        let definition = &rig.definition.joints[index];
+        let definition = &rig.parts.definition.joints[index];
         let config = motors
             .joints
             .iter()
@@ -48,6 +49,22 @@ pub(super) fn configure(
             free,
             config,
         );
+    }
+}
+
+pub(super) fn drive(
+    rig: &mut WriteRig<'_>,
+    motors: &MotorConfig,
+    targets: &[Rotation<Real>; 14],
+    balance: Option<&mut super::balance::BalanceController>,
+    enabled: bool,
+) {
+    configure(rig, motors, targets, enabled);
+    if enabled && let Some(balance) = balance {
+        balance.sample(rig.read());
+        let pelvis = rig.parts.bodies[super::BodyPart::Pelvis.index()];
+        rig.world.bodies[pelvis]
+            .apply_torque_impulse(Vector::from(balance.state.torque) * TICK_SECONDS, true);
     }
 }
 

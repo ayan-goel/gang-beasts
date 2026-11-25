@@ -60,8 +60,7 @@ pub struct LocomotionRagdoll {
     layout: Layout,
     hands: crate::combat::Hands,
     controller: WalkingController,
-    idle_motors: MotorConfig,
-    active_motors: MotorConfig,
+    presets: super::fighter_control::MotorPresets,
 }
 
 impl LocomotionRagdoll {
@@ -83,8 +82,7 @@ impl LocomotionRagdoll {
             layout: Layout::Platform,
             hands: crate::combat::Hands::new()?,
             controller: WalkingController::new(config),
-            idle_motors: MotorConfig::standing()?,
-            active_motors: MotorConfig::locomotion()?,
+            presets: super::fighter_control::MotorPresets::bundled()?,
         })
     }
     pub fn stairs(
@@ -162,31 +160,20 @@ impl LocomotionRagdoll {
         if !enabled {
             self.hands.clear();
             self.controller.reset();
-            self.pose
-                .blend_motors(&self.idle_motors, &self.active_motors, 0.0);
+            self.presets.blend(&mut self.pose.motors, 0.0);
         }
     }
     pub fn step(&mut self) {
         // Queued foot departures must reach support queries before movement can assist.
         self.pose.rig.apply_pending_impulse();
         let enabled = self.pose.enabled();
-        let mut targets = self.controller.advance(&mut self.pose.rig, enabled);
-        self.pose.blend_motors(
-            &self.idle_motors,
-            &self.active_motors,
-            self.controller.state.motor_strength,
+        let targets = self.presets.prepare(
+            &mut self.pose.rig.frame(),
+            &mut self.pose.motors,
+            &mut self.controller,
+            &mut self.hands,
+            enabled,
         );
-        if enabled && self.state().recovery_strength == 0.0 {
-            super::arm_pose::apply(
-                &mut self.hands,
-                &mut self.pose,
-                self.controller.state.feet,
-                &mut self.controller.state.targets,
-                &mut targets,
-            );
-        } else {
-            self.hands.clear();
-        }
         self.pose.step_with_targets(&targets);
     }
     pub fn queue_impulse(&mut self, part: BodyPart, impulse: [f32; 3]) -> Result<(), CommandError> {
@@ -203,7 +190,6 @@ impl LocomotionRagdoll {
             }
         }
         self.controller.reset();
-        self.pose
-            .blend_motors(&self.idle_motors, &self.active_motors, 0.0);
+        self.presets.blend(&mut self.pose.motors, 0.0);
     }
 }

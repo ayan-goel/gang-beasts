@@ -26,6 +26,7 @@
 - [Settling and support velocity](verification/settling-and-support-velocity.md): completed-rotation feedback, whole-trunk recovery, rotating drag and rejected stride history.
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
+- [Two-fighter physics](slices/08a3-duel.md) records world ownership, controller reuse, contact and movement evidence.
 - [Strike practice](slices/08a2-strike-practice.md) describes the suspended target, its rendering contract and native/browser trajectory checks.
 - [Independent hand strikes](slices/08a-hand-strikes.md) records the phase timing, control bindings and physical contact evidence.
 - [Physical get-up](slices/07b-recovery.md) covers fallen poses, contact and effort limits, obstructions, restraints and the return to standing.

@@ -58,6 +58,32 @@ impl PassiveRagdoll {
         })
     }
 
+    pub(super) fn frame(&mut self) -> super::rig_frame::WriteRig<'_> {
+        super::rig_frame::RigFrame {
+            world: &mut self.world,
+            parts: super::rig_frame::RigParts {
+                bodies: self.bodies,
+                joints: self.joints,
+                definition: &self.definition,
+                physics: &self.physics,
+                tick: self.completed_tick,
+            },
+        }
+    }
+
+    pub(super) fn read_frame(&self) -> super::rig_frame::ReadRig<'_> {
+        super::rig_frame::RigFrame {
+            world: &self.world,
+            parts: super::rig_frame::RigParts {
+                bodies: self.bodies,
+                joints: self.joints,
+                definition: &self.definition,
+                physics: &self.physics,
+                tick: self.completed_tick,
+            },
+        }
+    }
+
     pub fn tick(&self) -> u64 {
         self.completed_tick
     }
@@ -100,22 +126,7 @@ impl PassiveRagdoll {
     }
 
     pub fn body_states(&self) -> Vec<RagdollBodyState> {
-        BodyPart::ALL
-            .into_iter()
-            .map(|part| {
-                let body = &self.world.bodies[self.bodies[part.index()]];
-                RagdollBodyState {
-                    part,
-                    state: FixtureState {
-                        position: (*body.translation()).into(),
-                        rotation: body.rotation().coords.into(),
-                        linear_velocity: (*body.linvel()).into(),
-                        angular_velocity: (*body.angvel()).into(),
-                        mass: body.mass(),
-                    },
-                }
-            })
-            .collect()
+        super::rig_frame::body_states(self.read_frame())
     }
 
     pub fn joint_states(&self) -> Vec<RagdollJointState> {

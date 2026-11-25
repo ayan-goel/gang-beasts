@@ -1,7 +1,8 @@
-use super::{BodyPart, PassiveRagdoll};
+use super::BodyPart;
+use super::rig_frame::ReadRig;
 use rapier3d::prelude::*;
 
-pub(super) fn separated(rig: &PassiveRagdoll, targets: &[[f32; 3]; 14]) -> bool {
+pub(super) fn separated(rig: ReadRig<'_>, targets: &[[f32; 3]; 14]) -> bool {
     let feet = [BodyPart::LeftFoot, BodyPart::RightFoot];
     let poses = [
         [BodyPart::LeftThigh, BodyPart::LeftShin, BodyPart::LeftFoot],
@@ -12,7 +13,7 @@ pub(super) fn separated(rig: &PassiveRagdoll, targets: &[[f32; 3]; 14]) -> bool 
         ],
     ]
     .map(|parts| {
-        let definition = &rig.definition;
+        let definition = rig.parts.definition;
         let bind = |part: BodyPart| Vector::from(definition.bodies[part.index()].position);
         let mut pose = Isometry::translation(0.0, 0.0, 0.0);
         for child in parts {
@@ -32,7 +33,7 @@ pub(super) fn separated(rig: &PassiveRagdoll, targets: &[[f32; 3]; 14]) -> bool 
         pose
     });
     let shapes = feet.map(|part| {
-        let body = &rig.world.bodies[rig.bodies[part.index()]];
+        let body = &rig.world.bodies[rig.parts.bodies[part.index()]];
         rig.world.colliders[body.colliders()[0]].shape()
     });
     // Check the actual rounded shapes: inward placement must not bypass the

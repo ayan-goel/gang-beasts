@@ -1,4 +1,5 @@
-use super::{BodyPart, PassiveRagdoll, support::FootSupport};
+use super::rig_frame::ReadRig;
+use super::{BodyPart, support::FootSupport};
 use rapier3d::prelude::*;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -16,10 +17,10 @@ pub(super) struct PoseMotion {
 impl PoseMotion {
     pub fn sample_supported(
         &mut self,
-        rig: &PassiveRagdoll,
+        rig: ReadRig<'_>,
         supports: [Option<FootSupport>; 2],
     ) -> Vector<Real> {
-        let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+        let root = &rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]];
         let mut selected = supports.iter().flatten();
         let Some(first) = selected.next() else {
             *self = Self::default();
@@ -49,7 +50,7 @@ impl PoseMotion {
             *rig.world.bodies[body].rotation()
         });
         self.sample_in_frame(
-            rig.tick(),
+            rig.parts.tick,
             *root.rotation(),
             *root.angvel(),
             reference_body,

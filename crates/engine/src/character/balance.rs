@@ -1,6 +1,6 @@
+use super::rig_frame::ReadRig;
 use super::{
-    BalanceConfig, BodyPart, JointMotorConfig, PassiveRagdoll, motor::local_torque,
-    support::foot_supported,
+    BalanceConfig, BodyPart, JointMotorConfig, motor::local_torque, support::foot_supported,
 };
 use rapier3d::prelude::*;
 
@@ -20,12 +20,12 @@ pub(super) struct BalanceController {
 }
 
 impl BalanceController {
-    pub fn sample(&mut self, rig: &PassiveRagdoll) {
+    pub fn sample(&mut self, rig: ReadRig<'_>) {
         let feet = [BodyPart::LeftFoot, BodyPart::RightFoot].map(|part| {
             foot_supported(
-                &rig.world,
-                rig.bodies[part.index()],
-                &rig.bodies,
+                rig.world,
+                rig.parts.bodies[part.index()],
+                &rig.parts.bodies,
                 &self.config,
             )
         });
@@ -37,7 +37,7 @@ impl BalanceController {
         if support == 0.0 {
             return;
         }
-        let root = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+        let root = &rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]];
         let up = root.rotation() * Vector::y();
         let correction = Rotation::rotation_between(&up, &Vector::y()).unwrap_or_else(|| {
             // An inverted up vector has no unique cross-product axis. Choose the

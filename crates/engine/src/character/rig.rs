@@ -7,12 +7,22 @@ pub(crate) fn insert_rig(
     definition: &CharacterDefinition,
     spawn: [f32; 3],
 ) -> ([RigidBodyHandle; 15], [ImpulseJointHandle; 14]) {
+    insert_oriented_rig(world, definition, spawn, Rotation::identity())
+}
+
+pub(super) fn insert_oriented_rig(
+    world: &mut PhysicsWorld,
+    definition: &CharacterDefinition,
+    spawn: [f32; 3],
+    heading: Rotation<Real>,
+) -> ([RigidBodyHandle; 15], [ImpulseJointHandle; 14]) {
     let bodies = std::array::from_fn(|index| {
         let body = &definition.bodies[index];
-        let position = Vector::from(body.position) + Vector::from(spawn);
-        let handle = world
-            .bodies
-            .insert(RigidBodyBuilder::dynamic().translation(position));
+        let position = heading * Vector::from(body.position) + Vector::from(spawn);
+        let handle = world.bodies.insert(
+            RigidBodyBuilder::dynamic()
+                .position(Isometry::from_parts(Translation::from(position), heading)),
+        );
         world.colliders.insert_with_parent(
             body.shape
                 .collider()
@@ -39,8 +49,8 @@ pub(crate) fn insert_rig(
                 locked |= axis;
             }
         }
-        // One authored world-space anchor becomes two local anchors; identity
-        // bind rotations keep every joint frame aligned before the first solve.
+        // One authored world-space anchor becomes two local anchors; a shared
+        // spawn heading rotates both connected bodies and preserves local anchors.
         let parent = &definition.bodies[joint.parent.index()];
         let child = &definition.bodies[joint.child.index()];
         let mut builder = GenericJointBuilder::new(locked)

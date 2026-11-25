@@ -26,7 +26,7 @@ fn slope_gait_does_not_command_intersecting_feet() {
                         1.0,
                     );
                     crate::character::terrain_gait::adapt(
-                        &rig.pose.rig,
+                        rig.pose.rig.read_frame(),
                         contacts,
                         &config,
                         1.0,
@@ -62,7 +62,13 @@ fn slope_targets_preserve_placement_when_the_ankle_saturates_and_do_not_follow_b
     nominal[10] = [-1.0, 0.0, 0.0];
     nominal[12] = [0.5, 0.0, 0.0];
     let mut adapted = nominal;
-    crate::character::terrain_gait::adapt(&rig.pose.rig, contacts, &config, 1.0, &mut adapted);
+    crate::character::terrain_gait::adapt(
+        rig.pose.rig.read_frame(),
+        contacts,
+        &config,
+        1.0,
+        &mut adapted,
+    );
     let z = -0.02 * <f32 as ComplexField>::sin(0.5);
     let y = -0.62 * <f32 as ComplexField>::cos(0.5) + 0.62 * 0.25 * normal.z / normal.y
         - normal.z * z / normal.y;
@@ -81,7 +87,13 @@ fn slope_targets_preserve_placement_when_the_ankle_saturates_and_do_not_follow_b
     rig.pose.rig.world.bodies[shin]
         .set_rotation(Rotation::from_axis_angle(&Vector::x_axis(), -0.3), true);
     let mut tilted = nominal;
-    crate::character::terrain_gait::adapt(&rig.pose.rig, contacts, &config, 1.0, &mut tilted);
+    crate::character::terrain_gait::adapt(
+        rig.pose.rig.read_frame(),
+        contacts,
+        &config,
+        1.0,
+        &mut tilted,
+    );
     assert_eq!(adapted, tilted);
 }
 
@@ -198,7 +210,7 @@ fn stopping_allocator_respects_zero_budgets_and_low_speed_continuity() {
             tuning.maximum_acceleration_m_s2 = acceleration;
             tuning.stopping_moment_cap_nm = cap;
             let drive = crate::character::stopping_drive::allocate(
-                &walking.pose.rig,
+                walking.pose.rig.read_frame(),
                 Vector::zeros(),
                 Vector::x(),
                 contacts,
@@ -211,7 +223,7 @@ fn stopping_allocator_respects_zero_budgets_and_low_speed_continuity() {
         }
         let command = |v| {
             crate::character::stopping_drive::allocate(
-                &walking.pose.rig,
+                walking.pose.rig.read_frame(),
                 Vector::zeros(),
                 Vector::x() * v,
                 contacts,
@@ -230,7 +242,7 @@ fn stopping_allocator_respects_zero_budgets_and_low_speed_continuity() {
         )
         .unwrap();
         let drive = crate::character::stopping_drive::allocate(
-            &low_gravity,
+            low_gravity.read_frame(),
             Vector::zeros(),
             Vector::x(),
             contacts,

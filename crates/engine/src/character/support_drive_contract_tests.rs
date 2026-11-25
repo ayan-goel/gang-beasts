@@ -74,7 +74,7 @@ fn active_drag_does_not_confuse_rigid_deck_rotation_with_relative_motion() {
     for supports in [supports, [supports[0], None], [None, supports[1]]] {
         let allocate = |steering| {
             crate::character::support_drive::allocate(
-                rig,
+                rig.read_frame(),
                 supports,
                 translation + spin.cross(&center),
                 Vector::zeros(),

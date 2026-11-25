@@ -1,7 +1,5 @@
-use super::{
-    BalanceConfig, BodyPart, LocomotionConfig, PassiveRagdoll, recovery_drive,
-    support::foot_support,
-};
+use super::rig_frame::WriteRig;
+use super::{BalanceConfig, BodyPart, LocomotionConfig, recovery_drive, support::foot_support};
 use rapier3d::prelude::*;
 
 const REST_TICKS: u8 = 18;
@@ -27,7 +25,7 @@ pub(super) struct RecoveryStep {
 impl Recovery {
     pub fn advance(
         &mut self,
-        rig: &mut PassiveRagdoll,
+        rig: &mut WriteRig<'_>,
         trunk_up: f32,
         feet: [bool; 2],
         support: &BalanceConfig,
@@ -54,15 +52,20 @@ impl Recovery {
             self.age += 1;
         }
         let contact = BodyPart::ALL.into_iter().find_map(|part| {
-            foot_support(&rig.world, rig.bodies[part.index()], &rig.bodies, support)
-                .filter(|s| s.body.is_none_or(|h| !rig.world.bodies[h].is_dynamic()))
+            foot_support(
+                rig.world,
+                rig.parts.bodies[part.index()],
+                &rig.parts.bodies,
+                support,
+            )
+            .filter(|s| s.body.is_none_or(|h| !rig.world.bodies[h].is_dynamic()))
         });
         let Some(contact) = contact else {
             self.still_ticks = 0;
             self.upright_ticks = 0;
             return None;
         };
-        let pelvis = &rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]];
+        let pelvis = &rig.world.bodies[rig.parts.bodies[BodyPart::Pelvis.index()]];
         if self.age == 0 {
             // Wait for the fall to settle relative to the supporting surface.
             // Colliding with a wall or another suspended ragdoll supplies no bracing moment.
@@ -96,7 +99,7 @@ impl Recovery {
         let facing = (pelvis.rotation() * -Vector::z()).y;
         let tuck = (1.0 - up.y).clamp(0.0, 1.0) * strength;
         let mut targets = [[0.0; 3]; 14];
-        for (target, joint) in targets.iter_mut().zip(&rig.definition.joints) {
+        for (target, joint) in targets.iter_mut().zip(&rig.parts.definition.joints) {
             // Reverse the shoulder reach between prone and supine falls. A side fall
             // uses neutral shoulder pitch. Extend the knees as the pelvis rises.
             let pitch = match joint.child {
