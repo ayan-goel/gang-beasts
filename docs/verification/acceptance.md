@@ -6,7 +6,7 @@ No release criteria have passed yet. Update each row with a slice, build/config 
 | --- | --- |
 | Browser entry/download budget | Foundation loads in Chromium; [fixture evidence](foundation.md). Final game, browser matrix and critical asset budget pending. |
 | 2–8 friend joining and ninth-player handling | Pending |
-| Active ragdoll/body/joint/mass | Pending |
+| Active ragdoll/body/joint/mass | Native passive rig has verified 15 bodies/14 joints/40 kg; [fixture evidence](../slices/04a-native-passive-ragdoll.md). Active control, browser rig and gameplay acceptance pending. |
 | Locomotion and human playability | Pending |
 | Independent hands | Pending |
 | Physical lift/throw | Pending |

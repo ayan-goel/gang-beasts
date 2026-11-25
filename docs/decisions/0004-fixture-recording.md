@@ -18,6 +18,8 @@ The format includes schema version, engine source/compiler fingerprint, producer
 
 The current fixture has no randomness: seed zero is the only accepted seed. Adding random scenarios requires an explicit versioned seeded implementation. Input-only reproduction is validated for this fixed fixture under the pinned builds; complete game checkpoints/state tracks remain future work. Do not apply this limited result to prediction islands or whole-world rollback.
 
+Slice 04a extends the fingerprint inputs to include the embedded character JSON; see [ADR 0005](0005-passive-character-rig.md). Recordings from earlier engine sources remain intentionally incompatible.
+
 Limits: 256 KiB JSON, 36,000 ticks (10 simulated minutes), 1,024 impulses, strictly increasing nonzero command ticks no later than the recorded end, the existing finite 10 N·s impulse bound, and 4 KiB configuration JSON. The browser checks file size before reading; Rust checks UTF-8 byte size before parsing. Exceeding a live recording budget leaves simulation usable but disables export until reset; incomplete logs are never silently presented as complete.
 
 ## Alternatives

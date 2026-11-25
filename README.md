@@ -17,6 +17,8 @@ cargo build --workspace --locked
 
 The engine has no network, rendering, or wall-clock dependency. `config/physics.json` is the initial versioned configuration.
 
+The native passive character uses `config/character.json`. Run `cargo test --locked -p brawler-engine --test ragdoll -- --nocapture` for its mass, anchor, drop and reset fixtures. The browser still shows the cuboid; character rendering and controls are the next slice. See [native rig evidence](docs/slices/04a-native-passive-ragdoll.md).
+
 ## Browser playground
 
 Use Node 20.18.0 (`.nvmrc`). Install project-local wasm-pack once, then build the shared engine before starting Vite:

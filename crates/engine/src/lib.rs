@@ -1,5 +1,6 @@
 //! Shared fixed-tick physics and gameplay; independent of transport and presentation.
 
+mod character;
 mod config;
 mod debug;
 mod fixture;
@@ -8,6 +9,10 @@ mod recording;
 mod session;
 mod simulation;
 
+pub use character::{
+    BodyDefinition, BodyPart, BodyShape, CharacterDefinition, CharacterError, JointDefinition,
+    PassiveRagdoll, RagdollBodyState, RagdollJointState,
+};
 pub use config::{ConfigError, PhysicsConfig};
 pub use fixture::{CommandError, FixtureState};
 pub use recording::{ENGINE_HASH, FixtureRecording, RecordingError};

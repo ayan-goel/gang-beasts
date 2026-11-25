@@ -10,7 +10,8 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 02 — verified | Same fixture through WASM and Three.js | Browser loads actual WASM; native/browser fixture agreement; build and browser tests |
 | 03 — verified | Playground controls and diagnostics | Pause, single step, reset, impulse and timing work; debug geometry is accurate |
 | 03b — verified | Fixture recording/replay and configuration editing | Replayed tick-stamped commands reproduce native/WASM state; invalid imported data is bounded/rejected; exported tuning matches the running world |
-| 04 | Fifteen-body passive ragdoll | 40 kg/14 joints, collision filtering, finite falls and aligned anchors |
+| 04a — verified | Native fifteen-body passive ragdoll | 40 kg/14 joints, collision filtering, finite falls and aligned anchors |
+| 04b | Passive rig in browser playground | Shared native/WASM trace, visible collider geometry and joint anchors, reset/impulse controls |
 | 05 | Bounded motors and standing | Upright controller yields to pushes; 60-second stand; visible motor targets |
 | 06 | Walking/running and support | Direction/speed/wall/slope/moving-support fixtures and browser inspection |
 | 07 | Jump, fall and recovery | Buffered edge consumed once; total impulse bounded; physical get-up |

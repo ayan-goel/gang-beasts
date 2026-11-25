@@ -22,6 +22,7 @@ fn main() {
         root.join("Cargo.toml"),
         root.join("Cargo.lock"),
         root.join("rust-toolchain.toml"),
+        root.join("config/character.json"),
         manifest.join("Cargo.toml"),
         manifest.join("build.rs"),
     ];

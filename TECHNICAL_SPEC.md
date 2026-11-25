@@ -389,6 +389,8 @@ The anatomical tree contains 14 joints: neck 1, spine 1, shoulders 2, elbows 2, 
 
 A reduced rig is permitted for early diagnosis, not as an unexamined final fidelity reduction. Define collision shapes, anchor frames, bind transforms, body IDs and local forward axes in one versioned character asset/configuration.
 
+The initial native passive rig uses `config/character.json` schema 1: canonical anatomical body order, the table's per-part masses/shapes, positions, shared-frame anchors and per-axis angular limits. The version-one frame convention is right-handed +Y up/−Z forward with identity body and local joint-frame bind rotations; spawn supplies translation only. Dimensions produce a 1.6 m rig with feet at local Y=0. Identity frames are an explicit schema restriction; future rotated authoring must extend it. Strict validation preserves anatomical topology, shape categories and angular-axis patterns. See `docs/decisions/0005-passive-character-rig.md` for limits and the native diagnostic spawn contract. Native passive fixtures are partial evidence; browser ragdolls and active control remain separate gates.
+
 ### 11.2 Joint design
 
 | Joint | Proposed constraint |

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "bodies": [
+    {"part":"head","mass":4,"position":[0,1.42,0],"shape":{"kind":"sphere","radius":0.18}},
+    {"part":"chest","mass":10,"position":[0,1.11,0],"shape":{"kind":"capsule","half_height":0.12,"radius":0.18}},
+    {"part":"pelvis","mass":6,"position":[0,0.82,0],"shape":{"kind":"capsule","half_height":0.06,"radius":0.16}},
+    {"part":"left_upper_arm","mass":1.5,"position":[-0.27,1.10,0],"shape":{"kind":"capsule","half_height":0.10,"radius":0.065}},
+    {"part":"right_upper_arm","mass":1.5,"position":[0.27,1.10,0],"shape":{"kind":"capsule","half_height":0.10,"radius":0.065}},
+    {"part":"left_forearm","mass":1,"position":[-0.30,0.84,0],"shape":{"kind":"capsule","half_height":0.10,"radius":0.055}},
+    {"part":"right_forearm","mass":1,"position":[0.30,0.84,0],"shape":{"kind":"capsule","half_height":0.10,"radius":0.055}},
+    {"part":"left_hand","mass":0.5,"position":[-0.31,0.66,0],"shape":{"kind":"sphere","radius":0.07}},
+    {"part":"right_hand","mass":0.5,"position":[0.31,0.66,0],"shape":{"kind":"sphere","radius":0.07}},
+    {"part":"left_thigh","mass":3.5,"position":[-0.11,0.55,0],"shape":{"kind":"capsule","half_height":0.14,"radius":0.09}},
+    {"part":"right_thigh","mass":3.5,"position":[0.11,0.55,0],"shape":{"kind":"capsule","half_height":0.14,"radius":0.09}},
+    {"part":"left_shin","mass":2.5,"position":[-0.11,0.25,0],"shape":{"kind":"capsule","half_height":0.13,"radius":0.07}},
+    {"part":"right_shin","mass":2.5,"position":[0.11,0.25,0],"shape":{"kind":"capsule","half_height":0.13,"radius":0.07}},
+    {"part":"left_foot","mass":1,"position":[-0.11,0.07,-0.06],"shape":{"kind":"rounded_box","half_extents":[0.08,0.05,0.14],"border_radius":0.02}},
+    {"part":"right_foot","mass":1,"position":[0.11,0.07,-0.06],"shape":{"kind":"rounded_box","half_extents":[0.08,0.05,0.14],"border_radius":0.02}}
+  ],
+  "joints": [
+    {"parent":"chest","child":"head","anchor":[0,1.29,0],"angular_limits":[[-0.5,0.5],[-0.6,0.6],[-0.4,0.4]]},
+    {"parent":"pelvis","child":"chest","anchor":[0,0.94,0],"angular_limits":[[-0.5,0.5],[-0.4,0.4],[-0.4,0.4]]},
+    {"parent":"chest","child":"left_upper_arm","anchor":[-0.24,1.23,0],"angular_limits":[[-2.4,2.4],[-1.2,1.2],[-1.8,0.4]]},
+    {"parent":"chest","child":"right_upper_arm","anchor":[0.24,1.23,0],"angular_limits":[[-2.4,2.4],[-1.2,1.2],[-0.4,1.8]]},
+    {"parent":"left_upper_arm","child":"left_forearm","anchor":[-0.29,0.97,0],"angular_limits":[[0,2.4],[0,0],[0,0]]},
+    {"parent":"right_upper_arm","child":"right_forearm","anchor":[0.29,0.97,0],"angular_limits":[[0,2.4],[0,0],[0,0]]},
+    {"parent":"left_forearm","child":"left_hand","anchor":[-0.31,0.70,0],"angular_limits":[[0,0],[0,0],[0,0]]},
+    {"parent":"right_forearm","child":"right_hand","anchor":[0.31,0.70,0],"angular_limits":[[0,0],[0,0],[0,0]]},
+    {"parent":"pelvis","child":"left_thigh","anchor":[-0.11,0.72,0],"angular_limits":[[-1.2,1.5],[-0.5,0.5],[-0.8,0.3]]},
+    {"parent":"pelvis","child":"right_thigh","anchor":[0.11,0.72,0],"angular_limits":[[-1.2,1.5],[-0.5,0.5],[-0.3,0.8]]},
+    {"parent":"left_thigh","child":"left_shin","anchor":[-0.11,0.40,0],"angular_limits":[[-2.4,0],[0,0],[0,0]]},
+    {"parent":"right_thigh","child":"right_shin","anchor":[0.11,0.40,0],"angular_limits":[[-2.4,0],[0,0],[0,0]]},
+    {"parent":"left_shin","child":"left_foot","anchor":[-0.11,0.10,0],"angular_limits":[[-0.5,0.5],[-0.2,0.2],[-0.3,0.3]]},
+    {"parent":"right_shin","child":"right_foot","anchor":[0.11,0.10,0],"angular_limits":[[-0.5,0.5],[-0.2,0.2],[-0.3,0.3]]}
+  ]
+}

@@ -6,6 +6,7 @@
 - [Acceptance record](verification/acceptance.md): evidence against all MVP release requirements.
 - [Playground controls](slices/03-playground-controls.md): contracts, review corrections and verification.
 - [Recording and tuning](slices/03b-recording-tuning.md): bounded native/WASM reproduction and transactional configuration changes.
+- [Native passive ragdoll](slices/04a-native-passive-ragdoll.md): anatomy, constraints, collision behavior and drop fixtures.
 - [Foundation evidence](verification/foundation.md): native/WASM tests, build identity and browser smoke.
 - [Decisions](decisions/): numbered records of context, alternatives, and consequences.
 - [Slices](slices/): behavior, contracts, tests, and remaining work for each completed increment.
