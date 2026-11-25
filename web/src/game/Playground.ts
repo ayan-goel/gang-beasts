@@ -1,20 +1,6 @@
 import { FixedClock } from './FixedClock';
-
-export interface SimulationPort {
-  step(): boolean;
-  tick(): bigint;
-  reset(): void;
-  queue_impulse(x: number, y: number, z: number): void;
-  fixture_state(): Float32Array;
-  collider_lines(): Float32Array;
-  free(): void;
-  configure(json: string): void;
-  configuration_json(): string;
-  import_recording(json: string): void;
-  export_recording(): string;
-  replay_end(): number | undefined;
-  recording_available(): boolean;
-}
+import type { SimulationPort } from './SimulationPort';
+import { inspectRig } from './rigDefinition';
 
 export type PlaybackRate = 0.25 | 0.5 | 1;
 
@@ -27,6 +13,7 @@ export class Playground {
   private previousTime: number;
   private revision = 0;
   showColliders = false;
+  showJoints = false;
 
   constructor(readonly simulation: SimulationPort, private readonly now = () => performance.now()) {
     this.previousTime = now();
@@ -59,9 +46,9 @@ export class Playground {
     if (this.paused) this.step(1);
   }
 
-  queueImpulse(): void {
+  queueImpulse(impulse: [number, number, number] = [0, 4, 0]): void {
     if (this.impulsePending) return;
-    this.simulation.queue_impulse(0, 4, 0);
+    this.simulation.queue_impulse(...impulse);
     this.impulsePending = true;
   }
 
@@ -77,9 +64,15 @@ export class Playground {
   }
 
   importRecording(json: string): void {
+    if (!this.simulation.import_recording) throw new Error('This scene does not support recording import');
     this.simulation.import_recording(json);
     this.clearPlayback();
     this.paused = true;
+  }
+
+  exportRecording(): string {
+    if (!this.simulation.export_recording) throw new Error('This scene does not support recording export');
+    return this.simulation.export_recording();
   }
 
   private clearPlayback(): void {
@@ -100,8 +93,10 @@ export class Playground {
       droppedSeconds: this.clock.droppedSeconds,
       debugSegments: this.showColliders ? this.simulation.collider_lines().length / 6 : 0,
       configuration: this.simulation.configuration_json(),
-      replayEnd: this.simulation.replay_end(), replayComplete: this.replayComplete(),
-      recordingAvailable: this.simulation.recording_available(),
+      replayEnd: this.simulation.replay_end?.(), replayComplete: this.replayComplete(),
+      recordingAvailable: this.simulation.recording_available?.() ?? false,
+      supportsRecording: !!this.simulation.export_recording,
+      rig: this.simulation.rig ? inspectRig(this.simulation.rig) : undefined, showJoints: this.showJoints,
     };
   }
 
@@ -119,7 +114,7 @@ export class Playground {
   }
 
   private replayComplete(): boolean {
-    const end = this.simulation.replay_end();
+    const end = this.simulation.replay_end?.();
     return end !== undefined && this.simulation.tick() >= BigInt(end);
   }
 }

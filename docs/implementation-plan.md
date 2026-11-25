@@ -12,7 +12,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 03b — verified | Fixture recording/replay and configuration editing | Replayed tick-stamped commands reproduce native/WASM state; invalid imported data is bounded/rejected; exported tuning matches the running world |
 | 04a — verified | Native fifteen-body passive ragdoll | 40 kg/14 joints, collision filtering, finite falls and aligned anchors |
 | 04b1 — verified | Ragdoll WASM contract | Shared native/WASM body and joint-frame trace, owned buffers, validated limb indices |
-| 04b2 | Passive rig in browser playground | Scenario selection, visible collider geometry and joint frames, reset/impulse controls |
+| 04b2 — verified | Passive rig in browser playground | Scenario selection, visible collider geometry and joint frames, reset/impulse controls |
 | 05 | Bounded motors and standing | Upright controller yields to pushes; 60-second stand; visible motor targets |
 | 06 | Walking/running and support | Direction/speed/wall/slope/moving-support fixtures and browser inspection |
 | 07 | Jump, fall and recovery | Buffered edge consumed once; total impulse bounded; physical get-up |

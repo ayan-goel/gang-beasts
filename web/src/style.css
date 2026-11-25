@@ -29,6 +29,8 @@ aside h2 { font-size: 0.85rem; margin: 0 0 1.5rem; }
 .controls h2:not(:first-child) { margin-top: 1.5rem; }
 button, select, input[type=number], input[type=file] { font: inherit; font-size: 0.75rem; border: 1px solid var(--line); border-radius: 0.25rem; padding: 0.7rem 0.75rem; background: #203641; color: var(--text); min-width: 0; max-width: 100%; }
 .inspector-section { border-top: 1px solid var(--line); margin-top: 1.5rem; padding-top: 1.5rem; }
+details { margin-top: 1rem; font-size: 0.75rem; }
+summary { cursor: pointer; color: var(--muted); }
 button { cursor: pointer; width: 100%; }
 button:hover:not(:disabled) { border-color: var(--accent); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }

@@ -17,7 +17,7 @@ cargo build --workspace --locked
 
 The engine has no network, rendering, or wall-clock dependency. `config/physics.json` is the initial versioned configuration.
 
-The native passive character uses `config/character.json`. Run `cargo test --locked -p brawler-engine --test ragdoll -- --nocapture` for its mass, anchor, drop and reset fixtures. The browser still shows the cuboid; character rendering and controls are the next slice. See [native rig evidence](docs/slices/04a-native-passive-ragdoll.md).
+The passive character uses `config/character.json`. Run `cargo test --locked -p brawler-engine --test ragdoll -- --nocapture` for its mass, anchor, drop and reset fixtures. The same rig is available in the browser's **Test scene → Passive ragdoll**. See [native rig evidence](docs/slices/04a-native-passive-ragdoll.md) and [browser inspection](docs/slices/04b2-ragdoll-browser-inspector.md).
 
 ## Browser playground
 
@@ -44,6 +44,8 @@ npm --prefix web run build
 Browser integration tests start their own local server if needed. They compare a 600-tick WASM trace against the native release fixture and test canvas resize containment. The production static bundle is in `web/dist`; it is a diagnostic fixture, not an online game.
 
 ## Playground controls
+
+Choose **Passive ragdoll** to inspect the fifteen-body rig paused at tick zero. Select a limb for readings and impulses, enable joint frames/colliders, then resume to observe its unpowered fall. Joint limits and anchor separation are available in the inspector. Scene switching starts a fresh world with default tuning. Ragdoll recording and active motors are not implemented yet; the recording controls below apply to the cuboid scene.
 
 Pause to enable exact single-step. Reset reconstructs the fixture and preserves the paused/running mode. Slow motion changes playback cadence without changing physics dt. The upward impulse is queued once for the next tick. Enable **Show colliders** to inspect Rapier geometry.
 

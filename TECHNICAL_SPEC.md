@@ -1312,6 +1312,8 @@ Required controls: spawn/remove ragdolls and props; stand/walk/jump/fall/recover
 
 Required overlays: colliders, joint axes/limits, anchors, force vectors, contact normals, desired skeleton and actual skeleton. Live tuning edits a temporary configuration and exports a complete versioned configuration; production multiplayer does not accept arbitrary client tuning values.
 
+The current browser inspector offers cuboid and passive-ragdoll scenes. Scene replacement rebuilds default configuration and releases the prior native/GPU resources; the ragdoll starts paused. Its actual 15-body states drive diagnostic solid meshes, selected-body readings and bounded 4 N·s upward/−Z impulses. Paired world anchors/XYZ frames, maximum anchor separation and selected angular limits are inspectable. Physics tuning/reset use the shared controller and native reconstruction. Cuboid recording remains available; character-input recording and motor/contact/force diagnostics are separate unfinished playground requirements. See `docs/slices/04b2-ragdoll-browser-inspector.md`.
+
 | Example tuning control | Source illustration | Status |
 | --- | --- | --- |
 | Gravity magnitude | 9.81 m/s² | Baseline |

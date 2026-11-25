@@ -24,6 +24,8 @@ export function Controls({ state, act }: InspectorProps) {
       Apply upward impulse
     </button>
     <p className="hint">4 N·s once on the next tick. {state.impulsePending ? 'Impulse queued.' : ''}</p>
+    {state.rig && <><button disabled={state.impulsePending} onClick={() => act(p => p.queueImpulse([0, 0, -4]))}>Apply forward impulse</button>
+      <p className="hint">4 N·s toward −Z on the selected body.</p></>}
     <label className="check"><input type="checkbox" checked={state.showColliders}
       onChange={event => act(p => { p.showColliders = event.target.checked; })} />Show colliders</label>
   </section>;

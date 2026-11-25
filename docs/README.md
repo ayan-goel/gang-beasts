@@ -8,6 +8,7 @@
 - [Recording and tuning](slices/03b-recording-tuning.md): bounded native/WASM reproduction and transactional configuration changes.
 - [Native passive ragdoll](slices/04a-native-passive-ragdoll.md): anatomy, constraints, collision behavior and drop fixtures.
 - [Ragdoll WASM contract](slices/04b1-ragdoll-wasm-contract.md): batched body/joint buffers, ownership and native/browser parity.
+- [Ragdoll browser inspector](slices/04b2-ragdoll-browser-inspector.md): scene selection, solid geometry, joint inspection and resource cleanup.
 - [Foundation evidence](verification/foundation.md): native/WASM tests, build identity and browser smoke.
 - [Decisions](decisions/): numbered records of context, alternatives, and consequences.
 - [Slices](slices/): behavior, contracts, tests, and remaining work for each completed increment.

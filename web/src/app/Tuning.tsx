@@ -20,7 +20,7 @@ export function Tuning({ state, act }: InspectorProps) {
       </label>
       <button type="submit">Apply tuning</button>
     </form>
-    <p className="hint">Applying tuning restarts the fixture paused and starts a new recording.</p>
+    <p className="hint">Applying tuning restarts the fixture paused{state.supportsRecording ? ' and starts a new recording' : ''}.</p>
     <button className="quiet" onClick={() => act(p => downloadJson('physics-v1.json', p.simulation.configuration_json()))}>
       Export configuration
     </button>

@@ -4,7 +4,7 @@ import type { InspectorProps } from './types';
 
 export function Recordings({ state, act, reportError, sessionRevision }: InspectorProps & {
   reportError: (error: string) => void;
-  sessionRevision: () => number;
+  sessionRevision: () => string;
 }) {
   const request = useRef(0);
   useEffect(() => () => { request.current++; }, []);
@@ -13,7 +13,7 @@ export function Recordings({ state, act, reportError, sessionRevision }: Inspect
     <p className="hint" id="replay-status">{state.replayEnd !== undefined
       ? `Replay ${state.replayComplete ? 'complete' : 'loaded'} · ${state.replayEnd} ticks. Reset to return to live play.`
       : state.recordingAvailable ? 'Recording completed ticks since the last reset.' : 'Recording limit reached. Reset to start a new log.'}</p>
-    <button disabled={!state.recordingAvailable} onClick={() => act(p => downloadJson('fixture-recording-v1.json', p.simulation.export_recording()))}>
+    <button disabled={!state.recordingAvailable} onClick={() => act(p => downloadJson('fixture-recording-v1.json', p.exportRecording()))}>
       Export recording
     </button>
     <label className="field">Import recording
