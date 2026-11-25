@@ -632,6 +632,8 @@ A reaching hand may acquire an eligible physically reachable surface on actual c
 
 Use a soft positional grip with bounded effort and permissive angular movement; do not default to an infinitely rigid weld. Multiple characters can form closed loops. Cap one outgoing constraint per hand, maintain reverse references to each target and test loops under stress. Fixed world surfaces may need a fixed anchor body representation so grip joints reference valid bodies.
 
+The local opponent-grip fixture uses a 25 mm maximum gap between collider surfaces, checks intervening solids, and stores the midpoint in each body’s local frame. The three linear spring motors share a bounded force budget and leave relative rotation free. [Native implementation and verification](docs/slices/09a-opponent-grips.md).
+
 ### 13.7 Stamina and grip failure
 
 | Parameter | Proposed value |

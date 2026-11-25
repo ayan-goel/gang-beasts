@@ -33,6 +33,7 @@ pub enum HandPhase {
     Strike,
     Recovery,
     Reach,
+    Gripping,
 }
 
 #[derive(Clone, Copy, Debug, Default)]

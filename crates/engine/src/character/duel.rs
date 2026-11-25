@@ -28,6 +28,7 @@ pub struct Duel {
     definition: CharacterDefinition,
     presets: MotorPresets,
     impact: crate::combat::ImpactTuning,
+    grips: super::duel_grips::Grips,
     hits: Vec<super::StrikeHit>,
     physics: PhysicsConfig,
     tick: u64,
@@ -56,6 +57,7 @@ impl Duel {
             presets: MotorPresets::bundled()?,
             impact: crate::combat::ImpactTuning::bundled()?,
             hits: Vec::with_capacity(4),
+            grips: super::duel_grips::Grips::new()?,
             physics,
             tick: 0,
         })
@@ -68,6 +70,9 @@ impl Duel {
     }
     pub fn clear_hands(&mut self, who: FighterId) {
         self.fighters[who as usize].hands.release_inputs();
+        for hand in [Hand::Left, Hand::Right] {
+            self.grips.release(&mut self.world, who, hand);
+        }
     }
     pub fn clear_jump(&mut self, who: FighterId) {
         self.fighters[who as usize].walking.clear_jump_input();
@@ -87,10 +92,13 @@ impl Duel {
                 &self.presets,
             );
         }
+        self.grips.retract(&mut self.world, &self.fighters);
         let contacts = super::duel_contacts::ContactFrame::capture(&self.world, &self.fighters);
         self.world.step();
         self.tick += 1;
         self.hits.clear();
+        self.grips
+            .acquire(&mut self.world, &self.fighters, self.tick);
         if let Some(frame) = contacts {
             frame.resolve(
                 &self.world,
@@ -115,13 +123,23 @@ impl Duel {
         self.fighters[who as usize].walking.set_jump(held);
     }
     pub fn set_hand(&mut self, who: FighterId, hand: Hand, held: bool) {
+        if !held {
+            self.grips.release(&mut self.world, who, hand);
+        }
         let fighter = &mut self.fighters[who as usize];
         if fighter.walking.state.recovery_strength == 0.0 {
             fighter.hands.set(hand, held);
         }
     }
     pub fn hand_state(&self, who: FighterId, hand: Hand) -> HandState {
-        self.fighters[who as usize].hands.state(hand)
+        let mut state = self.fighters[who as usize].hands.state(hand);
+        if self.grip(who, hand).is_some() {
+            state.phase = crate::HandPhase::Gripping;
+        }
+        state
+    }
+    pub fn grip(&self, who: FighterId, hand: Hand) -> Option<super::GripState> {
+        self.grips.state(who, hand)
     }
     pub fn body_states(&self, who: FighterId) -> Vec<RagdollBodyState> {
         body_states(RigFrame {

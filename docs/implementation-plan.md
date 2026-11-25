@@ -34,6 +34,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 08b1 — verified native | Physical punch damage events | Positive fist contact, pre-solve normal point speed, region scaling, attack ownership, whiffs and simultaneous punches |
 | 08b2 — verified local fixture | Playable two-fighter sparring | Both fighters visible and controllable, native/WASM agreement, hit diagnostics |
 | 08c | Target selection and headbutts | Reachable directional targets, wall obstruction, head contact and independent cooldown |
+| 09a — verified native fixture | Opponent grips | Surface proximity, occlusion, reciprocal holds and momentum-preserving release |
 | 09 | Grips, stamina and release | Per-hand constraints, valid anchors, load failure, cyclic stress cleanup |
 | 10 | Lift, throw, knockout and rescue | Momentum preserved; bounded assistance; KO and ledge cases verified |
 | 11 | Skyline and group camera | Spawns, props, panels, warnings, camera bounds and local round |
