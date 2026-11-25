@@ -1,7 +1,9 @@
 //! Shared fixed-tick physics and gameplay; independent of transport and presentation.
 
 mod character;
+mod combat;
 mod config;
+pub use combat::{Hand, HandPhase, HandState};
 mod debug;
 mod fixture;
 mod physics;

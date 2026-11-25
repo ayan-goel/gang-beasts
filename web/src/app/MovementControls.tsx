@@ -1,3 +1,4 @@
+import { HandControls } from './HandControls';
 import type { InspectorProps } from './types';
 
 export function MovementControls({state, act, focus}: InspectorProps & {focus(): void}) {
@@ -37,6 +38,8 @@ export function MovementControls({state, act, focus}: InspectorProps & {focus():
         onClick={() => act(p => p.movementInput?.tapJump())}>Jump</button>
       <button className="focus-movement" onClick={focus}>Focus movement controls</button>
     </div>
+    <HandControls act={act} disabled={blocked} />
     <p>Hold WASD / arrows · Shift to run · Space to jump</p>
+    <p>Left/right mouse or J/K to punch · Hold to reach</p>
   </div>;
 }

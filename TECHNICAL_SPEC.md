@@ -558,6 +558,8 @@ Full-game gamepad proposal: left stick movement, A/south jump, shoulders indepen
 
 Define priority: elimination/knockout overrides everything; an existing grip remains a grip while held; lifting/climbing modifies gripping-arm targets; a free hand may punch; a held hand does not simultaneously create a new damaging punch. Each attack has a server-created ID and a per-target hit set. A continued hold is not an automatic punch macro.
 
+The local controller samples each hand independently. A press and release between two ticks still produces one punch. Focus loss clears held input and unsampled presses. A punch that has started keeps its full 24-tick cooldown. Each accepted punch gets a monotonically increasing ID within the character fixture. Networked hits must also carry the attacker and round identity.
+
 ### 13.3 Punches, targeting and timing
 
 | Phase | Proposed design time | Initial 60 Hz schedule |
@@ -566,6 +568,8 @@ Define priority: elimination/knockout overrides everything; an existing grip rem
 | Strike | 120 ms | 7 ticks ≈116.7 ms |
 | Recovery | 200 ms | 12 ticks =200 ms |
 | Total | 400 ms | 24 ticks |
+
+The playground uses shoulder/elbow pitch pairs of [0.15, 1.80] radians in wind-up, [1.65, 0.15] in extension and [1.45, 0.30] in held reach. The active arm uses stiffness 160 N·m/rad, damping 4 N·m·s/rad and a 45 N·m torque ceiling per motor. Authored joint limits bound each pitch. The opposite arm retains its ordinary gait or independent action. Over the twelve recovery ticks, a tap retracts toward rest and a hold settles into reach. When a foot is supported, the controller measures the gravity moment of the six arm bodies about the chest and biases the chest and supported ankle pitch targets to counter it. Each bias is capped at 0.20 radians and retains the ordinary motor torque ceiling. These versioned settings live in `config/hands.json`.
 
 Drive shoulder/elbow targets through anticipation, extension and retraction. Candidate detection ranks targets by forward intent, distance, reachable geometry and stable entity-ID tie-breaks. A cone/query finds candidates; only real qualifying physical contact can damage a target. Do not attack through walls or snap hands to a candidate. Separate candidate selection from hit detection.
 

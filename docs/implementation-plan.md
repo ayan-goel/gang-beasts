@@ -28,7 +28,8 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 06c3 | Browser terrain and human movement assessment | Matching scenes/traces, visible contact transitions and human playability |
 | 07a — verified local fixtures | Jump, flight and landing | Single bounded takeoff, coyote and buffer boundaries, finite air control, native/WASM agreement and accessible controls |
 | 07b — verified local fixtures | Fallen recovery | Face-up, face-down and side get-up, obstruction and restraint, clear handoff to supported standing, native/WASM shove trace |
-| 08 | Independent strikes and contact damage | Real contact, attack deduplication, no resting damage |
+| 08a — verified local fixtures | Independent strikes and held reach | Per-hand timing, bounded motors, physical momentum transfer and browser controls |
+| 08b | Contact damage and headbutt | Qualified directional hits, attacker/target deduplication, occlusion and resting contacts |
 | 09 | Grips, stamina and release | Per-hand constraints, valid anchors, load failure, cyclic stress cleanup |
 | 10 | Lift, throw, knockout and rescue | Momentum preserved; bounded assistance; KO and ledge cases verified |
 | 11 | Skyline and group camera | Spawns, props, panels, warnings, camera bounds and local round |

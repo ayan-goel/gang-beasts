@@ -64,6 +64,9 @@ impl PoseRagdoll {
     pub fn enabled(&self) -> bool {
         self.enabled
     }
+    pub(super) fn motor_configuration_mut(&mut self) -> &mut MotorConfig {
+        &mut self.motors
+    }
     pub fn motor_configuration(&self) -> &MotorConfig {
         &self.motors
     }

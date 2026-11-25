@@ -3,7 +3,7 @@ import { MovementInput } from './MovementInput';
 
 test('keyboard and pointer intent normalize, combine, and release independently', () => {
   const sent: unknown[] = [];
-  const input = new MovementInput({ setInput: (...args) => sent.push(args), setJump: vi.fn(), clearJumpInput: vi.fn() }, () => true);
+  const input = new MovementInput({ setInput: (...args) => sent.push(args), setJump: vi.fn(), clearJumpInput: vi.fn(), setHand: vi.fn(), clearHands: vi.fn() }, () => true);
   input.key('KeyW', true); input.key('KeyD', true); input.key('ShiftLeft', true);
   expect(input.command[0]).toBeCloseTo(Math.SQRT1_2, 12);
   expect(input.command[1]).toBeCloseTo(-Math.SQRT1_2, 12);
@@ -18,7 +18,7 @@ test('keyboard and pointer intent normalize, combine, and release independently'
 test('unfocused lifecycle clears controls and disabled input cannot resume a held key', () => {
   let allowed = true;
   const sent: unknown[] = [];
-  const input = new MovementInput({ setInput: (...args) => sent.push(args), setJump: vi.fn(), clearJumpInput: vi.fn() }, () => allowed);
+  const input = new MovementInput({ setInput: (...args) => sent.push(args), setJump: vi.fn(), clearJumpInput: vi.fn(), setHand: vi.fn(), clearHands: vi.fn() }, () => allowed);
   input.key('KeyW',true); allowed = false; input.clear();
   expect(input.key('KeyW',true)).toBe(false);
   expect(sent.at(-1)).toEqual([0,0,false]);
@@ -28,7 +28,7 @@ test('unfocused lifecycle clears controls and disabled input cannot resume a hel
 });
 
 test('W and ArrowUp share directional weight but retain independent releases', () => {
-  const input = new MovementInput({ setInput: vi.fn(), setJump: vi.fn(), clearJumpInput: vi.fn() }, () => true);
+  const input = new MovementInput({ setInput: vi.fn(), setJump: vi.fn(), clearJumpInput: vi.fn(), setHand: vi.fn(), clearHands: vi.fn() }, () => true);
   input.key('KeyW', true); input.key('KeyD', true);
   const diagonal = input.command;
   input.key('ArrowUp', true);
@@ -41,7 +41,7 @@ test('W and ArrowUp share directional weight but retain independent releases', (
 
 test('a held Space key submits one edge, release retains taps, and blur cancels pending input', () => {
   let allowed = true;
-  const port = { setInput: vi.fn(), setJump: vi.fn(), clearJumpInput: vi.fn() };
+  const port = { setInput: vi.fn(), setJump: vi.fn(), clearJumpInput: vi.fn(), setHand: vi.fn(), clearHands: vi.fn() };
   const input = new MovementInput(port, () => allowed);
   input.key('Space', true);
   expect(input.key('Space', true, true)).toBe(true);

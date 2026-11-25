@@ -61,6 +61,36 @@ impl LocalRagdoll {
             .set_input(direction, running)
             .map_err(js_error)
     }
+    pub fn set_hand(&mut self, side: JsValue, held: JsValue) -> Result<(), JsValue> {
+        let hand = match side.as_f64() {
+            Some(0.0) => brawler_engine::Hand::Left,
+            Some(1.0) => brawler_engine::Hand::Right,
+            _ => return Err(js_error("hand index must be zero or one")),
+        };
+        let held = held
+            .as_bool()
+            .ok_or_else(|| js_error("hand state must be a boolean"))?;
+        self.rig
+            .walking_mut()
+            .map_err(js_error)?
+            .set_hand(hand, held);
+        Ok(())
+    }
+    pub fn hand_states(&self) -> Vec<u64> {
+        self.rig.walking().map_or_else(Vec::new, |rig| {
+            [brawler_engine::Hand::Left, brawler_engine::Hand::Right]
+                .into_iter()
+                .flat_map(|hand| {
+                    let state = rig.hand_state(hand);
+                    [state.phase as u64, state.attack_id]
+                })
+                .collect()
+        })
+    }
+    pub fn clear_hands(&mut self) -> Result<(), JsValue> {
+        self.rig.walking_mut().map_err(js_error)?.clear_hands();
+        Ok(())
+    }
     pub fn set_jump(&mut self, held: JsValue) -> Result<(), JsValue> {
         let held = held
             .as_bool()

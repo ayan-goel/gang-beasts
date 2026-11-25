@@ -26,6 +26,7 @@
 - [Settling and support velocity](verification/settling-and-support-velocity.md): completed-rotation feedback, whole-trunk recovery, rotating drag and rejected stride history.
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
+- [Independent hand strikes](slices/08a-hand-strikes.md) records the phase timing, control bindings and physical contact evidence.
 - [Physical get-up](slices/07b-recovery.md) covers fallen poses, contact and effort limits, obstructions, restraints and the return to standing.
 - [Jump, flight and landing](slices/07a-jumping.md) covers the takeoff impulse, timing windows, airborne budget and local controls.
 - [Low stair traversal](slices/06c2b4b-stairs.md) records the current failing fixture and where the feet lose support.

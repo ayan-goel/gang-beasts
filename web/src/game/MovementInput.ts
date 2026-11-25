@@ -1,3 +1,4 @@
+import { HandInput } from './HandInput';
 import type { MovementPort } from './movementInspection';
 
 const directions: Record<string, readonly [number, number]> = {
@@ -6,14 +7,17 @@ const directions: Record<string, readonly [number, number]> = {
 };
 
 export class MovementInput {
+  readonly hands: HandInput;
   private keys = new Set<string>();
   private pointers = new Map<number, readonly [number, number]>();
   private running = false;
   command: readonly [number, number, boolean] = [0,0,false];
   constructor(
-    private movement: Pick<MovementPort, 'setInput' | 'setJump' | 'clearJumpInput'>,
+    private movement: Pick<MovementPort, 'setInput' | 'setJump' | 'clearJumpInput' | 'setHand' | 'clearHands'>,
     private allowed: () => boolean,
-  ) {}
+  ) {
+    this.hands = new HandInput((side, held) => movement.setHand(side, held), () => movement.clearHands(), allowed);
+  }
   tapJump(): void {
     if (!this.allowed() || this.keys.has('Space')) return;
     this.movement.setJump(true);
@@ -23,8 +27,13 @@ export class MovementInput {
   setRun(run: boolean): void { this.running = run; this.publish(); }
   key(code: string, down: boolean, repeat = false): boolean {
     if (repeat) return this.keys.has(code);
-    if (!(code in directions) && !['ShiftLeft','ShiftRight','Space'].includes(code)) return false;
+    if (!(code in directions) && !['ShiftLeft','ShiftRight','Space','KeyJ','KeyK'].includes(code)) return false;
     if (down && !this.allowed()) return false;
+    if (code === 'KeyJ' || code === 'KeyK') {
+      this.hands.hold(code === 'KeyJ' ? 0 : 1, code, down);
+      if (down) this.keys.add(code); else this.keys.delete(code);
+      return true;
+    }
     if (code === 'Space') {
       if (down !== this.keys.has(code)) this.movement.setJump(down);
       if (down) this.keys.add(code); else this.keys.delete(code);
@@ -37,7 +46,7 @@ export class MovementInput {
     if (this.allowed()) { this.pointers.set(id, direction); this.publish(); }
   }
   releasePointer(id: number): void { this.pointers.delete(id); this.publish(); }
-  clear(): void { this.keys.clear(); this.pointers.clear(); this.movement.clearJumpInput(); this.publish(); }
+  clear(): void { this.keys.clear(); this.pointers.clear(); this.hands.clear(); this.movement.clearJumpInput(); this.publish(); }
   private publish(): void {
     let x = 0, z = 0;
     // Aliased keys represent one direction, so W+Up cannot double analog input.

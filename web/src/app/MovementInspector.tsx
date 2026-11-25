@@ -13,6 +13,7 @@ export function MovementInspector({state}: InspectorProps) {
       <div><dt>Commanded acceleration</dt><dd>{movement.acceleration.toFixed(2)} m/s²</dd></div>
       <div><dt>Support moment</dt><dd id="support-moment">{movement.supportMoment.toFixed(2)} N·m</dd></div>
       <div><dt>Stopping moment</dt><dd id="stopping-moment">{movement.stoppingMoment.toFixed(2)} N·m</dd></div>
+      <div><dt>Left / right hand</dt><dd><span id="left-hand-phase">{movement.hands[0]}</span> / <span id="right-hand-phase">{movement.hands[1]}</span></dd></div>
       <div><dt>Get-up assistance</dt><dd id="recovery-status">{movement.recovering ? 'Getting up' : 'Inactive'}</dd></div>
       <div><dt>Active motor strength</dt><dd id="movement-strength">{(movement.strength*100).toFixed(0)}%</dd></div>
     </dl>

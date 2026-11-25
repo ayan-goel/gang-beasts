@@ -6,6 +6,7 @@ test('support and stopping moments are measured separately from yaw and accelera
     state: () => new Float32Array([1,0,0,0,0,0,1,1,0,2,1]),
     stoppingMoment: () => new Float32Array([3,4,0]),
     supportMoment: () => new Float32Array([0,5,12]),
+    handStates: () => new BigUint64Array([0n,0n,0n,0n]), setHand: () => {}, clearHands: () => {},
     recoveryState: () => new Float32Array([0.5, 100, 48]),
     setJump: () => {}, clearJumpInput: () => {},
     setInput: () => {},

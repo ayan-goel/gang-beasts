@@ -18,6 +18,10 @@ mod jump_tests;
 mod recovery_tests;
 
 #[cfg(test)]
+#[path = "strike_tests.rs"]
+mod strike_tests;
+
+#[cfg(test)]
 #[path = "moving_support_tests.rs"]
 mod moving_support_tests;
 
@@ -48,6 +52,7 @@ mod rotating_traversal_tests;
 pub struct LocomotionRagdoll {
     pose: PoseRagdoll,
     stair_fixture: bool,
+    hands: crate::combat::Hands,
     controller: WalkingController,
     idle_motors: MotorConfig,
     active_motors: MotorConfig,
@@ -70,6 +75,7 @@ impl LocomotionRagdoll {
         Ok(Self {
             pose,
             stair_fixture: false,
+            hands: crate::combat::Hands::new()?,
             controller: WalkingController::new(config),
             idle_motors: MotorConfig::standing()?,
             active_motors: MotorConfig::locomotion()?,
@@ -108,6 +114,17 @@ impl LocomotionRagdoll {
     pub fn set_input(&mut self, direction: [f32; 2], running: bool) -> Result<(), CharacterError> {
         self.controller.set_input(direction, running)
     }
+    pub fn set_hand(&mut self, hand: crate::Hand, held: bool) {
+        if self.pose.enabled() && self.state().recovery_strength == 0.0 {
+            self.hands.set(hand, held);
+        }
+    }
+    pub fn hand_state(&self, hand: crate::Hand) -> crate::HandState {
+        self.hands.state(hand)
+    }
+    pub fn clear_hands(&mut self) {
+        self.hands.release_inputs();
+    }
     pub fn set_jump(&mut self, held: bool) {
         if self.pose.enabled() {
             self.controller.set_jump(held);
@@ -119,6 +136,7 @@ impl LocomotionRagdoll {
     pub fn set_enabled(&mut self, enabled: bool) {
         self.pose.set_enabled(enabled);
         if !enabled {
+            self.hands.clear();
             self.controller.reset();
             self.pose
                 .blend_motors(&self.idle_motors, &self.active_motors, 0.0);
@@ -128,18 +146,30 @@ impl LocomotionRagdoll {
         // Queued foot departures must reach support queries before movement can assist.
         self.pose.rig.apply_pending_impulse();
         let enabled = self.pose.enabled();
-        let targets = self.controller.advance(&mut self.pose.rig, enabled);
+        let mut targets = self.controller.advance(&mut self.pose.rig, enabled);
         self.pose.blend_motors(
             &self.idle_motors,
             &self.active_motors,
             self.controller.state.motor_strength,
         );
+        if enabled && self.state().recovery_strength == 0.0 {
+            super::arm_pose::apply(
+                &mut self.hands,
+                &mut self.pose,
+                self.controller.state.feet,
+                &mut self.controller.state.targets,
+                &mut targets,
+            );
+        } else {
+            self.hands.clear();
+        }
         self.pose.step_with_targets(&targets);
     }
     pub fn queue_impulse(&mut self, part: BodyPart, impulse: [f32; 3]) -> Result<(), CommandError> {
         self.pose.queue_impulse(part, impulse)
     }
     pub fn reset(&mut self) {
+        self.hands.reset();
         self.pose.reset();
         if self.stair_fixture {
             super::stair_fixture::install(&mut self.pose.rig);

@@ -1,3 +1,4 @@
+mod arm_pose;
 mod balance;
 mod balance_config;
 mod definition;
