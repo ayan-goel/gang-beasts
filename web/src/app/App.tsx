@@ -16,6 +16,7 @@ const environments: Record<Scenario, { name: string; title: string; description:
   ragdoll: { name: 'Passive ragdoll', title: 'Passive ragdoll', description: 'Fifteen bodies. Physical joints. No motors.' },
   standing: { name: 'Standing ragdoll', title: 'Standing ragdoll', description: 'Bounded motors. Foot support. Physical balance.' },
   locomotion: { name: 'Locomotion', title: 'Locomotion playground', description: 'Walk. Run. Turn. Keep your balance.' },
+  practice: { name: 'Strike practice', title: 'Strike practice', description: 'Punch the suspended pad with either hand.' },
   stairs: { name: 'Low stairs', title: 'Low stairs', description: 'Walk forward to approach three 10 cm risers.' },
 };
 

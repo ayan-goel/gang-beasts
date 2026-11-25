@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { RigDefinition } from '../game/rigDefinition';
+import { PracticeTargetView } from './PracticeTargetView';
 import { RagdollView } from './RagdollView';
 import { fixtureTerrain } from './fixtureTerrain';
 import { JointOverlay } from './JointOverlay';
@@ -17,10 +18,11 @@ export class FixtureScene {
     new THREE.MeshStandardMaterial({ color: '#f58465', roughness: 0.65 }),
   );
   private readonly resizeObserver?: ResizeObserver;
+  private readonly practice?: PracticeTargetView;
   private readonly rig?: RagdollView;
   private readonly joints?: JointOverlay;
 
-  constructor(private readonly container: HTMLElement, definition?: RigDefinition, rigFocusHeight = 1.7, private readonly followRig = false, terrainBoxes?: Float32Array) {
+  constructor(private readonly container: HTMLElement, definition?: RigDefinition, rigFocusHeight = 1.7, private readonly followRig = false, terrainBoxes?: Float32Array, target?: Float32Array) {
     try {
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       this.renderer.shadowMap.enabled = true;
@@ -40,6 +42,11 @@ export class FixtureScene {
         this.renderer.domElement.setAttribute('aria-label', terrainBoxes && terrainBoxes.length > 6 ? 'Live physical ragdoll on low stairs' : 'Live fifteen-body physical ragdoll on a platform');
       }
 
+      if (target) {
+        this.practice = new PracticeTargetView(target);
+        this.scene.add(this.practice.root);
+        this.renderer.domElement.setAttribute('aria-label', 'Live ragdoll and suspended target in strike practice');
+      }
       this.cube.castShadow = true;
       this.scene.add(fixtureTerrain(terrainBoxes), this.cube);
       this.colliders.frustumCulled = false;
@@ -67,14 +74,18 @@ export class FixtureScene {
     }
   }
 
-  render(state: Float32Array, lines?: Float32Array, jointStates?: Float32Array, selectedBody = 0, poseTargets?: Float32Array): void {
+  render(state: Float32Array, lines?: Float32Array, jointStates?: Float32Array, selectedBody = 0, poseTargets?: Float32Array, target?: Float32Array): void {
     if (this.rig) this.rig.update(state, selectedBody);
     else {
       this.cube.position.set(state[0]!, state[1]!, state[2]!);
       this.cube.quaternion.set(state[3]!, state[4]!, state[5]!, state[6]!);
     }
+    if (target) this.practice?.update(target);
     this.joints?.update(jointStates, poseTargets);
-    if (this.followRig) {
+    if (this.practice) {
+      this.camera.position.set(state[28]! + 3.0, 2.15, state[30]! + 1.7);
+      this.camera.lookAt(state[28]!, 1.1, state[30]! - 0.22);
+    } else if (this.followRig) {
       this.camera.position.set(state[28]! + 4, 3.8, state[30]! + 6);
       this.camera.lookAt(state[28]!, 0.85, state[30]!);
     }

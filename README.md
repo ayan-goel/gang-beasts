@@ -55,6 +55,8 @@ Choose **Locomotion**, resume and focus the canvas to walk with WASD/arrows and 
 
 With Locomotion running, click the canvas with either mouse button to punch with the corresponding hand. Hold to keep reaching after the punch. J and K and the two hand buttons provide the same controls. The inspector shows each hand’s phase.
 
+Choose **Strike practice** to punch a suspended 2 kg pad. Resume, then use either hand. The pad can swing and twist. The displacement readout measures horizontal distance from its resting line. Reset hangs the pad at rest again.
+
 Choose **Low stairs** to inspect the same three 10 cm risers as the native traversal test. Resume and walk forward with W or ↑. The current controller trips on the second riser in the scripted approach. [Fixture and reproduction](docs/slices/06c2b4b-stairs.md)
 
 Pause to enable exact single-step. Reset reconstructs the fixture and preserves the paused/running mode. Slow motion changes playback cadence without changing physics dt. The upward impulse is queued once for the next tick. Enable **Show colliders** to inspect Rapier geometry.

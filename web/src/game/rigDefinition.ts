@@ -14,6 +14,7 @@ export interface RigDefinition {
 
 export interface RigInspection {
   readonly terrainBoxes?: Float32Array;
+  practiceState?(): Float32Array;
   readonly controller?: RigControl;
   readonly movement?: MovementPort;
   definition: RigDefinition;
@@ -24,6 +25,7 @@ export interface RigInspection {
 }
 
 export function inspectRig(rig: RigInspection) {
+  const target = rig.practiceState?.();
   const bodies = rig.bodyStates();
   const joints = rig.jointStates();
   let mass = 0;
@@ -34,6 +36,7 @@ export function inspectRig(rig: RigInspection) {
     controller: rig.controller ? inspectController(rig.controller, rig.definition, rig.selectedBody) : undefined,
     movement: rig.movement ? inspectMovement(rig.movement) : undefined,
     position: [bodies[28]!, bodies[30]!], speed: Math.hypot(bodies[35]!, bodies[37]!),
+    targetDisplacement: target ? Math.hypot(target[0]! - target[10]!, target[2]! - target[12]!) : undefined,
     selectedBody: rig.selectedBody, bodyCount: bodies.length / 14, jointCount: joints.length / 17,
     mass, maxAnchorError, bodyNames: rig.definition.bodies.map(body => body.part.replaceAll('_', ' ')),
     limits: rig.definition.joints.find(joint => joint.child === rig.definition.bodies[rig.selectedBody]!.part)?.angular_limits,

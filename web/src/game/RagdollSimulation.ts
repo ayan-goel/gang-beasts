@@ -9,11 +9,12 @@ export class RagdollSimulation implements SimulationPort, RigInspection {
   readonly terrainBoxes: Float32Array;
   readonly definition: RigDefinition;
   readonly rig = this;
+  readonly practiceState?: () => Float32Array;
   readonly controller?: RigControl;
   readonly movement?: MovementPort;
   selectedBody = 2;
 
-  constructor(configuration: string, kind: 'ragdoll' | 'standing' | 'locomotion' | 'stairs' = 'ragdoll') {
+  constructor(configuration: string, kind: 'ragdoll' | 'standing' | 'locomotion' | 'stairs' | 'practice' = 'ragdoll') {
     this.native = kind === 'ragdoll' ? new LocalRagdoll(configuration) : LocalRagdoll[kind](configuration);
     const native = this.native;
     try {
@@ -26,7 +27,8 @@ export class RagdollSimulation implements SimulationPort, RigInspection {
         state: () => this.native.controller_state(), efforts: () => this.native.motor_efforts(),
         targets: () => this.native.motor_targets(), setEnabled: enabled => this.native.set_enabled(enabled),
       };
-      if (kind === 'locomotion' || kind === 'stairs') this.movement = {
+      if (kind === 'practice') this.practiceState = () => native.practice_state();
+      if (kind === 'locomotion' || kind === 'stairs' || kind === 'practice') this.movement = {
         state: () => native.movement_state(),
         stoppingMoment: () => native.stopping_moment(),
         supportMoment: () => native.support_moment(),

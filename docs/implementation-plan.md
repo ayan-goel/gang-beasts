@@ -29,6 +29,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 07a — verified local fixtures | Jump, flight and landing | Single bounded takeoff, coyote and buffer boundaries, finite air control, native/WASM agreement and accessible controls |
 | 07b — verified local fixtures | Fallen recovery | Face-up, face-down and side get-up, obstruction and restraint, clear handoff to supported standing, native/WASM shove trace |
 | 08a — verified local fixtures | Independent strikes and held reach | Per-hand timing, bounded motors, physical momentum transfer and browser controls |
+| 08a2 — verified local fixture | Strike practice scene | Either fist swings a suspended target through physical contact, with matching native/WASM traces, reset and tuning replacement |
 | 08b | Contact damage and headbutt | Qualified directional hits, attacker/target deduplication, occlusion and resting contacts |
 | 09 | Grips, stamina and release | Per-hand constraints, valid anchors, load failure, cyclic stress cleanup |
 | 10 | Lift, throw, knockout and rescue | Momentum preserved; bounded assistance; KO and ledge cases verified |

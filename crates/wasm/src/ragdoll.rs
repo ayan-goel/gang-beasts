@@ -25,6 +25,17 @@ impl LocalRagdoll {
         build(configuration, RigKind::Stairs)
     }
 
+    pub fn practice(configuration: &str) -> Result<LocalRagdoll, JsValue> {
+        build(configuration, RigKind::Practice)
+    }
+
+    pub fn practice_state(&self) -> Vec<f32> {
+        self.rig
+            .walking()
+            .and_then(|rig| rig.practice_state())
+            .map_or_else(Vec::new, |s| s.to_vec())
+    }
+
     pub fn terrain_boxes(&self) -> Vec<f32> {
         self.rig
             .view()

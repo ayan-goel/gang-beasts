@@ -49,9 +49,15 @@ mod pose_transition_tests;
 #[path = "rotating_traversal_tests.rs"]
 mod rotating_traversal_tests;
 
+enum Layout {
+    Platform,
+    Stairs,
+    Practice(super::practice_target::PracticeTarget),
+}
+
 pub struct LocomotionRagdoll {
     pose: PoseRagdoll,
-    stair_fixture: bool,
+    layout: Layout,
     hands: crate::combat::Hands,
     controller: WalkingController,
     idle_motors: MotorConfig,
@@ -74,7 +80,7 @@ impl LocomotionRagdoll {
         pose.configure_balance(Some(BalanceConfig::bundled()?))?;
         Ok(Self {
             pose,
-            stair_fixture: false,
+            layout: Layout::Platform,
             hands: crate::combat::Hands::new()?,
             controller: WalkingController::new(config),
             idle_motors: MotorConfig::standing()?,
@@ -87,12 +93,30 @@ impl LocomotionRagdoll {
     ) -> Result<Self, CharacterError> {
         let mut rig = Self::new(physics, config, [0.0, 0.08, 0.0])?;
         super::stair_fixture::install(&mut rig.pose.rig);
-        rig.stair_fixture = true;
+        rig.layout = Layout::Stairs;
         Ok(rig)
     }
 
     pub fn is_stair_fixture(&self) -> bool {
-        self.stair_fixture
+        matches!(self.layout, Layout::Stairs)
+    }
+
+    pub fn strike_practice(
+        physics: PhysicsConfig,
+        config: LocomotionConfig,
+    ) -> Result<Self, CharacterError> {
+        let mut rig = Self::new(physics, config, [0.; 3])?;
+        rig.layout = Layout::Practice(super::practice_target::PracticeTarget::install(
+            &mut rig.pose.rig,
+        ));
+        Ok(rig)
+    }
+
+    pub fn practice_state(&self) -> Option<[f32; 13]> {
+        match &self.layout {
+            Layout::Practice(target) => Some(target.state(&self.pose.rig)),
+            _ => None,
+        }
     }
 
     pub fn pose(&self) -> &PoseRagdoll {
@@ -171,8 +195,12 @@ impl LocomotionRagdoll {
     pub fn reset(&mut self) {
         self.hands.reset();
         self.pose.reset();
-        if self.stair_fixture {
-            super::stair_fixture::install(&mut self.pose.rig);
+        match &mut self.layout {
+            Layout::Platform => {}
+            Layout::Stairs => super::stair_fixture::install(&mut self.pose.rig),
+            Layout::Practice(target) => {
+                *target = super::practice_target::PracticeTarget::install(&mut self.pose.rig)
+            }
         }
         self.controller.reset();
         self.pose
