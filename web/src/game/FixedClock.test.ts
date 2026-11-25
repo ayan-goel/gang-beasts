@@ -23,4 +23,20 @@ describe('fixed simulation clock', () => {
     for (const value of [-1, NaN, Infinity]) expect(clock.advance(value)).toBe(0);
     expect(clock.advance(1 / 60)).toBe(1);
   });
+
+  it('processes elapsed waiting ticks at four rendered frames per second', () => {
+    const clock = new FixedClock();
+    let remaining = 180;
+    for (let frame = 0; frame < 12; frame++) remaining -= clock.advance(0.25, remaining);
+    expect(remaining).toBe(0);
+    expect(clock.droppedSeconds).toBe(0);
+    expect(clock.advance(0.25)).toBe(4);
+  });
+
+  it('cannot spend an intermission backlog on the next physics solve', () => {
+    const clock = new FixedClock();
+    expect(clock.advance(10, 9)).toBe(9);
+    expect(clock.advance(0)).toBe(0);
+    expect(clock.advance(10, 1)).toBe(4);
+  });
 });

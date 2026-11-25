@@ -9,13 +9,12 @@ export class FixedClock {
     this.accumulator = 0;
   }
 
-  advance(seconds: number): number {
+  advance(seconds: number, waitingTicks = 0): number {
     if (!Number.isFinite(seconds) || seconds < 0) return 0;
     this.accumulator += seconds;
     const available = Math.floor((this.accumulator + 1e-10) / STEP_SECONDS);
-    const steps = Math.min(available, MAX_CATCH_UP_STEPS);
-    // The local playground drops suspended time instead of blocking the UI.
-    // This is not the authoritative server's overload policy.
+    // Countdown and results ticks have no physics solve. Only the current phase can enlarge the budget.
+    const steps = Math.min(available, Math.max(waitingTicks, MAX_CATCH_UP_STEPS));
     this.droppedSeconds += (available - steps) * STEP_SECONDS;
     this.accumulator = Math.max(0, this.accumulator - available * STEP_SECONDS);
     return steps;

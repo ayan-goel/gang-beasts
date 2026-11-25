@@ -47,6 +47,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 11 | Skyline and group camera | Spawns, props, panels, warnings, camera bounds and local round |
 | 12a — verified native local match | Two-player Skyline melee | Countdown, physical eliminations, draws, first-to-three, full reset and rematch |
 | 12b — playable browser match | Local Skyline game screen | Group framing, hazard warnings, keyboard ring-out, three rounds and rematch |
+| 12c — local phase clock | Preserve local countdown and results duration at low frame rates | Slow-render keyboard ring-out, bounded physics work and correct round reset |
 | 12 | Melee match lifecycle | Simultaneous elimination, scoring, full reset and rematch |
 | 13a — input wire contract | Browser sampling and native codec | Shared 18-byte golden record, edge ordering, malformed input, bounded burst and wraparound |
 | 13b — full snapshot codec | Rust encoder and browser decoder | Independent binary fixture, stable body and grip IDs, bounded validation, exact epoch and optional input acknowledgement |

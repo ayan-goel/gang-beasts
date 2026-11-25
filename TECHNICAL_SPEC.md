@@ -1159,6 +1159,8 @@ Provide master, music and effects sliders, mute and persistence of settings. Ful
 
 2–8 players, individual survival, last survivor wins, default first to three round wins. Draws award no point. Process all eliminations before scoring; award each round once using a unique round ID. Use automatic next rounds, configurable map rotation and rematch without refresh.
 
+In local Skyline, the three-second countdown and five-second round results use visible, unpaused time. Their fixed ticks may catch up to the current phase boundary. Active fighter physics retains its four-step catch-up budget. [Local phase timing](docs/slices/12c-local-phase-clock.md)
+
 At 180 seconds, begin the map's sudden-death sequence. Initial maximum extension is 30 seconds; unresolved rounds become draws. If fewer than two eligible players remain between rounds, return to a waiting lobby instead of farming automatic wins. Exact countdown/result display durations are UI configuration candidates (initially 3 s/5 s).
 
 ### 22.2 Teams

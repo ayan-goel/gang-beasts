@@ -39,10 +39,12 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
   let previous = performance.now();
   let displayed = 0;
   let disposed = false;
+  const resetClock = () => { clock.clearDebt(); previous = performance.now(); };
   const dispose = () => {
     if (disposed) return;
     disposed = true;
     cancelAnimationFrame(frame);
+    document.removeEventListener('visibilitychange', resetClock);
     try { unbind?.(); } finally { try { scene?.dispose(); } finally { duel.free(); } }
   };
   try {
@@ -97,8 +99,9 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
       }
     };
     const animate = (now: number) => {
-      if (!paused) {
-        const steps = clock.advance((now - previous) / 1000);
+      if (!paused && (!skyline || !document.hidden)) {
+        const waitingTicks = match?.phase === 'countdown' || match?.phase === 'round_results' ? match.remaining : 0;
+        const steps = clock.advance((now - previous) / 1000, waitingTicks);
         for (let i = 0; i < steps; i++) step();
       }
       if (skyline && !paused) {
@@ -113,14 +116,14 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     };
     render();
     snapshot();
+    if (skyline) document.addEventListener('visibilitychange', resetClock);
     frame = requestAnimationFrame(animate);
     return {
       toggle() {
         paused = !paused;
         if (paused) inputs.forEach(input => input.clear());
         else canvas.focus({ preventScroll: true });
-        clock.clearDebt();
-        previous = performance.now();
+        resetClock();
         snapshot();
       },
       reset() {

@@ -46,6 +46,7 @@
 - [Pulling onto the roof](slices/10c3-mantling.md) covers climbing controls, support transfer and obstruction tests.
 - [Ledge catches](slices/10c2-ledge-catch.md) documents falling-hand targeting, physical slip and break loads.
 - [Arena grips](slices/10c1-arena-grips.md) covers physical interaction with rooftop props and edges.
+- [Local countdown and results timing](slices/12c-local-phase-clock.md) explains how slow render frames affect phase transitions.
 - [Play Skyline](slices/12b-play-skyline.md) covers the playable local match, rooftop presentation and camera.
 - [Local melee rounds](slices/12a-local-rounds.md) records fall elimination, first-to-three scoring, round epochs and rematch.
 - [Skyline physics](slices/11a-skyline-physics.md) covers authored geometry, validation, debris, hazards and fall detection.
