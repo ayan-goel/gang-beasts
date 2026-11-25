@@ -27,6 +27,7 @@ export default function OnlineMatch({feed, exit}: {feed: MatchFeed; exit: () => 
       <span aria-label="Round phase">{phaseNames[match.phase]}</span>
       {feed.fighters.map((p,i) => <span key={p.slot}>{p.name} <b aria-label={p.name + ' score'}>{match.scores[i]}</b></span>)}
     </div>}
+    <p className="online-controls">{feed.own === null ? 'Spectating' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift'}</p>
     {match && match.phase !== 'playing' && <div className="online-callout" role="status">{match.phase === 'countdown' ? Math.max(1,Math.ceil(match.remaining/60)) : winner}</div>}
     {error && <p role="alert">{error}</p>}
   </section>;

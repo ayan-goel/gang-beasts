@@ -17,9 +17,9 @@ fn slot_saturation_and_expired_arrivals_leave_the_other_slot_operable() {
     assert_eq!(client.input(first, 1, &bytes), Err(DispatchError::Busy));
     client.input(second, 1, &bytes).unwrap();
     let mut last = None;
-    drain(&mut room, first, &coral, &client.shared, &mut last);
+    drain(&mut room, first, &coral, &client.shared, &mut last, 0);
     assert_eq!(client.rejected_inputs(), 7);
-    drain(&mut room, second, &blue, &client.shared, &mut None);
+    drain(&mut room, second, &blue, &client.shared, &mut None, 0);
     room.step();
     assert_eq!(room.applied(first), Some(0));
     assert_eq!(room.applied(second), Some(0));
@@ -33,13 +33,14 @@ fn slot_saturation_and_expired_arrivals_leave_the_other_slot_operable() {
     .encode()
     .unwrap();
     tx.send(Command::Input {
+        generation: 0,
         round: 1,
         bytes: next,
         received: stale,
     })
     .unwrap();
     last = Some(stale);
-    drain(&mut room, first, &rx, &client.shared, &mut last);
+    drain(&mut room, first, &rx, &client.shared, &mut last, 0);
     room.step();
     assert_eq!(last, None);
     assert_eq!(client.rejected_inputs(), 8);
@@ -58,7 +59,7 @@ fn detach_fences_following_inputs_until_reattached_in_command_order() {
     client.input(id, 1, &bytes).unwrap();
     client.detach(id).unwrap();
     client.input(id, 1, &bytes).unwrap();
-    drain(&mut room, id, &rx, &client.shared, &mut None);
+    drain(&mut room, id, &rx, &client.shared, &mut None, 0);
     room.step();
     assert_eq!(room.applied(id), None);
     assert_eq!(client.rejected_inputs(), 1);
@@ -75,7 +76,44 @@ fn detach_fences_following_inputs_until_reattached_in_command_order() {
             .unwrap(),
         )
         .unwrap();
-    drain(&mut room, id, &rx, &client.shared, &mut None);
+    drain(&mut room, id, &rx, &client.shared, &mut None, 0);
     room.step();
     assert_eq!(room.applied(id), Some(1));
+}
+
+#[test]
+fn a_full_old_input_queue_cannot_take_over_or_release_the_replacement_connection() {
+    let mut room = Room::skyline().unwrap();
+    for _ in 0..180 {
+        room.step();
+    }
+    let (client, [rx, _]) = RoomClient::channel();
+    let id = FighterId::First;
+    client.bind(id, 41);
+    room.replace_connection(id, true);
+    for sequence in 0..8 {
+        let bytes = InputFrame {
+            sequence,
+            ..Default::default()
+        }
+        .encode()
+        .unwrap();
+        client.input_for(id, 41, 1, &bytes).unwrap();
+    }
+    client.bind(id, 42);
+    client.unbind(id, 41);
+    assert_eq!(client.shared.owners[0].load(Ordering::Acquire), 42);
+    room.replace_connection(id, true);
+    drain(&mut room, id, &rx, &client.shared, &mut None, 42);
+    room.step();
+    assert_eq!(room.applied(id), None);
+    assert_eq!(client.rejected_inputs(), 8);
+    client
+        .input_for(id, 42, 1, &InputFrame::default().encode().unwrap())
+        .unwrap();
+    drain(&mut room, id, &rx, &client.shared, &mut None, 42);
+    room.step();
+    assert_eq!(room.applied(id), Some(0));
+    client.unbind(id, 42);
+    assert_eq!(client.shared.owners[0].load(Ordering::Acquire), 0);
 }

@@ -21,6 +21,7 @@ pub enum DispatchError {
 
 pub(super) enum Command {
     Input {
+        generation: u64,
         round: u64,
         bytes: [u8; INPUT_BYTES],
         received: Instant,
@@ -33,6 +34,7 @@ pub(super) struct Shared {
     pub latest: Mutex<Option<Arc<RoomFrame>>>,
     pub closed: AtomicBool,
     pub rejected: AtomicU64,
+    pub owners: [AtomicU64; 2],
     pub delayed: AtomicU64,
 }
 
@@ -47,6 +49,7 @@ impl RoomClient {
         let shared = Arc::new(Shared {
             latest: Mutex::default(),
             closed: AtomicBool::new(false),
+            owners: Default::default(),
             rejected: AtomicU64::new(0),
             delayed: AtomicU64::new(0),
         });
@@ -71,10 +74,34 @@ impl RoomClient {
     }
 
     pub fn input(&self, id: FighterId, round: u64, bytes: &[u8]) -> Result<(), DispatchError> {
+        self.input_for(id, 0, round, bytes)
+    }
+
+    pub(crate) fn bind(&self, id: FighterId, generation: u64) {
+        self.shared.owners[id as usize].store(generation, Ordering::Release);
+    }
+
+    pub(crate) fn unbind(&self, id: FighterId, generation: u64) {
+        let _ = self.shared.owners[id as usize].compare_exchange(
+            generation,
+            0,
+            Ordering::AcqRel,
+            Ordering::Acquire,
+        );
+    }
+
+    pub(crate) fn input_for(
+        &self,
+        id: FighterId,
+        generation: u64,
+        round: u64,
+        bytes: &[u8],
+    ) -> Result<(), DispatchError> {
         InputFrame::decode(bytes).map_err(|e| DispatchError::Invalid(SubmitError::Invalid(e)))?;
         self.send(
             id,
             Command::Input {
+                generation,
                 round,
                 bytes: bytes.try_into().expect("validated input length"),
                 received: Instant::now(),

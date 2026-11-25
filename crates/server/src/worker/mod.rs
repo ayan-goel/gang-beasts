@@ -37,6 +37,7 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
     let origin = Instant::now();
     let mut clock = Cadence::default();
     let mut accepted = [None; 2];
+    let mut owners = [0u64; 2];
     while !stop.load(Ordering::Acquire) && !job.shared.closed.load(Ordering::Acquire) {
         let elapsed = origin.elapsed();
         let debt = clock.debt(elapsed);
@@ -48,12 +49,19 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
         for _ in 0..clock.take(elapsed) {
             for id in [FighterId::First, FighterId::Second] {
                 let i = id as usize;
+                let generation = job.shared.owners[i].load(Ordering::Acquire);
+                if owners[i] != generation {
+                    room.replace_connection(id, generation != 0);
+                    owners[i] = generation;
+                    accepted[i] = None;
+                }
                 drain(
                     &mut room,
                     id,
                     &job.incoming[i],
                     &job.shared,
                     &mut accepted[i],
+                    generation,
                 );
             }
             room.step();
@@ -77,6 +85,7 @@ fn drain(
     incoming: &Receiver<Command>,
     shared: &Shared,
     last: &mut Option<Instant>,
+    generation: u64,
 ) {
     let expiry = Duration::from_millis(250);
     if last.is_some_and(|at| at.elapsed() >= expiry) {
@@ -87,11 +96,15 @@ fn drain(
     for command in incoming.try_iter().take(8) {
         match command {
             Command::Input {
+                generation: sender,
                 round,
                 bytes,
                 received,
             } => {
-                if received.elapsed() >= expiry || room.submit(id, round, &bytes).is_err() {
+                if sender != generation
+                    || received.elapsed() >= expiry
+                    || room.submit(id, round, &bytes).is_err()
+                {
                     shared.rejected.fetch_add(1, Ordering::Relaxed);
                 } else {
                     *last = Some(received);

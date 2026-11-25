@@ -11,3 +11,4 @@
 .online-score { background:#19313c; }
 .online-score b,.online-callout { color:#f8c660; }
 .online-callout { position:absolute; top:30%; left:50%; transform:translateX(-50%); padding:.5rem 1rem; background:#19313c; font-size:2rem; }
+.online-controls { margin:0; padding:.4rem clamp(1rem,3vw,3rem) 1rem; color:#ccdad9; }

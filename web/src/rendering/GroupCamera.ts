@@ -3,6 +3,10 @@ import { PerspectiveCamera, Vector3 } from 'three';
 const direction = new Vector3(0.18, 0.85, 1).normalize();
 const right = new Vector3().crossVectors(new Vector3(0, 1, 0), direction).normalize();
 const up = new Vector3().crossVectors(direction, right);
+export function cameraRelativeMovement(x: number, z: number): [number, number] {
+  return [right.x*x - right.z*z, right.z*x + right.x*z];
+}
+
 export class GroupCamera {
   private readonly focus = new Vector3();
   private readonly desired = new Vector3();

@@ -60,6 +60,13 @@ impl Room {
         controls::neutralize(&mut self.game, id);
     }
 
+    pub(crate) fn replace_connection(&mut self, id: FighterId, connected: bool) {
+        self.detach(id);
+        // Each socket starts an independent sequence namespace after old input and grips are cleared.
+        self.inboxes[id as usize] = Inbox::default();
+        self.attached[id as usize] = connected;
+    }
+
     pub fn attach(&mut self, id: FighterId) {
         self.attached[id as usize] = true;
     }

@@ -1,6 +1,6 @@
 # Physics brawler
 
-A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline Melee is playable locally with two people on one keyboard. Friends can create and join private lobbies. Online matches are in development.
+A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline Melee is playable locally with two people on one keyboard. Two friends can also play Skyline from separate browser sessions through a private lobby.
 
 The [technical specification](TECHNICAL_SPEC.md) is canonical. See the [documentation index](docs/README.md) for implementation order, decisions, and acceptance evidence.
 
@@ -16,7 +16,7 @@ For the production build, run `npm --prefix web run build` followed by `npm --pr
 
 ## Open a private room
 
-Start the API and web app in separate terminals using `cargo run --release --locked -p brawler-server` and `npm --prefix web run dev`. Open [Private rooms](http://127.0.0.1:5173/rooms/) and create a room. Copy the invite into a separate browser profile to try joining as a second player on the same machine. Use **Ready up** to mark your seat ready. Friends see the change in their roster. Reloading retains your seat and clears readiness. The host role passes to the next occupied slot when the host leaves. [Lobby design and tests](docs/slices/16b-browser-lobby.md)
+Start the API and web app in separate terminals using `cargo run --release --locked -p brawler-server` and `npm --prefix web run dev`. Open [Private rooms](http://127.0.0.1:5173/rooms/) and create a room. Copy the invite into a separate browser profile to try joining as a second player on the same machine. Use **Ready up** to mark your seat ready. When both seats are ready, the host can start a two-player online match. Focus the arena and use WASD, Shift, Space, J/K and E. Both browsers receive the server’s physical outcomes and scores. Reloading retains your seat and clears readiness. The host role passes to the next occupied slot when the host leaves. [Lobby design and tests](docs/slices/16b-browser-lobby.md)
 
 ## Native server
 

@@ -1,3 +1,4 @@
+import { bindRemoteControls } from './RemoteControls';
 import { FixtureScene } from '../rendering/FixtureScene';
 import type { MatchView } from '../rendering/SkylineView';
 import type { SkylineContent } from '../lobby/content';
@@ -22,8 +23,10 @@ export function startRemoteScene(container: HTMLElement, content: SkylineContent
   const bodies = [new Float32Array(15*14), new Float32Array(15*14)] as const;
   const objects = new Float32Array(8*content.map.objects.length);
   let animation = 0, priorTime = performance.now(), prior: Snapshot | null = null, match: MatchView | null = null;
+  let unbind: (() => void) | undefined;
   try {
     scene.addOpponent(content.fighter, colors[feed.fighters[1].color]);
+    unbind = bindRemoteControls(container.querySelector('canvas')!, feed);
     function render(now: number) {
       const frame = feed.latest;
       if (frame && frame !== prior) {
@@ -48,6 +51,6 @@ export function startRemoteScene(container: HTMLElement, content: SkylineContent
       animation = requestAnimationFrame(render);
     }
     animation = requestAnimationFrame(render);
-  } catch (error) { scene.dispose(); throw error; }
-  return () => { cancelAnimationFrame(animation); scene.dispose(); };
+  } catch (error) { unbind?.(); scene.dispose(); throw error; }
+  return () => { cancelAnimationFrame(animation); unbind?.(); scene.dispose(); };
 }

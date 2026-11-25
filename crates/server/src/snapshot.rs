@@ -8,6 +8,7 @@ const SLOTS: [FighterId; 2] = [FighterId::First, FighterId::Second];
 
 pub struct RoomFrame {
     tick: u64,
+    pub(crate) round: u64,
     world: SharedSnapshot,
     applied: [Option<u32>; 2],
 }
@@ -72,6 +73,7 @@ impl Room {
         };
         Ok(RoomFrame {
             tick: self.tick(),
+            round: m.round_id,
             world: snapshot.encode_shared()?,
             applied: SLOTS.map(|id| self.applied(id)),
         })

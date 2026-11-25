@@ -154,6 +154,13 @@ impl Directory {
     pub fn leave(&mut self, session: SessionId, code: &str, now: Instant) -> Result<(), Fault> {
         let r = self.rooms.get_mut(code).ok_or(Fault::MISSING)?;
         if let Some(slot) = r.slot(session) {
+            if let (Some(game), Some(generation)) =
+                (&r.game, r.members[slot].as_ref().and_then(|m| m.generation))
+            {
+                if let Some(id) = game.fighter(session) {
+                    game.client.unbind(id, generation);
+                }
+            }
             r.members[slot] = None;
             r.revision = r.revision.wrapping_add(1);
             r.update_host(now);

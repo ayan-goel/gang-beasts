@@ -6,7 +6,7 @@ use std::time::Instant;
 pub(super) struct Connection {
     pub session: SessionId,
     pub slot: usize,
-    generation: u64,
+    pub generation: u64,
 }
 
 impl Lobby {
@@ -36,6 +36,11 @@ impl Directory {
         self.next_connection = self.next_connection.checked_add(1)?;
         let generation = self.next_connection;
         let member = room.members[slot].as_mut()?;
+        if let (Some(game), Some(previous)) = (&room.game, member.generation) {
+            if let Some(id) = game.fighter(session) {
+                game.client.unbind(id, previous);
+            }
+        }
         member.generation = Some(generation);
         member.ready = false;
         Some(Connection {
