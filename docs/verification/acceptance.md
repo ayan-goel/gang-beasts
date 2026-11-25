@@ -14,7 +14,7 @@ No release criteria have passed yet. Update each row with a slice, build/config 
 | Ledge rescue | [Arena grip fixtures](../slices/10c1-arena-grips.md) cover exposed lips, sealed seams and attachment through panel detachment. [Catch and hang](../slices/10c2-ledge-catch.md) covers the falling west walkway, finite hand slip and voluntary release. [Local pull-up](../slices/10c3-mantling.md) covers one- and two-hand return, a blocked landing, a ceiling, panel failure and a hanging passenger. Human and network cases remain open. |
 | Skyline mechanics/reset | [Native Skyline fixtures](../slices/11a-skyline-physics.md) exercise movable crates, timed panel failure, sensor versus root crossing, and full reconstruction. Ledge gameplay and online acceptance remain open. |
 | Camera readability | [Local group framing](../slices/12b-play-skyline.md) checks portrait/landscape view bounds and follows both visible fighters. Occlusion, spectating and human readability remain open. |
-| Server authority | Pending |
+| Server authority | [Headless room fixtures](../slices/14a-room-input.md) apply validated intent to the native solver, reproduce a physical ring-out, and reject stale-round submissions. Transport, session authorization and multiclient acceptance remain open. |
 | Smooth multiplayer/latency | Pending |
 | Round/match scoring | [Local melee](../slices/12a-local-rounds.md) verifies three real ring-outs, simultaneous eliminations and deadline draws. [The browser match](../slices/12b-play-skyline.md) exercises keyboard ring-outs and rematch. Online client agreement pending. |
 | Disconnect/reconnect/host transfer | Pending |

@@ -69,6 +69,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "brawler-server"
+version = "0.1.0"
+dependencies = [
+ "brawler-engine",
+ "brawler-protocol",
+]
+
+[[package]]
 name = "brawler-wasm"
 version = "0.1.0"
 dependencies = [
