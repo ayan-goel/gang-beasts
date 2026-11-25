@@ -19,6 +19,8 @@ The engine has no network, rendering, or wall-clock dependency. `config/physics.
 
 The passive character uses `config/character.json`. Run `cargo test --locked -p brawler-engine --test ragdoll -- --nocapture` for its mass, anchor, drop and reset fixtures. The same rig is available in the browser's **Test scene → Passive ragdoll**. See [native rig evidence](docs/slices/04a-native-passive-ragdoll.md) and [browser inspection](docs/slices/04b2-ragdoll-browser-inspector.md).
 
+The native `PoseRagdoll` diagnostic adds bounded bind-pose motors using `config/motors.json`. Run `cargo test --locked -p brawler-engine --test pose_motors -- --nocapture`; see [motor contracts and evidence](docs/slices/05a-bounded-pose-motors.md). Standing assistance and browser motor controls remain in development.
+
 ## Browser playground
 
 Use Node 20.18.0 (`.nvmrc`). Install project-local wasm-pack once, then build the shared engine before starting Vite:

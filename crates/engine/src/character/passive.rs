@@ -11,9 +11,9 @@ pub struct RagdollBodyState {
 }
 
 pub struct PassiveRagdoll {
-    world: PhysicsWorld,
+    pub(super) world: PhysicsWorld,
     bodies: [RigidBodyHandle; 15],
-    definition: CharacterDefinition,
+    pub(super) definition: CharacterDefinition,
     physics: PhysicsConfig,
     spawn: [f32; 3],
     completed_tick: u64,

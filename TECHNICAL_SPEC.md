@@ -418,6 +418,8 @@ Use a shortest-arc quaternion error converted to a rotation vector for 3D orient
 
 Illustrative normalized UI values from the source were stiffness 45 and damping 7; the playground also used stiffness 60. These are separate illustrative presets, not calibrated physical gains. Store real per-joint gains with units/model metadata. Increase damping to reduce oscillation, but verify recovery speed and contact compliance. Character control must yield to meaningful external forces.
 
+The first native pose-control diagnostic uses `config/motors.json` schema 1 with model `explicit_pd`, per-joint stiffness in N·m/rad, damping in N·m·s/rad, and a whole-vector torque cap in N·m. It targets the relative bind pose and zero relative angular velocity. Quaternion rotation-vector error and relative velocity are expressed in the parent joint frame; locked-axis effort is removed before vector clamping. All joints sample the same pre-actuation state, then apply equal/opposite world-space angular impulses of `torque × 1/60 s`. No persistent force, transform override, or absolute airborne stabilization is added. Fixed wrists have no actuation. These gains and input ceilings are initial tuning, not a stability guarantee for arbitrary accepted values. See `docs/decisions/0006-bounded-relative-pose-motors.md`. Support-aware standing and browser motor inspection remain subsequent gates.
+
 ### 11.4 Orthogonal character state
 
 Conceptual fields:

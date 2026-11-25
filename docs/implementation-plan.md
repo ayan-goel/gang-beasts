@@ -13,7 +13,8 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 04a — verified | Native fifteen-body passive ragdoll | 40 kg/14 joints, collision filtering, finite falls and aligned anchors |
 | 04b1 — verified | Ragdoll WASM contract | Shared native/WASM body and joint-frame trace, owned buffers, validated limb indices |
 | 04b2 — verified | Passive rig in browser playground | Scenario selection, visible collider geometry and joint frames, reset/impulse controls |
-| 05 | Bounded motors and standing | Upright controller yields to pushes; 60-second stand; visible motor targets |
+| 05a — verified | Native bounded relative pose motors | Quaternion/frame correctness, conserved actuation momentum, per-joint torque caps, finite driven drop |
+| 05b | Support-aware standing and motor inspection | Upright controller yields to pushes; 60-second stand; native/WASM agreement; visible motor targets |
 | 06 | Walking/running and support | Direction/speed/wall/slope/moving-support fixtures and browser inspection |
 | 07 | Jump, fall and recovery | Buffered edge consumed once; total impulse bounded; physical get-up |
 | 08 | Independent strikes and contact damage | Real contact, attack deduplication, no resting damage |
