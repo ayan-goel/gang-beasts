@@ -9,3 +9,5 @@ pub fn is_newer(candidate: u32, previous: u32) -> bool {
     let distance = candidate.wrapping_sub(previous);
     distance != 0 && distance < (1 << 31)
 }
+
+pub mod snapshot;

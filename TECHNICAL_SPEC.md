@@ -888,7 +888,7 @@ MVP full snapshots are preferable to premature compression. Use stable applicati
 | Entity-record count | u16 | Number of bounded following records |
 | Gameplay payload bytes | u16 | Length of separately versioned state block |
 
-This proposed header is **20 bytes**. It is distinct from the 18-byte input record. Define all remaining record layouts before implementation and lock them with golden fixtures; do not infer a wire format from illustrative Rust types.
+The v1 full Skyline record uses kind 2. Its [wire layout and golden fixture](docs/protocol.md#full-skyline-snapshots) specify the fighter, round, arena and transform fields, reference validation and full-state replacement semantics. The header is **20 bytes**. It is distinct from the 18-byte input record. Define all remaining record layouts before implementation and lock them with golden fixtures; do not infer a wire format from illustrative Rust types.
 
 Initial transform record proposal: stable body ID `u32`, position `3×f32`, quaternion `4×f32` = **32 bytes**. Body identity is stable across snapshots within a round and mapped to character/body-part at spawn. Reject nonfinite values; normalize or reject invalid rotations. Optional velocity fields add bytes explicitly.
 
