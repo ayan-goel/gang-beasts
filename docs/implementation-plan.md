@@ -57,6 +57,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 14d — verified HTTP service | Axum/Tokio listener with liveness, worker readiness and map catalog | In-process router and real loopback requests against the native binary |
 | 14 | Dedicated room server | Single owner, bounded queues, authoritative inputs, scheduling tests |
 | 15 | Two-to-eight online clients | Interpolation, resync, backpressure and latency matrix |
+| 16a — verified private admission | Anonymous secure cookies, create/join and room metadata | Scoped retry, eight distinct seats, ninth rejected, real Chromium cookie isolation |
 | 16 | Private sessions and lobby | Link/code, ready/start, auth, reconnect, host transfer, late joining |
 | 17 | Original presentation and audio | Original skinned characters, effects, warnings, licensed asset manifest |
 | 18 | Settings, accessibility and product flows | Input isolation, keyboard navigation, loading/errors, quality/audio settings |

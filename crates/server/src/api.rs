@@ -42,6 +42,10 @@ struct Readiness {
 }
 
 pub fn api(pool: Arc<WorkerPool>) -> Result<Router, CharacterError> {
+    api_for_origin(pool, "http://127.0.0.1:5173")
+}
+
+pub fn api_for_origin(pool: Arc<WorkerPool>, origin: &str) -> Result<Router, CharacterError> {
     let map = MapDefinition::skyline()?;
     let state = ApiState {
         pool,
@@ -63,7 +67,8 @@ pub fn api(pool: Arc<WorkerPool>) -> Result<Router, CharacterError> {
             "/api/maps",
             get(|State(s): State<ApiState>| async move { Json(s.catalog) }),
         )
-        .with_state(state))
+        .with_state(state)
+        .merge(crate::admission::routes(origin)?))
 }
 
 async fn readiness(State(s): State<ApiState>) -> impl axum::response::IntoResponse {
