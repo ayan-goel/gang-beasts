@@ -21,24 +21,28 @@ impl Drop for Binding<'_> {
     }
 }
 
-fn eligible(
+fn current_host(
     state: &Admission,
     code: &str,
     owner: Connection,
     game: &Arc<Match>,
     touch: bool,
-) -> bool {
+) -> Option<bool> {
     let mut dir = state.directory.lock().unwrap();
-    let valid = dir.live_state(code, owner, None).is_some()
-        && dir
-            .rooms
-            .get(code)
-            .and_then(|r| r.game.as_ref())
-            .is_some_and(|g| Arc::ptr_eq(game, g));
-    if valid && touch {
-        *dir.sessions.0.get_mut(&owner.session).unwrap() = Instant::now();
+    let membership = dir.live_state(code, owner, None)?;
+    if !dir
+        .rooms
+        .get(code)?
+        .game
+        .as_ref()
+        .is_some_and(|current| Arc::ptr_eq(current, game))
+    {
+        return None;
     }
-    valid
+    if touch {
+        *dir.sessions.0.get_mut(&owner.session)? = Instant::now();
+    }
+    Some(usize::from(membership.host) == owner.slot)
 }
 
 pub(super) async fn play(
@@ -79,17 +83,21 @@ pub(super) async fn play(
     let mut acknowledged = None;
     let mut since = Instant::now();
     let mut received = 0;
+    let mut rematch_permission = None;
     loop {
         tokio::select! {
             _ = timer.tick() => (),
             message = socket.recv() => {
                 if since.elapsed() >= Duration::from_secs(1) { since = Instant::now(); received = 0; }
                 received += 1;
-                if received > 120 || !eligible(state, code, owner, &game, true) { return; }
+                if received > 120 || current_host(state, code, owner, &game, true).is_none() { return; }
                 match message {
                     Some(Ok(Message::Ping(_) | Message::Pong(_))) => (),
                     Some(Ok(Message::Binary(bytes))) => match bytes.as_ref() {
                         [18,1,1] => (),
+                        [30,1] => {
+                            if state.directory.lock().unwrap().request_rematch(code, owner, &game) { return; }
+                        },
                         [24,1, epoch @ ..] if epoch.len()==8 => {
                             let claimed = u64::from_le_bytes(epoch.try_into().unwrap());
                             if published == Some(claimed) { acknowledged = Some(claimed); }
@@ -109,12 +117,21 @@ pub(super) async fn play(
                 continue;
             }
         }
-        if game.client.returning_to_lobby() || !eligible(state, code, owner, &game, false) {
+        let Some(host) = current_host(state, code, owner, &game, false) else {
+            return;
+        };
+        if game.client.returning_to_lobby() {
             return;
         }
         let Some(frame) = game.client.latest() else {
             continue;
         };
+        if frame.match_finished && rematch_permission != Some(host) {
+            if !send(socket, vec![29, 1, u8::from(host)]).await {
+                return;
+            }
+            rematch_permission = Some(host);
+        }
         if tick == Some(frame.tick()) {
             continue;
         }

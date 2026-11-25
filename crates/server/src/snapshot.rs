@@ -7,6 +7,7 @@ use brawler_protocol::snapshot::{
 pub struct RoomFrame {
     tick: u64,
     pub(crate) round: u64,
+    pub(crate) match_finished: bool,
     world: SharedSnapshot,
     applied: [Option<u32>; FighterId::ALL.len()],
 }
@@ -52,7 +53,7 @@ impl Room {
         let snapshot = Snapshot {
             tick: self.tick() as u32,
             applied: None,
-            round: m.round_id,
+            round: self.epoch(),
             number: m.round_number,
             arena_tick: game.tick() as u32,
             remaining: m.remaining_ticks,
@@ -73,7 +74,8 @@ impl Room {
         };
         Ok(RoomFrame {
             tick: self.tick(),
-            round: m.round_id,
+            round: self.epoch(),
+            match_finished: m.phase == MeleePhase::MatchResults,
             world: snapshot.encode_shared()?,
             applied: FighterId::ALL.map(|id| self.applied(id)),
         })

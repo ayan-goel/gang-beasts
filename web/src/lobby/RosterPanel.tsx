@@ -8,7 +8,7 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
   const [fallback, setFallback] = useState<Roster | null>(null);
   const [error, setError] = useState('');
   const [lostAccess, setLostAccess] = useState<'seat' | 'room' | null>(null);
-  const {connection, disconnected, game, start, startError, load, setReady, reconnect} = useLiveRoom(code);
+  const {connection, disconnected, game, canRematch, requestRematch, start, startError, load, setReady, reconnect} = useLiveRoom(code);
   const state = connection ?? (disconnected ? fallback : null);
   const mySlot = connection?.slot ?? fallback?.you;
   const myReady = !!(connection && (connection.ready & (1 << connection.slot)));
@@ -41,7 +41,7 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
     setLeaving(true);
     try { await leave(code); onLeave(); } catch (err) { setError(errorText(err)); setLeaving(false); }
   }
-  if (game) return <Suspense fallback={<p role="status">Opening Skyline…</p>}><OnlineMatch feed={game} exit={exit}/>{error && <p role="alert">{error}</p>}</Suspense>;
+  if (game) return <Suspense fallback={<p role="status">Opening Skyline…</p>}><OnlineMatch feed={game} exit={exit} rematch={canRematch ? requestRematch : undefined}/>{error && <p role="alert">{error}</p>}</Suspense>;
   if (lostAccess && disconnected) return <section className="room-panel">
     <h1>{lostAccess === 'room' ? 'Room closed' : 'Seat expired'}</h1>
     <p role="status">{lostAccess === 'room' ? 'This room is no longer available.' : 'Your seat was released while you were disconnected.'}</p>

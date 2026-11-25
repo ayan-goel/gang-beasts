@@ -42,6 +42,29 @@ impl Match {
 }
 
 impl Directory {
+    pub fn request_rematch(&mut self, code: &str, owner: Connection, game: &Arc<Match>) -> bool {
+        if self.live_state(code, owner, None).is_none() {
+            return false;
+        }
+        let Some(room) = self.rooms.get_mut(code) else {
+            return false;
+        };
+        if room.host != owner.slot
+            || !room
+                .game
+                .as_ref()
+                .is_some_and(|current| Arc::ptr_eq(current, game))
+            || !game
+                .client
+                .latest()
+                .is_some_and(|frame| frame.match_finished)
+        {
+            return false;
+        }
+        room.return_to_lobby();
+        true
+    }
+
     fn starters(&mut self, code: &str, owner: Connection) -> Option<Vec<Participant>> {
         self.live_state(code, owner, None)?;
         let room = self.rooms.get(code)?;
@@ -68,24 +91,28 @@ impl Directory {
 }
 
 pub(super) async fn start(state: &Admission, code: &str, owner: Connection) -> Result<(), u8> {
-    let ticket = state
-        .directory
-        .lock()
-        .unwrap()
-        .starters(code, owner)
-        .ok_or(1u8)?;
+    let (ticket, serial) = {
+        let mut dir = state.directory.lock().unwrap();
+        let players = dir.starters(code, owner).ok_or(1u8)?;
+        (players, dir.rooms[code].matches_started)
+    };
+    let next = serial.checked_add(1).ok_or(2u8)?;
     let pool = Arc::clone(&state.pool);
     let count = ticket.len();
-    let client = tokio::task::spawn_blocking(move || pool.open_with_players(count))
+    let client = tokio::task::spawn_blocking(move || pool.open_in_match(count, serial))
         .await
         .map_err(|_| 2u8)?
         .map_err(|_| 2u8)?;
     // Worker initialization can overlap a leave or socket replacement. Commit only the exact ready roster.
     let mut dir = state.directory.lock().unwrap();
-    if dir.starters(code, owner).as_ref() != Some(&ticket) {
+    if dir.starters(code, owner).as_ref() != Some(&ticket)
+        || dir.rooms[code].matches_started != serial
+    {
         return Err(1);
     }
-    dir.rooms.get_mut(code).unwrap().game = Some(Arc::new(Match {
+    let room = dir.rooms.get_mut(code).unwrap();
+    room.matches_started = next;
+    room.game = Some(Arc::new(Match {
         client,
         players: ticket,
     }));

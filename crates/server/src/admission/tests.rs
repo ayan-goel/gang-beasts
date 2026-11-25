@@ -197,6 +197,10 @@ async fn only_a_ready_host_can_allocate_one_worker_for_the_current_roster() {
     assert_eq!(super::matches::start(&state, &code, host).await, Err(1));
     let mut d = state.directory.lock().unwrap();
     assert_eq!(d.metadata(&code).ok().unwrap().phase, "match");
+    let game = d.rooms[&code].game.clone().unwrap();
+    assert!(!d.request_rematch(&code, host, &game));
+    assert!(!d.request_rematch(&code, guest, &game));
+    drop(game);
     d.leave(host.session, &code, now).ok().unwrap();
     d.leave(guest.session, &code, now).ok().unwrap();
     assert_eq!(d.metadata(&code).ok().unwrap().phase, "lobby");

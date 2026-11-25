@@ -13,3 +13,5 @@ The server uses Axum on Tokio for HTTP. Worker threads own the simulation. Map v
 Run `cargo test --locked --release -p brawler-server --test api` for the real router's empty/full admission and catalog cases. A loopback check against the compiled executable exercised all three routes over TCP, checked the bundled map digest and observed a clean Ctrl-C exit. The map hash was 5a7b22f8def2fe29714c1616a8cc8bddd8d9555f630bc854acc834ab5fc48da5 for content version 1.
 
 The [disconnect timer](slices/16e-disconnect-grace.md) reserves a closed socket’s seat for 20 seconds. The service releases abandoned workers and retires empty rooms without an incoming request. A remaining competitor can return to the lobby after the results interval and start a new match with ready friends.
+
+At match results, the current host can [return everyone to the lobby for a rematch](slices/16f-online-rematch.md). The room keeps its invite code and assigns a fresh input epoch to the next match.

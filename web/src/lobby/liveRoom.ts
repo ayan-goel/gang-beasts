@@ -10,6 +10,7 @@ export function useLiveRoom(code: string) {
   const [attempt, setAttempt] = useState(0);
   const [game, setGame] = useState<MatchFeed | null>(null);
   const [startError, setStartError] = useState('');
+  const [canRematch, setCanRematch] = useState(false);
   const [load, setLoad] = useState<LoadState>({loading: false, error: ''});
   const handshake = useRef<ContentHandshake | null>(null);
   const transport = useRef<WebSocket | null>(null);
@@ -27,6 +28,7 @@ export function useLiveRoom(code: string) {
     let last: LiveRoom | null = null;
     let feed: MatchFeed | null = null;
     setGame(null);
+    setCanRematch(false);
     setStartError('');
     socket.onopen = () => {
       const connect = new Uint8Array(8);
@@ -37,6 +39,10 @@ export function useLiveRoom(code: string) {
     socket.onmessage = event => {
       try {
         const bytes = new Uint8Array(event.data);
+        if (bytes.length === 3 && bytes[0] === 29 && bytes[1] === 1 && bytes[2]! <= 1 && feed) {
+          setCanRematch(bytes[2] === 1);
+          return;
+        }
         if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 28 && last && !feed) {
           void content.ready();
           return;
@@ -85,5 +91,8 @@ export function useLiveRoom(code: string) {
     setStartError('');
     if (transport.current?.readyState === WebSocket.OPEN) transport.current.send(Uint8Array.of(22, 1));
   }
-  return {connection, disconnected, game, start, startError, load, setReady, reconnect: () => setAttempt(n => n + 1)};
+  function requestRematch() {
+    if (canRematch) game?.transmit(Uint8Array.of(30, 1));
+  }
+  return {connection, disconnected, game, canRematch, requestRematch, start, startError, load, setReady, reconnect: () => setAttempt(n => n + 1)};
 }

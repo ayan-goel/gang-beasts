@@ -22,6 +22,7 @@ pub(super) struct Lobby {
     pub members: Vec<Option<Member>>,
     pub host: usize,
     pub revision: u32,
+    pub matches_started: u32,
     pub empty_since: Option<Instant>,
     original_name: String,
     original_color: Option<u8>,
@@ -54,6 +55,7 @@ impl Lobby {
             members,
             host: 0,
             revision: 1,
+            matches_started: 0,
             empty_since: None,
             original_name: name.to_owned(),
             original_color: color,
@@ -99,13 +101,17 @@ impl Lobby {
                 game.client.forfeit(forfeits);
             }
             if game.client.returning_to_lobby() {
-                self.game = None;
-                for member in self.members.iter_mut().flatten() {
-                    member.ready = false;
-                }
+                self.return_to_lobby();
             }
         }
         self.update_host(now);
+    }
+
+    pub fn return_to_lobby(&mut self) {
+        self.game = None;
+        for member in self.members.iter_mut().flatten() {
+            member.ready = false;
+        }
     }
 
     fn update_host(&mut self, now: Instant) {

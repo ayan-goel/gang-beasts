@@ -20,13 +20,14 @@ use std::{
 };
 
 struct Job {
+    match_serial: u32,
     shared: Arc<Shared>,
     incoming: Vec<Receiver<Command>>,
     ready: SyncSender<Result<(), DispatchError>>,
 }
 
 fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), DispatchError> {
-    let mut room = Room::skyline_with_players(job.incoming.len())
+    let mut room = Room::skyline_in_match(job.incoming.len(), job.match_serial)
         .map_err(|_| DispatchError::Initialization)?;
     let publish = |r: &Room| {
         let frame = r.capture().map_err(|_| DispatchError::Initialization)?;

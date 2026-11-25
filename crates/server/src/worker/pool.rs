@@ -83,6 +83,14 @@ impl WorkerPool {
     }
 
     pub fn open_with_players(&self, count: usize) -> Result<RoomClient, DispatchError> {
+        self.open_in_match(count, 0)
+    }
+
+    pub(crate) fn open_in_match(
+        &self,
+        count: usize,
+        match_serial: u32,
+    ) -> Result<RoomClient, DispatchError> {
         if !(2..=brawler_engine::FighterId::ALL.len()).contains(&count) {
             return Err(DispatchError::Initialization);
         }
@@ -101,6 +109,7 @@ impl WorkerPool {
         let (client, incoming) = RoomClient::channel(count);
         let (ready, started) = sync_channel(1);
         let job = Job {
+            match_serial,
             shared: Arc::clone(&client.shared),
             incoming,
             ready,

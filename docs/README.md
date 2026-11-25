@@ -27,6 +27,7 @@
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
 - [Playable asset provenance](asset-provenance.md) identifies the source of the current arena, fighter geometry and interface.
+- [Online rematches](slices/16f-online-rematch.md) covers first-to-three results, host authority and fresh round epochs.
 - [Disconnect grace and forfeits](slices/16e-disconnect-grace.md) covers seat expiry, reconnect, scoring and abandoned rooms.
 - [Private multiplayer rosters](slices/15f-online-roster.md) covers browser assignment, eight-player rendering and the shared elimination test.
 - [Native Skyline rosters](slices/15d-native-roster.md) covers two through eight fighters, contact ownership, and round reconstruction.

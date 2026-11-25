@@ -8,7 +8,7 @@ import type { MatchFeed } from './MatchFeed';
 import './match.css';
 
 const phaseNames = {countdown:'Countdown', playing:'Playing', round_results:'Round results', match_results:'Match results'};
-export default function OnlineMatch({feed, exit}: {feed: MatchFeed; exit: () => void}) {
+export default function OnlineMatch({feed, exit, rematch}: {feed: MatchFeed; exit: () => void; rematch: (() => void) | undefined}) {
   const container = useRef<HTMLDivElement>(null);
   const [match, setMatch] = useState<MatchView | null>(null);
   const [status, setStatus] = useState<StreamStatus>('buffering');
@@ -36,7 +36,9 @@ export default function OnlineMatch({feed, exit}: {feed: MatchFeed; exit: () => 
       </span>)}
     </div>}
     <p className="online-controls">{feed.own === null ? 'Spectating' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift'}</p>
-    {match && match.phase !== 'playing' && <div className="online-callout" role="status">{match.phase === 'countdown' ? Math.max(1,Math.ceil(match.remaining/60)) : winner}</div>}
+    {match && match.phase !== 'playing' && <div className="online-callout"><span role="status">{match.phase === 'countdown' ? Math.max(1,Math.ceil(match.remaining/60)) : winner}</span>
+      {match.phase === 'match_results' && rematch && <button className="room-primary" onClick={rematch}>Play again</button>}
+    </div>}
     {status === 'stalled' && <p className="online-status" role="status">Waiting for the server…</p>}
     {error && <p role="alert">{error}</p>}
   </section>;

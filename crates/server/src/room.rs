@@ -7,6 +7,7 @@ use brawler_engine::{CharacterError, Duel, FighterId, MeleePhase, MeleeState, Ph
 pub struct Room {
     game: Duel,
     tick: u64,
+    match_serial: u32,
     inboxes: Vec<Inbox>,
     attached: Vec<bool>,
     forfeits: u8,
@@ -18,9 +19,16 @@ impl Room {
         Self::skyline_with_players(2)
     }
     pub fn skyline_with_players(count: usize) -> Result<Self, CharacterError> {
+        Self::skyline_in_match(count, 0)
+    }
+    pub(crate) fn skyline_in_match(
+        count: usize,
+        match_serial: u32,
+    ) -> Result<Self, CharacterError> {
         Ok(Self {
             game: Duel::skyline_match_with_players(PhysicsConfig::default(), count)?,
             tick: 0,
+            match_serial,
             inboxes: (0..count).map(|_| Inbox::default()).collect(),
             attached: vec![true; count],
             forfeits: 0,
@@ -37,6 +45,10 @@ impl Room {
     fn melee(&self) -> &MeleeState {
         self.game.match_state().expect("Skyline room owns a match")
     }
+    pub(crate) fn epoch(&self) -> u64 {
+        // A rematch reuses displayed round numbers, so its input acknowledgements need a fresh namespace.
+        (u64::from(self.match_serial) << 32) | u64::from(self.melee().round_number)
+    }
     pub fn applied(&self, id: FighterId) -> Option<u32> {
         self.inboxes.get(id as usize)?.applied
     }
@@ -47,7 +59,7 @@ impl Room {
         {
             return Err(SubmitError::Detached);
         }
-        if self.melee().round_id != round {
+        if self.epoch() != round {
             return Err(SubmitError::Round);
         }
         if self.melee().phase != MeleePhase::Playing {
@@ -138,5 +150,30 @@ impl Room {
         if self.melee().round_id != round {
             self.inboxes.fill_with(Inbox::default);
         }
+    }
+}
+
+#[cfg(test)]
+mod epoch_tests {
+    use super::*;
+    use brawler_protocol::InputFrame;
+
+    #[test]
+    fn a_fresh_match_starts_round_one_and_rejects_the_previous_matches_round_one_input() {
+        let mut room = Room::skyline_in_match(2, 1).unwrap();
+        assert_eq!(room.melee().round_number, 1);
+        let epoch = (1u64 << 32) + 1;
+        assert_eq!(room.capture().unwrap().round, epoch);
+        for _ in 0..180 {
+            room.step();
+        }
+        let bytes = InputFrame::default().encode().unwrap();
+        assert_eq!(
+            room.submit(FighterId::First, 1, &bytes),
+            Err(SubmitError::Round)
+        );
+        room.submit(FighterId::First, epoch, &bytes).unwrap();
+        room.step();
+        assert_eq!(room.applied(FighterId::First), Some(0));
     }
 }

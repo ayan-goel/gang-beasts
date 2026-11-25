@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
+import { verifyOnlineRematch } from './support/rematchScenario';
 import { verifyDisconnectGrace } from './support/disconnectScenario';
 import { observeMatch } from './support/onlineTrace';
 
@@ -149,8 +150,25 @@ test('eight ready browsers share the rooftop and the eighth player can run off i
     }
     for (const player of pages) await expect(player.getByLabel('Fighter 8 eliminated')).toHaveText('Out');
     await expect(host.getByLabel('Round phase')).toHaveText('Playing');
-    for (const player of pages.slice().reverse()) await player.getByRole('button',{name:'Leave room'}).click();
-  } finally { await Promise.all(contexts.map(context => context.close())); }
+  } finally {
+    try {
+      if (invite !== '/rooms/') {
+        const room = new URL(invite);
+        const code = room.searchParams.get('code');
+        // Closing eight sockets reserves their seats for reconnect. Explicit leaves release the shared worker.
+        await Promise.all(contexts.map(async context => {
+          const response = await context.request.post(room.origin + '/api/rooms/' + code + '/leave', {
+            headers: {Origin:room.origin}, data:{},
+          });
+          expect(response.status()).toBe(204);
+        }));
+      }
+    } finally {
+      await Promise.all(contexts.map(context => context.close()));
+    }
+  }
 });
 
 test('an online seat reconnects before grace and spectates after expiry, then survivors return to the lobby', verifyDisconnectGrace);
+
+test('the host and guest can play two rematches in the same room without refreshing', verifyOnlineRematch);

@@ -5,6 +5,8 @@ const server = 'http://127.0.0.1:5181';
 
 export default defineConfig({
   testDir: './tests',
+  // The eight-player scenario shares one renderer host with the real-time local physics tests.
+  workers: 1,
   timeout: 120_000,
   use: { baseURL: site, viewport: { width: 1440, height: 900 } },
   webServer: [

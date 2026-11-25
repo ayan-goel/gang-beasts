@@ -983,6 +983,8 @@ Use a monotonic scheduler and fixed accumulator. Allow at most four catch-up tic
 
 `Lobby → Loading → Countdown → Playing → RoundResults → Loading` for another round; after the match-winning score, `MatchResults → Lobby` or rematch. `Draining/Closed` are lifecycle states, not game modes.
 
+After online MatchResults, the current host can [return everyone to the same lobby for a rematch](docs/slices/16f-online-rematch.md). The room retains its code and seats. Starting again requires fresh readiness and uses a new match serial in the network round epoch.
+
 | Transition | Guard / action |
 | --- | --- |
 | Lobby → Loading | Host request, at least two ready players, valid settings/content |
@@ -1667,7 +1669,7 @@ Retain all 18 original completion checks, with explicit evidence expectations:
 - [ ] **Smooth multiplayer:** Interpolation is stable and action latency meets the playability gate at the regional test profile.
 - [ ] **Round/match scoring:** All clients agree; simultaneous elimination and duplicate events score correctly.
 - [ ] **Disconnects:** Stale input, grace expiry, host transfer and reconnect work without orphan grips.
-- [ ] **Rematch:** Repeated rounds/rematches do not require refresh or leak stale physics/network state.
+- [x] **Rematch:** Repeated rounds/rematches do not require refresh or leak stale physics/network state. [Two consecutive online rematches](docs/slices/16f-online-rematch.md#verification)
 - [ ] **Performance:** Eight-player server/client budgets are measured on declared hardware; optimized traffic target is separately measured.
 - [ ] **Stability:** Endurance and worst-case tests reveal no game-breaking explosions, persistent invalid states or unbounded memory growth.
 - [ ] **Original content:** Original/licensed visual and audio assets are included with provenance.
