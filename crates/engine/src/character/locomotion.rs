@@ -1,0 +1,78 @@
+use super::walking_controller::{LocomotionState, WalkingController};
+use super::{
+    BalanceConfig, BodyPart, CharacterDefinition, CharacterError, LocomotionConfig, MotorConfig,
+    PoseRagdoll,
+};
+use crate::{CommandError, PhysicsConfig};
+
+#[cfg(test)]
+#[path = "locomotion_tests.rs"]
+mod tests;
+
+pub struct LocomotionRagdoll {
+    pose: PoseRagdoll,
+    controller: WalkingController,
+    idle_motors: MotorConfig,
+    active_motors: MotorConfig,
+}
+
+impl LocomotionRagdoll {
+    pub fn new(
+        physics: PhysicsConfig,
+        config: LocomotionConfig,
+        spawn: [f32; 3],
+    ) -> Result<Self, CharacterError> {
+        config.validate()?;
+        let mut pose = PoseRagdoll::new(
+            physics,
+            CharacterDefinition::bundled()?,
+            MotorConfig::standing()?,
+            spawn,
+        )?;
+        pose.configure_balance(Some(BalanceConfig::bundled()?))?;
+        Ok(Self {
+            pose,
+            controller: WalkingController::new(config),
+            idle_motors: MotorConfig::standing()?,
+            active_motors: MotorConfig::locomotion()?,
+        })
+    }
+    pub fn pose(&self) -> &PoseRagdoll {
+        &self.pose
+    }
+    pub fn state(&self) -> &LocomotionState {
+        &self.controller.state
+    }
+    pub fn set_input(&mut self, direction: [f32; 2], running: bool) -> Result<(), CharacterError> {
+        self.controller.set_input(direction, running)
+    }
+    pub fn set_enabled(&mut self, enabled: bool) {
+        self.pose.set_enabled(enabled);
+        if !enabled {
+            self.controller.reset();
+            self.pose
+                .blend_motors(&self.idle_motors, &self.active_motors, 0.0);
+        }
+    }
+    pub fn step(&mut self) {
+        // Queued foot departures must reach support queries before movement can assist.
+        self.pose.rig.apply_pending_impulse();
+        let enabled = self.pose.enabled();
+        let targets = self.controller.advance(&mut self.pose.rig, enabled);
+        self.pose.blend_motors(
+            &self.idle_motors,
+            &self.active_motors,
+            self.controller.state.motor_strength,
+        );
+        self.pose.step_with_targets(&targets);
+    }
+    pub fn queue_impulse(&mut self, part: BodyPart, impulse: [f32; 3]) -> Result<(), CommandError> {
+        self.pose.queue_impulse(part, impulse)
+    }
+    pub fn reset(&mut self) {
+        self.pose.reset();
+        self.controller.reset();
+        self.pose
+            .blend_motors(&self.idle_motors, &self.active_motors, 0.0);
+    }
+}

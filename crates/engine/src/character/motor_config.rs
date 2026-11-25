@@ -27,6 +27,10 @@ impl MotorConfig {
         Self::from_json(include_str!("../../../../config/standing-motors.json"))
     }
 
+    pub fn locomotion() -> Result<Self, CharacterError> {
+        Self::from_json(include_str!("../../../../config/locomotion-motors.json"))
+    }
+
     pub fn from_json(json: &str) -> Result<Self, CharacterError> {
         // Limit allocation before deserialization; tuning cannot create more actuators.
         if json.len() > 8192 {
@@ -43,6 +47,7 @@ impl MotorConfig {
         {
             return Err(CharacterError::Invalid("unsupported motor schema or model"));
         }
+        let implicit = self.model == "implicit_velocity_pd";
         let mut seen = [false; 15];
         for motor in &self.joints {
             if motor.child.parent().is_none() || seen[motor.child.index()] {
@@ -52,9 +57,12 @@ impl MotorConfig {
             // These are effort/input ceilings, not a stability guarantee for arbitrary gains.
             // Removing them would let imported tuning bypass the bounded-actuation contract.
             for (value, max) in [
-                (motor.stiffness_nm_per_rad, 200.0),
+                (
+                    motor.stiffness_nm_per_rad,
+                    if implicit { 600.0 } else { 200.0 },
+                ),
                 (motor.damping_nm_s_per_rad, 20.0),
-                (motor.max_torque_nm, 50.0),
+                (motor.max_torque_nm, if implicit { 150.0 } else { 50.0 }),
             ] {
                 if !value.is_finite() || !(0.0..=max).contains(&value) {
                     return Err(CharacterError::Invalid("motor gain outside allowed range"));

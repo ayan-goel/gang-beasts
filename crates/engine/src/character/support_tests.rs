@@ -114,3 +114,29 @@ fn contact_distance_and_support_normal_thresholds_are_enforced() {
         assert_eq!(foot_supported(&world, foot, &[foot], &config), expected);
     }
 }
+
+#[test]
+fn support_reports_velocity_at_the_current_contact_including_rotation() {
+    let (mut world, foot, platform) = fixture(floor(), true);
+    world.bodies[foot].set_translation(vector![0.5, 0.1, 0.0], true);
+    world.bodies[platform].set_linvel(vector![1.0, 0.0, 0.0], true);
+    world.bodies[platform].set_angvel(vector![0.0, 2.0, 0.0], true);
+    let support = foot_support(&world, foot, &[foot], &BalanceConfig::bundled().unwrap()).unwrap();
+    assert!((support.velocity - vector![1.0, 0.0, -1.0]).norm() < 1e-5);
+    assert!(support.normal.y > 0.999);
+}
+
+#[test]
+fn support_uses_the_solver_friction_material_combination() {
+    for (rule, expected) in [
+        (CoefficientCombineRule::Average, 0.65),
+        (CoefficientCombineRule::Min, 0.5),
+        (CoefficientCombineRule::Multiply, 0.4),
+        (CoefficientCombineRule::Max, 0.8),
+    ] {
+        let (world, foot, _) = fixture(floor().friction(0.8).friction_combine_rule(rule), true);
+        let support =
+            foot_support(&world, foot, &[foot], &BalanceConfig::bundled().unwrap()).unwrap();
+        assert!((support.friction - expected).abs() < 1e-6);
+    }
+}

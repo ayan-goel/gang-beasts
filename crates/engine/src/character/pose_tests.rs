@@ -40,7 +40,7 @@ fn joint_actuation_preserves_total_angular_momentum_and_does_not_move_transforms
     perturb(&mut rig);
     let initial = angular_momentum(&rig);
     let states = rig.rig.body_states();
-    rig.apply_motors();
+    rig.apply_motors(&[Rotation::identity(); 14]);
     assert!((angular_momentum(&rig) - initial).norm() < 1e-6);
     for (before, after) in states.iter().zip(rig.rig.body_states()) {
         assert_eq!(before.state.position, after.state.position);
@@ -66,8 +66,8 @@ fn rotating_the_whole_rig_rotates_the_motor_output_without_changing_its_magnitud
         body.set_rotation(rotation * body.rotation(), true);
         body.set_angvel(rotation * body.angvel(), true);
     }
-    first.apply_motors();
-    second.apply_motors();
+    first.apply_motors(&[Rotation::identity(); 14]);
+    second.apply_motors(&[Rotation::identity(); 14]);
     for (a, b) in first.motor_torques().iter().zip(second.motor_torques()) {
         assert!((rotation * Vector::from(*a) - Vector::from(*b)).norm() < 2e-5);
     }
@@ -78,12 +78,12 @@ fn a_large_external_spin_overpowers_the_motor_on_its_next_tick() {
     let mut rig = fixture();
     let handle = rig.rig.world.impulse_joints.iter().next().unwrap().1.body2;
     rig.rig.world.bodies[handle].set_angvel(vector![50.0, 0.0, 0.0], true);
-    rig.apply_motors();
+    rig.apply_motors(&[Rotation::identity(); 14]);
     assert!(rig.rig.world.bodies[handle].angvel().x > 45.0);
     assert!(rig.rig.world.bodies[handle].angvel().x < 50.0);
     rig.set_enabled(false);
     let before = rig.rig.body_states();
-    rig.apply_motors();
+    rig.apply_motors(&[Rotation::identity(); 14]);
     assert_eq!(rig.rig.body_states(), before);
 }
 
@@ -103,7 +103,7 @@ fn a_displaced_neck_restores_with_the_exact_tick_impulse() {
         rig.rig.body_states()[BodyPart::Head.index()].state.rotation,
         [0.0, 0.0, 0.0, 1.0]
     );
-    rig.apply_motors();
+    rig.apply_motors(&[Rotation::identity(); 14]);
     assert!((Vector::from(rig.motor_torques()[0]) - vector![-1.2, 0.0, 0.0]).norm() < 1e-6);
     // Independent physical oracle: 6 N·m/rad × 0.2 rad × 1/60 s = 0.02 N·m·s.
     // This catches a missing spring, reversed actuation, or incorrect tick scaling.

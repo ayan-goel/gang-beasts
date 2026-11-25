@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "model": "implicit_velocity_pd",
+  "joints": [
+    {
+      "child": "head",
+      "stiffness_nm_per_rad": 48,
+      "damping_nm_s_per_rad": 1.2,
+      "max_torque_nm": 18
+    },
+    {
+      "child": "chest",
+      "stiffness_nm_per_rad": 160,
+      "damping_nm_s_per_rad": 4,
+      "max_torque_nm": 48
+    },
+    {
+      "child": "left_upper_arm",
+      "stiffness_nm_per_rad": 2,
+      "damping_nm_s_per_rad": 0.08,
+      "max_torque_nm": 1
+    },
+    {
+      "child": "right_upper_arm",
+      "stiffness_nm_per_rad": 2,
+      "damping_nm_s_per_rad": 0.08,
+      "max_torque_nm": 1
+    },
+    {
+      "child": "left_forearm",
+      "stiffness_nm_per_rad": 1,
+      "damping_nm_s_per_rad": 0.04,
+      "max_torque_nm": 0.5
+    },
+    {
+      "child": "right_forearm",
+      "stiffness_nm_per_rad": 1,
+      "damping_nm_s_per_rad": 0.04,
+      "max_torque_nm": 0.5
+    },
+    {
+      "child": "left_hand",
+      "stiffness_nm_per_rad": 0,
+      "damping_nm_s_per_rad": 0,
+      "max_torque_nm": 0
+    },
+    {
+      "child": "right_hand",
+      "stiffness_nm_per_rad": 0,
+      "damping_nm_s_per_rad": 0,
+      "max_torque_nm": 0
+    },
+    {
+      "child": "left_thigh",
+      "stiffness_nm_per_rad": 600,
+      "damping_nm_s_per_rad": 12,
+      "max_torque_nm": 150
+    },
+    {
+      "child": "right_thigh",
+      "stiffness_nm_per_rad": 600,
+      "damping_nm_s_per_rad": 12,
+      "max_torque_nm": 150
+    },
+    {
+      "child": "left_shin",
+      "stiffness_nm_per_rad": 600,
+      "damping_nm_s_per_rad": 12,
+      "max_torque_nm": 150
+    },
+    {
+      "child": "right_shin",
+      "stiffness_nm_per_rad": 600,
+      "damping_nm_s_per_rad": 12,
+      "max_torque_nm": 150
+    },
+    {
+      "child": "left_foot",
+      "stiffness_nm_per_rad": 600,
+      "damping_nm_s_per_rad": 12,
+      "max_torque_nm": 150
+    },
+    {
+      "child": "right_foot",
+      "stiffness_nm_per_rad": 600,
+      "damping_nm_s_per_rad": 12,
+      "max_torque_nm": 150
+    }
+  ]
+}

@@ -21,6 +21,8 @@ The passive character uses `config/character.json`. Run `cargo test --locked -p 
 
 The native `PoseRagdoll` diagnostic adds bounded bind-pose motors using `config/motors.json`. Run `cargo test --locked -p brawler-engine --test pose_motors -- --nocapture`; see [motor contracts and evidence](docs/slices/05a-bounded-pose-motors.md). The separate `config/standing-motors.json` and `config/balance.json` presets enable support-aware standing. Run `cargo test --locked --release -p brawler-engine --test standing -- --nocapture`; see [standing evidence](docs/slices/05b1-native-standing.md). The same preset is available under **Test scene → Standing ragdoll**; see [browser standing and inspection](docs/slices/05b2-standing-browser.md).
 
+The native `LocomotionRagdoll` adds assisted walking/running, turning, braking and procedural leg targets. Run `cargo test --locked --release -p brawler-engine --test locomotion --test locomotion_config`; see [locomotion contracts and evidence](docs/slices/06a-native-locomotion.md). Browser movement controls and terrain acceptance remain in development.
+
 ## Browser playground
 
 Use Node 20.18.0 (`.nvmrc`). Install project-local wasm-pack once, then build the shared engine before starting Vite:

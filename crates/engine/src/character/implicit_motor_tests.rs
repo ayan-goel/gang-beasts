@@ -32,6 +32,7 @@ fn pair(
     configure_joint(
         &mut joint,
         Rotation::from_scaled_axis(vector![0.2, 0.0, 0.0]),
+        Rotation::identity(),
         [true; 3],
         gains,
     );
@@ -86,4 +87,32 @@ fn saturated_effort_and_diagnostics_use_substep_duration() {
         assert!((world.bodies[child].angvel().x * 0.016 + cap / 60.0).abs() < 1e-6);
         assert!((world.bodies[parent].angvel().x + world.bodies[child].angvel().x).abs() < 1e-6);
     }
+}
+
+#[test]
+fn a_nonzero_target_reverses_the_physical_correction_toward_that_pose() {
+    let gains = super::super::JointMotorConfig {
+        child: super::super::BodyPart::Head,
+        stiffness_nm_per_rad: 6.0,
+        damping_nm_s_per_rad: 0.3,
+        max_torque_nm: 3.0,
+    };
+    let (mut world, parent, child, joint) = pair(1, &gains);
+    configure_joint(
+        &mut world.impulse_joints.get_mut(joint, true).unwrap().data,
+        Rotation::from_scaled_axis(vector![0.2, 0.0, 0.0]),
+        Rotation::from_scaled_axis(vector![0.4, 0.0, 0.0]),
+        [true; 3],
+        &gains,
+    );
+    world.step();
+    let expected = 1.2 / (1.0 + 0.4 * 125.0 / 60.0);
+    assert!((world.bodies[child].angvel().x * 0.016 - expected / 60.0).abs() < 1e-6);
+    assert!((world.bodies[parent].angvel().x * 0.016 + expected / 60.0).abs() < 1e-6);
+    assert!(
+        world.bodies[parent]
+            .rotation()
+            .angle_to(world.bodies[child].rotation())
+            > 0.2
+    );
 }

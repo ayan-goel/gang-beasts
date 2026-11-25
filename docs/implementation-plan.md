@@ -16,7 +16,9 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 05a — verified | Native bounded relative pose motors | Quaternion/frame correctness, conserved actuation momentum, per-joint torque caps, finite driven drop |
 | 05b1 — verified | Native support-aware standing | 60-second stand, valid foot support, bounded effort, external pushes, reset/disable |
 | 05b2 — verified | Driven WASM rig and motor inspection | Native/WASM standing trace; visible motor targets, support/effort readings and browser controls |
-| 06 | Walking/running and support | Direction/speed/wall/slope/moving-support fixtures and browser inspection |
+| 06a — verified | Native assisted walking/running | Direction/speed, repeated alternating swings, bounded impulse/effort, stop, wall, moving-support and ledge fixtures |
+| 06b | Locomotion WASM/playground | Native/browser trace agreement, movement controls and visible gait/turn/stop inspection |
+| 06c | Terrain and locomotion transitions | Slopes, steps, rotating/moving supports, rapid reversals and human playability |
 | 07 | Jump, fall and recovery | Buffered edge consumed once; total impulse bounded; physical get-up |
 | 08 | Independent strikes and contact damage | Real contact, attack deduplication, no resting damage |
 | 09 | Grips, stamina and release | Per-hand constraints, valid anchors, load failure, cyclic stress cleanup |

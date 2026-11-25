@@ -8,7 +8,12 @@ mod tests;
 
 const AXES: [JointAxis; 3] = [JointAxis::AngX, JointAxis::AngY, JointAxis::AngZ];
 
-pub(super) fn configure(rig: &mut PassiveRagdoll, motors: &MotorConfig, enabled: bool) {
+pub(super) fn configure(
+    rig: &mut PassiveRagdoll,
+    motors: &MotorConfig,
+    targets: &[Rotation<Real>; 14],
+    enabled: bool,
+) {
     for (index, (_, joint)) in rig.world.impulse_joints.iter_mut().enumerate() {
         joint.data.motor_axes = JointAxesMask::empty();
         // A sleeping island may skip solving; never retain an earlier tick's effort.
@@ -27,13 +32,20 @@ pub(super) fn configure(rig: &mut PassiveRagdoll, motors: &MotorConfig, enabled:
         let free = definition.angular_limits.map(|limits| limits != [0.0, 0.0]);
         let parent = rig.world.bodies[joint.body1].rotation() * joint.data.local_frame1.rotation;
         let child = rig.world.bodies[joint.body2].rotation() * joint.data.local_frame2.rotation;
-        configure_joint(&mut joint.data, parent.inverse() * child, free, config);
+        configure_joint(
+            &mut joint.data,
+            parent.inverse() * child,
+            targets[index],
+            free,
+            config,
+        );
     }
 }
 
 fn configure_joint(
     joint: &mut GenericJoint,
     current: Rotation<Real>,
+    target: Rotation<Real>,
     free: [bool; 3],
     config: &JointMotorConfig,
 ) {
@@ -42,7 +54,7 @@ fn configure_joint(
     if count == 0 || damping == 0.0 || config.max_torque_nm == 0.0 {
         return;
     }
-    let error = rotation_error(current, Rotation::identity());
+    let error = rotation_error(current, target);
     // The solver evaluates damping against its next velocity. Adding Kp*dt
     // gives a first-order implicit position term without quaternion component subtraction.
     let velocity = error * (config.stiffness_nm_per_rad / damping);

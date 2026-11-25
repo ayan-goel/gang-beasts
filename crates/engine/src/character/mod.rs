@@ -1,8 +1,11 @@
 mod balance;
 mod balance_config;
 mod definition;
+mod gait;
 mod implicit_motor;
 mod joint_state;
+mod locomotion;
+mod locomotion_config;
 mod motor;
 mod motor_config;
 #[cfg(test)]
@@ -15,6 +18,7 @@ mod rig;
 mod rig_tests;
 mod shape;
 mod support;
+mod walking_controller;
 
 pub use balance::BalanceState;
 pub use balance_config::BalanceConfig;
@@ -25,3 +29,7 @@ pub use parts::BodyPart;
 pub use passive::{PassiveRagdoll, RagdollBodyState};
 pub use pose::PoseRagdoll;
 pub use shape::BodyShape;
+
+pub use locomotion::LocomotionRagdoll;
+pub use locomotion_config::LocomotionConfig;
+pub use walking_controller::LocomotionState;

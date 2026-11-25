@@ -14,7 +14,7 @@ mod tests;
 mod diagnostics_tests;
 
 pub struct PoseRagdoll {
-    rig: PassiveRagdoll,
+    pub(super) rig: PassiveRagdoll,
     motors: MotorConfig,
     enabled: bool,
     torques: [[f32; 3]; 14],
@@ -36,6 +36,25 @@ impl PoseRagdoll {
             torques: [[0.0; 3]; 14],
             balance: None,
         })
+    }
+
+    pub(super) fn blend_motors(&mut self, idle: &MotorConfig, active: &MotorConfig, blend: f32) {
+        // The locomotion owner supplies validated compatible presets and a [0,1]
+        // weight. Convex interpolation preserves their finite caps and fixed wrists.
+        for motor in &mut self.motors.joints {
+            let low = idle.joints.iter().find(|m| m.child == motor.child).unwrap();
+            let high = active
+                .joints
+                .iter()
+                .find(|m| m.child == motor.child)
+                .unwrap();
+            motor.stiffness_nm_per_rad = low.stiffness_nm_per_rad
+                + (high.stiffness_nm_per_rad - low.stiffness_nm_per_rad) * blend;
+            motor.damping_nm_s_per_rad = low.damping_nm_s_per_rad
+                + (high.damping_nm_s_per_rad - low.damping_nm_s_per_rad) * blend;
+            motor.max_torque_nm =
+                low.max_torque_nm + (high.max_torque_nm - low.max_torque_nm) * blend;
+        }
     }
 
     pub fn rig(&self) -> &PassiveRagdoll {
@@ -122,20 +141,25 @@ impl PoseRagdoll {
     }
 
     pub fn step(&mut self) {
+        self.step_with_targets(&[Rotation::identity(); 14]);
+    }
+
+    pub(super) fn step_with_targets(&mut self, targets: &[Rotation<Real>; 14]) {
         // Support must see queued departures on this tick, before balance decides effort.
         self.rig.apply_pending_impulse();
-        self.apply_motors();
+        self.apply_motors(targets);
         self.rig.step();
         if self.enabled && self.motors.model == "implicit_velocity_pd" {
             self.torques = super::implicit_motor::torques(&self.rig);
         }
     }
 
-    fn apply_motors(&mut self) {
+    fn apply_motors(&mut self, targets: &[Rotation<Real>; 14]) {
         self.torques = [[0.0; 3]; 14];
         super::implicit_motor::configure(
             &mut self.rig,
             &self.motors,
+            targets,
             self.enabled && self.motors.model == "implicit_velocity_pd",
         );
         if self.enabled {
@@ -168,7 +192,7 @@ impl PoseRagdoll {
                     .expect("validated motor topology");
                 let torque = local_torque(
                     parent_frame.inverse() * child_frame,
-                    Rotation::identity(),
+                    targets[index],
                     parent_frame.inverse() * (child.angvel() - parent.angvel()),
                     definition.angular_limits.map(|limits| limits != [0.0, 0.0]),
                     config,

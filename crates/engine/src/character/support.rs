@@ -13,12 +13,31 @@ fn current_pose(world: &PhysicsWorld, collider: &Collider) -> Isometry<Real> {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub(super) struct FootSupport {
+    pub velocity: Vector<Real>,
+    pub normal: Vector<Real>,
+    pub friction: f32,
+    collider: ColliderHandle,
+    distance: f32,
+}
+
 pub(super) fn foot_supported(
     world: &PhysicsWorld,
     foot: RigidBodyHandle,
     own_bodies: &[RigidBodyHandle],
     config: &BalanceConfig,
 ) -> bool {
+    foot_support(world, foot, own_bodies, config).is_some()
+}
+
+pub(super) fn foot_support(
+    world: &PhysicsWorld,
+    foot: RigidBodyHandle,
+    own_bodies: &[RigidBodyHandle],
+    config: &BalanceConfig,
+) -> Option<FootSupport> {
+    let mut selected: Option<FootSupport> = None;
     for handle in world.bodies[foot].colliders() {
         let foot_collider = &world.colliders[*handle];
         for pair in world.narrow_phase.contact_pairs_with(*handle) {
@@ -32,11 +51,12 @@ pub(super) fn foot_supported(
             {
                 continue;
             }
-            let other = &world.colliders[if pair.collider1 == *handle {
+            let other_handle = if pair.collider1 == *handle {
                 pair.collider2
             } else {
                 pair.collider1
-            }];
+            };
+            let other = &world.colliders[other_handle];
             if other.is_sensor()
                 || other
                     .parent()
@@ -64,9 +84,39 @@ pub(super) fn foot_supported(
             let relative_velocity =
                 world.bodies[foot].velocity_at_point(&contact.point1) - surface_velocity;
             if relative_velocity.dot(&contact.normal2) <= config.maximum_separation_speed_m_s {
-                return true;
+                let candidate = FootSupport {
+                    friction: pair
+                        .manifolds
+                        .iter()
+                        .filter(|m| m.data.solver_flags.contains(SolverFlags::COMPUTE_IMPULSES))
+                        .flat_map(|m| &m.data.solver_contacts)
+                        .map(|contact| contact.friction)
+                        .min_by(f32::total_cmp)
+                        .unwrap_or(0.0),
+                    velocity: surface_velocity,
+                    normal: *contact.normal2,
+                    collider: other_handle,
+                    distance: contact.dist,
+                };
+                // Prefer the most upward, closest contact; handle order breaks exact
+                // ties so narrow-phase traversal cannot change moving-surface velocity.
+                if selected.is_none_or(|old| {
+                    candidate
+                        .normal
+                        .y
+                        .total_cmp(&old.normal.y)
+                        .then_with(|| old.distance.total_cmp(&candidate.distance))
+                        .then_with(|| {
+                            old.collider
+                                .into_raw_parts()
+                                .cmp(&candidate.collider.into_raw_parts())
+                        })
+                        .is_gt()
+                }) {
+                    selected = Some(candidate);
+                }
             }
         }
     }
-    false
+    selected
 }

@@ -11,8 +11,8 @@ mod simulation;
 
 pub use character::{
     BalanceConfig, BalanceState, BodyDefinition, BodyPart, BodyShape, CharacterDefinition,
-    CharacterError, JointDefinition, JointMotorConfig, MotorConfig, PassiveRagdoll, PoseRagdoll,
-    RagdollBodyState, RagdollJointState,
+    CharacterError, JointDefinition, JointMotorConfig, LocomotionConfig, LocomotionRagdoll,
+    LocomotionState, MotorConfig, PassiveRagdoll, PoseRagdoll, RagdollBodyState, RagdollJointState,
 };
 pub use config::{ConfigError, PhysicsConfig};
 pub use fixture::{CommandError, FixtureState};

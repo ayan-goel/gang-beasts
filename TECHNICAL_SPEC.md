@@ -422,6 +422,8 @@ The first native pose-control diagnostic uses `config/motors.json` schema 1 with
 
 The standing preset in `config/standing-motors.json` extends motor schema 1 with `implicit_velocity_pd`. It retains the shortest-arc quaternion rotation-vector error, then sets force-based solver velocity motors with factor `Kd + Kp × tick_dt` and target relative angular velocity `Kp × error / factor`. Targets are sampled once per tick. Each free axis receives at most `joint_vector_cap / sqrt(free_axis_count)`, conservatively preserving the vector effort limit. Zero factor/effort disables actuation. This preset addresses the observed instability of stronger explicit gains; it adds no pose constraints or transform overrides. `config/motors.json` retains the explicit diagnostic model. See `docs/decisions/0007-support-aware-standing.md` for tuning, solver assumptions and effort-coordinate conventions.
 
+The native locomotion preset in `config/locomotion-motors.json` strengthens only thigh/shin/ankle actuators to stiffness 600 N·m/rad, damping 12 N·m·s/rad and vector cap 150 N·m. Implicit motor input ceilings are now 600/20/150; explicit ceilings remain 200/20/50. Fixed wrists remain unactuated. Supported movement/braking uses the active preset, which relaxes to standing after settling or support loss. The bounded pelvis tilt controller remains unchanged; movement adds a separate supported yaw budget up to 20 N·m. See `docs/decisions/0008-native-locomotion.md` for physical tradeoffs and limits.
+
 ### 11.4 Orthogonal character state
 
 Conceptual fields:
@@ -458,6 +460,8 @@ right_hip_target = amplitude × sin(phase + π)
 ```
 
 This gait supplies desired poses, not guaranteed foot trajectories. Scale stride with intended speed and blend toward idle. Foot contacts determine stance; avoid an actuator that accelerates indefinitely against a wall. Full-game work adds terrain-aware foot placement, slope handling, contact-aware transitions and stumbling.
+
+The implemented native `LocomotionRagdoll` uses versioned `config/locomotion.json` with 2.5/4.5 m/s walk/run targets, 1.6/2.5 Hz cadence and maximum 12 m/s² horizontal assistance. It normalizes world X/Z intent, subtracts sampled moving-support point velocity from COM feedback, and divides one total impulse budget between mass-proportional body application and supported feet. Solver-combined friction and pelvis lean/rate determine the division; this is ground-gated assistance, not a traction limit, and remains possible on zero-friction support. No vertical impulse or transform override is used. Alternating stance sweeps and raised returns generate bounded relative targets. Release uses a bounded braking interval, weaker velocity damping and a settled transition to idle gains; no position target is stored. Native direction, speed, alternating-foot, wall, moving-platform, ledge and shove fixtures are partial locomotion evidence. Browser locomotion, terrain and human playability remain required. See `docs/slices/06a-native-locomotion.md`.
 
 ### 12.2 Balance
 
