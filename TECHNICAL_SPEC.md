@@ -768,6 +768,8 @@ Place eight safe, nonoverlapping spawns with space to move and no immediate unav
 
 Proposed escalation schedule: warning at 90 s, first perimeter group weakened/detached at 120 s, second group at 150 s, sudden death at 180 s. Sudden death uses an authored, telegraphed hazard or additional edge failure with a 30 s maximum extension; then draw if unresolved. These timings are new tuning proposals, not source-game constants. Reset crates, panels, grips, hazard timers and camera defaults every round.
 
+The initial Skyline manifest uses a 20 × 20 m central deck and offset two-metre exterior walkways. Both walkways detach on the schedule above. At 180 s, a lateral gust ramps over three seconds to 9 m/s². Layout, mass, spawn and timing values come from one [versioned manifest](assets/maps/skyline/map.json). [Headless physics and verification](docs/slices/11a-skyline-physics.md).
+
 ## 16. Camera engine
 
 Implement an independent TypeScript camera module at render frequency, consuming interpolated presentation state.

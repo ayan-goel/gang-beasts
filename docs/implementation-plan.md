@@ -41,6 +41,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 10a — verified local encounter | Lift and release in motion | Valid support, per-hand force budget, all target colliders airborne, momentum-preserving release and matching browser trace |
 | 10b — local punch and recovery fixtures | Knockout and recovery | Physical impacts, bounded unconscious time, grip ownership, motor ramp and get-up |
 | 10c | Ledge rescue | One- and two-hand recovery, ceiling and obstruction cases |
+| 11a — verified native | Skyline map and physics | Eight safe spawns, physical crates, vents, warning, detachable walkways and fall threshold |
 | 11 | Skyline and group camera | Spawns, props, panels, warnings, camera bounds and local round |
 | 12 | Melee match lifecycle | Simultaneous elimination, scoring, full reset and rematch |
 | 13 | Rust/TS binary contracts | Golden inputs/snapshots, malformed records, sequence wrap and lifecycle |

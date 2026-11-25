@@ -28,6 +28,7 @@ fn main() {
         root.join("config/locomotion.json"),
         root.join("config/hands.json"),
         root.join("config/grip.json"),
+        root.join("assets/maps/skyline/map.json"),
         root.join("config/impact.json"),
         root.join("config/consciousness.json"),
         root.join("config/locomotion-motors.json"),

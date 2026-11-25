@@ -12,7 +12,7 @@ No release criteria have passed yet. Update each row with a slice, build/config 
 | Physical lift/throw | The [two-hand lift fixture](../slices/10a-lift-release.md) raises an active 40 kg opponent clear of the deck and releases it with upward momentum. Native/browser traces and bounded assistance pass. Human counterplay and online acceptance remain open. |
 | Knockout/recovery | [Local punch-driven knockouts](../slices/10b-consciousness.md) cover bounded duration, grip release, wake-up torque and return to standing. Online replication and human playability remain open. |
 | Ledge rescue | Pending |
-| Skyline mechanics/reset | Pending |
+| Skyline mechanics/reset | [Native Skyline fixtures](../slices/11a-skyline-physics.md) exercise movable crates, timed panel failure, sensor versus root crossing, and full reconstruction. Ledge gameplay and online acceptance remain open. |
 | Camera readability | Pending |
 | Server authority | Pending |
 | Smooth multiplayer/latency | Pending |

@@ -24,6 +24,7 @@ impl FighterId {
 
 pub struct Duel {
     world: PhysicsWorld,
+    arena: Option<crate::arena::Skyline>,
     fighters: [Fighter; 2],
     definition: CharacterDefinition,
     presets: MotorPresets,
@@ -40,23 +41,47 @@ pub struct Duel {
 
 impl Duel {
     pub fn new(physics: PhysicsConfig) -> Result<Self, CharacterError> {
+        Self::create(physics, false)
+    }
+    pub fn skyline(physics: PhysicsConfig) -> Result<Self, CharacterError> {
+        Self::create(physics, true)
+    }
+    fn create(physics: PhysicsConfig, skyline: bool) -> Result<Self, CharacterError> {
         physics.validate()?;
         let definition = CharacterDefinition::bundled()?;
         let mut world = PhysicsWorld::new(&physics);
-        world
-            .colliders
-            .insert(ColliderBuilder::cuboid(6.0, 0.5, 6.0).translation(vector![0., -0.5, 0.]));
-        let first = Fighter::spawn(
-            &mut world,
-            &definition,
-            [0.15, 0., 0.28],
-            Rotation::identity(),
-        )?;
-        let opposite = Rotation::from_quaternion(nalgebra::Quaternion::new(0., 0., 1., 0.));
-        let second = Fighter::spawn(&mut world, &definition, [-0.15, 0., -0.28], opposite)?;
+        let arena = if skyline {
+            Some(crate::arena::Skyline::insert(&mut world)?)
+        } else {
+            world
+                .colliders
+                .insert(ColliderBuilder::cuboid(6., 0.5, 6.).translation(vector![0., -0.5, 0.]));
+            None
+        };
+        let spawn = |index: usize| {
+            if let Some(a) = &arena {
+                let slot = a.definition.spawns[index];
+                (
+                    slot.position,
+                    Rotation::from_axis_angle(&Vector::y_axis(), slot.yaw),
+                )
+            } else if index == 0 {
+                ([0.15, 0., 0.28], Rotation::identity())
+            } else {
+                (
+                    [-0.15, 0., -0.28],
+                    Rotation::from_quaternion(nalgebra::Quaternion::new(0., 0., 1., 0.)),
+                )
+            }
+        };
+        let (at, heading) = spawn(0);
+        let first = Fighter::spawn(&mut world, &definition, at, heading)?;
+        let (at, heading) = spawn(1);
+        let second = Fighter::spawn(&mut world, &definition, at, heading)?;
         let health_rules = crate::combat::HealthRules::bundled()?;
         Ok(Self {
             world,
+            arena,
             fighters: [first, second],
             definition,
             presets: MotorPresets::bundled()?,
@@ -104,6 +129,9 @@ impl Duel {
             );
         }
         let contacts = super::duel_contacts::ContactFrame::capture(&self.world, &self.fighters);
+        if let Some(a) = &mut self.arena {
+            a.step(&mut self.world, self.tick + 1);
+        }
         self.world.step();
         self.tick += 1;
         self.hits.clear();
@@ -162,7 +190,8 @@ impl Duel {
             .sum()
     }
     pub fn reset(&mut self) {
-        *self = Self::new(self.physics.clone()).expect("validated duel configuration");
+        *self = Self::create(self.physics.clone(), self.arena.is_some())
+            .expect("validated duel configuration");
     }
 }
 
@@ -175,3 +204,6 @@ mod health;
 
 #[path = "duel_input.rs"]
 mod input;
+
+#[path = "duel_arena.rs"]
+mod map;

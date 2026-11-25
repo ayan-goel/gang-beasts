@@ -1,5 +1,7 @@
 //! Shared fixed-tick physics and gameplay; independent of transport and presentation.
 
+mod arena;
+pub use arena::{ArenaBodyState, ArenaKind, FallState, MapDefinition, SkylineEvent};
 mod character;
 mod combat;
 mod config;
