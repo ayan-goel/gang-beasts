@@ -9,6 +9,7 @@ export class JointOverlay {
   private readonly origin = new THREE.Vector3();
   private readonly endpoint = new THREE.Vector3();
   private readonly rotation = new THREE.Quaternion();
+  private readonly target = new THREE.Quaternion();
 
   constructor(private readonly count: number) {
     this.positions = new Float32Array(count * 42);
@@ -33,9 +34,10 @@ export class JointOverlay {
     this.root.add(this.lines, this.points);
   }
 
-  update(states?: Float32Array): void {
+  update(states?: Float32Array, targets?: Float32Array): void {
     this.root.visible = !!states;
     if (!states) return;
+    if (targets && targets.length !== this.count * 4) throw new Error('Invalid joint target buffer');
     if (states.length !== this.count * 17) throw new Error('Invalid joint-frame buffer');
     for (let joint = 0; joint < this.count; joint++) {
       const input = joint * 17;
@@ -45,6 +47,9 @@ export class JointOverlay {
       for (let side = 0; side < 2; side++) {
         this.origin.fromArray(states, input + 2 + side * 3);
         this.rotation.fromArray(states, input + 8 + side * 4);
+        // Native XYZW targets are relative to the parent joint frame; using them
+        // directly avoids duplicating Rust's Euler-angle convention in the renderer.
+        if (side === 0 && targets) this.rotation.multiply(this.target.fromArray(targets, joint * 4));
         for (let axis = 0; axis < 3; axis++) {
           const offset = output + 6 + side * 18 + axis * 6;
           this.origin.toArray(this.positions, offset);

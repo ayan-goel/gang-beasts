@@ -1,3 +1,5 @@
+import { MovementControls } from './MovementControls';
+import { MovementInspector } from './MovementInspector';
 import { useEffect, useRef, useState } from 'react';
 import type { PlaygroundSnapshot } from '../game/Playground';
 import { startPlayground, type PlaygroundRuntime, type Scenario } from '../game/startPlayground';
@@ -34,13 +36,15 @@ export function App() {
   return <>
     <header>
       <div><p className="eyebrow">Physics Brawler</p><h1>Development playground</h1></div>
-      <span className="badge">PHYSICS LAB / 05</span>
+      <span className="badge">PHYSICS LAB / 06</span>
     </header>
     <div className="workspace">
-      <section className="viewport" ref={viewport} aria-label="Physics scene">
+      <section className="viewport" aria-label="Physics scene">
+        <div className="scene-canvas" ref={viewport} />
         <div className="scene-label"><p className="eyebrow">Test environment</p>
-          <h2>{scenario === 'standing' ? 'Standing ragdoll' : scenario === 'ragdoll' ? 'Passive ragdoll' : 'Floating platform'}</h2>
-          <p>{scenario === 'standing' ? 'Bounded motors. Foot support. Physical balance.' : scenario === 'ragdoll' ? 'Fifteen bodies. Physical joints. No motors.' : 'One body. Real contact. Fixed timestep.'}</p></div>
+          <h2>{scenario === 'locomotion' ? 'Locomotion playground' : scenario === 'standing' ? 'Standing ragdoll' : scenario === 'ragdoll' ? 'Passive ragdoll' : 'Floating platform'}</h2>
+          <p>{scenario === 'locomotion' ? 'Walk. Run. Turn. Keep your balance.' : scenario === 'standing' ? 'Bounded motors. Foot support. Physical balance.' : scenario === 'ragdoll' ? 'Fifteen bodies. Physical joints. No motors.' : 'One body. Real contact. Fixed timestep.'}</p></div>
+        {state && <MovementControls state={state} act={act} focus={()=>viewport.current?.querySelector('canvas')?.focus({preventScroll:true})} />}
       </section>
       <aside aria-label="Playground tools">
         {error ? <p role="alert">{error}</p> : <p role="status">{state ? 'Simulation ready' : 'Loading simulation…'}</p>}
@@ -48,9 +52,11 @@ export function App() {
           <select value={scenario} onChange={event => setScenario(event.target.value as Scenario)}>
             <option value="cube">Cuboid fixture</option><option value="ragdoll">Passive ragdoll</option>
             <option value="standing">Standing ragdoll</option>
+            <option value="locomotion">Locomotion</option>
           </select>
         </label>
         {state && <>
+          <MovementInspector state={state} act={act} />
           <RagdollInspector state={state} act={act} />
           <Controls state={state} act={act} />
           <MotorInspector state={state} act={act} />

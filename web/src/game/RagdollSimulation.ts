@@ -1,6 +1,7 @@
 import { LocalRagdoll } from '../generated/wasm/brawler_wasm';
 import type { SimulationPort } from './SimulationPort';
 import type { RigDefinition, RigInspection } from './rigDefinition';
+import type { MovementPort } from './movementInspection';
 import type { MotorConfiguration, RigControl } from './motorInspection';
 
 export class RagdollSimulation implements SimulationPort, RigInspection {
@@ -8,18 +9,22 @@ export class RagdollSimulation implements SimulationPort, RigInspection {
   readonly definition: RigDefinition;
   readonly rig = this;
   readonly controller?: RigControl;
+  readonly movement?: MovementPort;
   selectedBody = 2;
 
-  constructor(configuration: string, standing = false) {
-    this.native = standing ? LocalRagdoll.standing(configuration) : new LocalRagdoll(configuration);
+  constructor(configuration: string, kind: 'ragdoll' | 'standing' | 'locomotion' = 'ragdoll') {
+    this.native = kind === 'locomotion' ? LocalRagdoll.locomotion(configuration) : kind === 'standing' ? LocalRagdoll.standing(configuration) : new LocalRagdoll(configuration);
+    const native = this.native;
     try {
       this.definition = JSON.parse(this.native.definition_json()) as RigDefinition;
       const motorJson = this.native.motor_configuration_json();
       if (motorJson) this.controller = {
-        configuration: JSON.parse(motorJson) as MotorConfiguration,
+        get configuration() { return JSON.parse(native.motor_configuration_json()!) as MotorConfiguration; },
+        poses: () => native.pose_targets(),
         state: () => this.native.controller_state(), efforts: () => this.native.motor_efforts(),
         targets: () => this.native.motor_targets(), setEnabled: enabled => this.native.set_enabled(enabled),
       };
+      if (kind === 'locomotion') this.movement = { state: () => native.movement_state(), setInput: (x,z,run) => native.set_movement(x,z,run) };
     }
     catch (error) { this.native.free(); throw error; }
   }

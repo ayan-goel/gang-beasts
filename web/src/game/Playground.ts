@@ -1,3 +1,4 @@
+import { MovementInput } from './MovementInput';
 import { FixedClock } from './FixedClock';
 import type { SimulationPort } from './SimulationPort';
 import { inspectRig } from './rigDefinition';
@@ -12,11 +13,14 @@ export class Playground {
   private stepMs = 0;
   private previousTime: number;
   private revision = 0;
+  readonly movementInput?: MovementInput;
   showColliders = false;
   showJoints = false;
 
   constructor(readonly simulation: SimulationPort, private readonly now = () => performance.now()) {
     this.previousTime = now();
+    const movement = simulation.rig?.movement;
+    if (movement) this.movementInput = new MovementInput((x,z,run) => movement.setInput(x,z,run), () => !this.paused && simulation.rig!.controller!.state()[0] === 1);
   }
 
   get sessionRevision(): number { return this.revision; }
@@ -30,6 +34,7 @@ export class Playground {
 
   setPaused(paused: boolean): void {
     this.paused = paused || this.replayComplete();
+    if (this.paused) this.movementInput?.clear();
     // Discard fractional playback debt so resume never consumes pre-pause time.
     this.clock.clearDebt();
     this.previousTime = this.now();
@@ -53,12 +58,14 @@ export class Playground {
   }
 
   reset(): void {
+    this.movementInput?.clear();
     this.simulation.reset();
     this.clearPlayback();
   }
 
   configure(json: string): void {
     this.simulation.configure(json);
+    this.movementInput?.clear();
     this.clearPlayback();
     this.paused = true;
   }
@@ -83,9 +90,15 @@ export class Playground {
     this.stepMs = 0;
   }
 
+  setControlEnabled(enabled: boolean): void {
+    if (!enabled) this.movementInput?.clear();
+    this.simulation.rig?.controller?.setEnabled(enabled);
+  }
+
   snapshot() {
     const state = this.simulation.fixture_state();
     return {
+      movementInput: this.movementInput ? { command: this.movementInput.command, run: this.movementInput.run } : undefined,
       tick: this.simulation.tick().toString(), height: state[1]!,
       verticalSpeed: state[8]!, mass: state[13]!,
       paused: this.paused, rate: this.rate, impulsePending: this.impulsePending,

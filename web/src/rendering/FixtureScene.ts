@@ -19,7 +19,7 @@ export class FixtureScene {
   private readonly rig?: RagdollView;
   private readonly joints?: JointOverlay;
 
-  constructor(private readonly container: HTMLElement, definition?: RigDefinition, rigFocusHeight = 1.7) {
+  constructor(private readonly container: HTMLElement, definition?: RigDefinition, rigFocusHeight = 1.7, private readonly followRig = false) {
     try {
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       this.renderer.shadowMap.enabled = true;
@@ -72,13 +72,17 @@ export class FixtureScene {
     }
   }
 
-  render(state: Float32Array, lines?: Float32Array, jointStates?: Float32Array, selectedBody = 0): void {
+  render(state: Float32Array, lines?: Float32Array, jointStates?: Float32Array, selectedBody = 0, poseTargets?: Float32Array): void {
     if (this.rig) this.rig.update(state, selectedBody);
     else {
       this.cube.position.set(state[0]!, state[1]!, state[2]!);
       this.cube.quaternion.set(state[3]!, state[4]!, state[5]!, state[6]!);
     }
-    this.joints?.update(jointStates);
+    this.joints?.update(jointStates, poseTargets);
+    if (this.followRig) {
+      this.camera.position.set(state[28]! + 4, 3.8, state[30]! + 6);
+      this.camera.lookAt(state[28]!, 0.85, state[30]!);
+    }
     this.colliders.visible = !!lines?.length;
     if (lines?.length) {
       const attribute = this.colliders.geometry.getAttribute('position');

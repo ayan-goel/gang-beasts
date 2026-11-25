@@ -10,6 +10,7 @@ export interface RigControl {
   state(): Float32Array;
   efforts(): Float32Array;
   targets(): Float32Array;
+  poses(): Float32Array;
   setEnabled(enabled: boolean): void;
 }
 

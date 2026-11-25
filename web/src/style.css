@@ -19,6 +19,7 @@ h1 { font-size: 1.25rem; letter-spacing: -0.03em; margin: 0.25rem 0 0; }
 .badge { border: 1px solid var(--line); padding: 0.5rem 0.75rem; font: 0.7rem ui-monospace, monospace; color: var(--muted); }
 .workspace { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr) 20rem; min-height: 0; }
 .viewport { min-height: 0; position: relative; }
+.scene-canvas { position: absolute; inset: 0; }
 .viewport canvas { display: block; position: absolute; inset: 0; max-width: 100%; }
 .scene-label { position: absolute; left: 2rem; top: 1.5rem; z-index: 1; pointer-events: none; }
 .scene-label h2 { font-size: 0.9rem; margin: 0.5rem 0; }
@@ -57,4 +58,16 @@ dd { margin: 0; font-family: ui-monospace, monospace; }
   aside { border-left: 0; border-top: 1px solid var(--line); padding: 1.5rem; overflow: visible; }
   .scene-label { left: 1rem; }
   .badge { display: none; }
+}
+
+.movement-controls { position: absolute; z-index: 2; bottom: 1rem; left: 1rem; width: min(26rem, calc(100% - 2rem)); padding: 0.7rem; border: 1px solid var(--line); border-radius: 0.4rem; background: #10222cee; }
+.movement-pad { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 0.4rem; margin-top: 0.5rem; }
+.movement-pad button { touch-action: none; user-select: none; font-size: 1.1rem; min-height: 44px; padding: 0.4rem; }
+.movement-pad label { padding: 0 0.3rem; }
+.movement-controls .focus-movement { background: transparent; border: 0; padding: 0.5rem 0 0; color: var(--accent); }
+.movement-controls p { margin: 0.35rem 0 0; font-size: 0.65rem; color: var(--muted); }
+.viewport canvas:focus-visible { outline-offset: -3px; }
+@media (max-width: 760px) {
+  .viewport:has(.movement-controls) .scene-canvas { position: relative; min-height: 55dvh; }
+  .movement-controls { position: relative; left: auto; bottom: auto; width: calc(100% - 2rem); margin: 0 1rem 1rem; }
 }

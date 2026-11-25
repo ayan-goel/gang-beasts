@@ -21,7 +21,7 @@ The passive character uses `config/character.json`. Run `cargo test --locked -p 
 
 The native `PoseRagdoll` diagnostic adds bounded bind-pose motors using `config/motors.json`. Run `cargo test --locked -p brawler-engine --test pose_motors -- --nocapture`; see [motor contracts and evidence](docs/slices/05a-bounded-pose-motors.md). The separate `config/standing-motors.json` and `config/balance.json` presets enable support-aware standing. Run `cargo test --locked --release -p brawler-engine --test standing -- --nocapture`; see [standing evidence](docs/slices/05b1-native-standing.md). The same preset is available under **Test scene → Standing ragdoll**; see [browser standing and inspection](docs/slices/05b2-standing-browser.md).
 
-The native `LocomotionRagdoll` adds assisted walking/running, turning, braking and procedural leg targets. Run `cargo test --locked --release -p brawler-engine --test locomotion --test locomotion_config`; see [locomotion contracts and evidence](docs/slices/06a-native-locomotion.md). Browser movement controls and terrain acceptance remain in development.
+The native `LocomotionRagdoll` adds assisted walking/running, turning, braking and procedural leg targets. Run `cargo test --locked --release -p brawler-engine --test locomotion --test locomotion_config`; see [locomotion contracts and evidence](docs/slices/06a-native-locomotion.md). The same controller is available under **Test scene → Locomotion**; see [browser movement and verification](docs/slices/06b-browser-locomotion.md). Terrain acceptance remains in development.
 
 ## Browser playground
 
@@ -50,6 +50,8 @@ Browser integration tests start their own local server if needed. They compare a
 ## Playground controls
 
 Choose **Passive ragdoll** to inspect the fifteen-body rig paused at tick zero. Select a limb for readings and impulses, enable joint frames/colliders, then resume to observe its unpowered fall. Joint limits and anchor separation are available in the inspector. Scene switching starts a fresh world with default tuning. Choose **Standing ragdoll** for the supported standing preset. Toggle character control, inspect support and per-joint effort/velocity targets, or shove the selected body with a 10 N·s +X impulse. Pale parent joint axes show the bind-pose target; saturated child axes show actual orientation. Reset and physics tuning preserve the control toggle. Scene changes discard unsubmitted tuning drafts. Ragdoll recording is not implemented; recording controls apply to the cuboid scene.
+
+Choose **Locomotion**, resume and focus the canvas to walk with WASD/arrows and run with Shift. Directions use world axes (forward −Z, right +X). Hold the arrow buttons or activate them with Space/Enter for an alternative; the Run checkbox selects running. Pause, reset, disabling control and focus/visibility loss clear movement. Pale joint axes show the requested gait. Reset after falling from the open platform; jump and recovery are not implemented.
 
 Pause to enable exact single-step. Reset reconstructs the fixture and preserves the paused/running mode. Slow motion changes playback cadence without changing physics dt. The upward impulse is queued once for the next tick. Enable **Show colliders** to inspect Rapier geometry.
 

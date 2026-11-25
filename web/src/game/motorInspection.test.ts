@@ -13,6 +13,7 @@ test('selected body joins native joint order and motor tuning by anatomical name
     state: () => new Float32Array([1, 1, 0, 0, 0, 2]),
     efforts: () => new Float32Array([0, 1, 0, 3, 4, 0]),
     targets: () => new Float32Array([0, 0, 0, 1, 2, 3]),
+    poses: () => new Float32Array([0,0,0,1, 0,0,0,1]),
     setEnabled: () => {},
   };
   const selected = inspectController(control, definition, 2);

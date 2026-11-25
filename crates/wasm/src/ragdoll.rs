@@ -1,4 +1,4 @@
-use crate::ragdoll_fixture::RagdollFixture;
+use crate::ragdoll_fixture::{RagdollFixture, RigKind};
 use brawler_engine::{BodyPart, PhysicsConfig};
 use wasm_bindgen::prelude::*;
 
@@ -11,11 +11,52 @@ pub struct LocalRagdoll {
 impl LocalRagdoll {
     #[wasm_bindgen(constructor)]
     pub fn new(configuration: &str) -> Result<LocalRagdoll, JsValue> {
-        build(configuration, false)
+        build(configuration, RigKind::Passive)
     }
 
     pub fn standing(configuration: &str) -> Result<LocalRagdoll, JsValue> {
-        build(configuration, true)
+        build(configuration, RigKind::Standing)
+    }
+
+    pub fn locomotion(configuration: &str) -> Result<LocalRagdoll, JsValue> {
+        build(configuration, RigKind::Locomotion)
+    }
+    pub fn set_movement(
+        &mut self,
+        x: JsValue,
+        z: JsValue,
+        running: JsValue,
+    ) -> Result<(), JsValue> {
+        // Reject JS coercions and f64 values that cannot fit a finite engine f32
+        // before replacing persistent movement intent.
+        let number = |value: JsValue| -> Result<f32, JsValue> {
+            let value = value
+                .as_f64()
+                .ok_or_else(|| js_error("movement axes must be numbers"))?;
+            if !value.is_finite() || value.abs() > f32::MAX as f64 {
+                return Err(js_error("movement axis outside finite f32 range"));
+            }
+            Ok(value as f32)
+        };
+        let direction = [number(x)?, number(z)?];
+        let running = running
+            .as_bool()
+            .ok_or_else(|| js_error("running must be a boolean"))?;
+        self.rig.set_movement(direction, running).map_err(js_error)
+    }
+    pub fn movement_state(&self) -> Vec<f32> {
+        self.rig
+            .walking()
+            .map_or_else(Vec::new, |rig| rig.state().to_buffer().to_vec())
+    }
+    pub fn pose_targets(&self) -> Vec<f32> {
+        if let Some(rig) = self.rig.walking() {
+            return rig.pose_targets().into_iter().flatten().collect();
+        }
+        if self.rig.driven().is_some() {
+            return [[0.0, 0.0, 0.0, 1.0]; 14].into_iter().flatten().collect();
+        }
+        Vec::new()
     }
 
     pub fn tick(&self) -> u64 {
@@ -64,7 +105,7 @@ impl LocalRagdoll {
 
     pub fn configure(&mut self, json: &str) -> Result<(), JsValue> {
         let enabled = self.rig.driven().map(|rig| rig.enabled());
-        let mut replacement = build(json, enabled.is_some())?;
+        let mut replacement = build(json, self.rig.kind())?;
         if let Some(enabled) = enabled {
             replacement.rig.set_enabled(enabled).map_err(js_error)?;
         }
@@ -132,10 +173,10 @@ impl LocalRagdoll {
     }
 }
 
-fn build(configuration: &str, standing: bool) -> Result<LocalRagdoll, JsValue> {
+fn build(configuration: &str, kind: RigKind) -> Result<LocalRagdoll, JsValue> {
     let physics = PhysicsConfig::from_json(configuration).map_err(js_error)?;
     Ok(LocalRagdoll {
-        rig: RagdollFixture::new(physics, standing).map_err(js_error)?,
+        rig: RagdollFixture::new(physics, kind).map_err(js_error)?,
     })
 }
 

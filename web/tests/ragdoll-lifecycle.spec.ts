@@ -1,5 +1,33 @@
 import { expect, test } from '@playwright/test';
 
+test('locomotion disposal frees native and GPU resources when neutral input fails', async ({page}) => {
+  await page.goto('/');
+  await expect(page.getByRole('status')).toHaveText('Simulation ready');
+  const result = await page.evaluate(async () => {
+    const moduleUrl = (path: string) => performance.getEntriesByType('resource').find(entry => new URL(entry.name).pathname === path)!.name;
+    const { LocalRagdoll } = await import(/* @vite-ignore */ moduleUrl('/src/generated/wasm/brawler_wasm.js'));
+    const { startPlayground } = await import(/* @vite-ignore */ moduleUrl('/src/game/startPlayground.ts'));
+    const container = document.createElement('div'); document.body.append(container);
+    const runtime = startPlayground(container, () => {}, 'locomotion');
+    const context = container.querySelector('canvas')!.getContext('webgl2')!;
+    const originalFree = LocalRagdoll.prototype.free;
+    const originalInput = LocalRagdoll.prototype.set_movement;
+    let freed = 0, error = '';
+    LocalRagdoll.prototype.free = function() { freed++; originalFree.call(this); };
+    LocalRagdoll.prototype.set_movement = () => { throw new Error('Injected neutral-input failure'); };
+    try {
+      try { runtime.dispose(); } catch (failure) { error = String(failure); }
+      runtime.dispose();
+      return {freed, error, lost:context.isContextLost(), canvases:container.querySelectorAll('canvas').length};
+    } finally {
+      LocalRagdoll.prototype.free = originalFree;
+      LocalRagdoll.prototype.set_movement = originalInput;
+      container.remove();
+    }
+  });
+  expect(result).toEqual({freed:1,error:'Error: Injected neutral-input failure',lost:true,canvases:0});
+});
+
 for (const stage of ['render', 'constructor'] as const) {
   test(`failed ${stage} cleans up the native rig, canvas and GPU context`, async ({ page }) => {
     await page.goto('/');

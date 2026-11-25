@@ -1,4 +1,5 @@
 use super::{BodyPart, CharacterDefinition, LocomotionConfig};
+use rapier3d::na::ComplexField;
 use rapier3d::prelude::*;
 
 pub(super) fn targets(
@@ -21,7 +22,8 @@ pub(super) fn targets(
         let knee = if cycle < 0.5 {
             0.0
         } else {
-            -((cycle - 0.5) * std::f32::consts::TAU).sin()
+            // Match Rapier's deterministic math path for native/WASM pose targets.
+            -<f32 as ComplexField>::sin((cycle - 0.5) * std::f32::consts::TAU)
         };
         [
             hip * config.hip_amplitude_rad * blend,

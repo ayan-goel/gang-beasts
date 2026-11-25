@@ -3,6 +3,7 @@ use super::{
     support::foot_support,
 };
 use crate::TICK_SECONDS;
+use rapier3d::na::RealField;
 use rapier3d::prelude::*;
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -14,6 +15,24 @@ pub struct LocomotionState {
     pub phase: f32,
     pub turn_torque: f32,
     pub targets: [[f32; 3]; 14],
+}
+
+impl LocomotionState {
+    pub fn to_buffer(&self) -> [f32; 11] {
+        [
+            self.acceleration[0],
+            self.acceleration[1],
+            self.acceleration[2],
+            self.support_velocity[0],
+            self.support_velocity[1],
+            self.support_velocity[2],
+            u8::from(self.feet[0]) as f32,
+            u8::from(self.feet[1]) as f32,
+            self.phase,
+            self.turn_torque,
+            self.motor_strength,
+        ]
+    }
 }
 
 pub(super) struct WalkingController {
@@ -141,8 +160,12 @@ impl WalkingController {
         let local = root.rotation().inverse() * self.intent;
         let forward = root.rotation() * -Vector::z();
         if self.intent.norm_squared() > 0.0 {
-            let angle = (forward.z * self.intent.x - forward.x * self.intent.z)
-                .atan2(forward.x * self.intent.x + forward.z * self.intent.z);
+            // Rapier's enhanced-determinism feature selects libm through RealField.
+            // Native f32 intrinsics can round differently from WASM and diverge.
+            let angle = <f32 as RealField>::atan2(
+                forward.z * self.intent.x - forward.x * self.intent.z,
+                forward.x * self.intent.x + forward.z * self.intent.z,
+            );
             self.state.turn_torque = (angle * self.config.turn_stiffness_nm_rad
                 - root.angvel().y * self.config.turn_damping_nm_s_rad)
                 .clamp(-self.config.turn_cap_nm, self.config.turn_cap_nm);

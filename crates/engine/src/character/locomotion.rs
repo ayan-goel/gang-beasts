@@ -40,6 +40,16 @@ impl LocomotionRagdoll {
     pub fn pose(&self) -> &PoseRagdoll {
         &self.pose
     }
+    pub fn collider_lines(&mut self) -> Vec<f32> {
+        self.pose.collider_lines()
+    }
+    pub fn pose_targets(&self) -> [[f32; 4]; 14] {
+        self.state().targets.map(|[x, y, z]| {
+            rapier3d::prelude::Rotation::from_euler_angles(x, y, z)
+                .coords
+                .into()
+        })
+    }
     pub fn state(&self) -> &LocomotionState {
         &self.controller.state
     }

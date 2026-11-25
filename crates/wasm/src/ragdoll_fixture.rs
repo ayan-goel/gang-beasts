@@ -1,17 +1,32 @@
 use brawler_engine::{
-    BalanceConfig, BodyPart, CharacterDefinition, CharacterError, CommandError, MotorConfig,
-    PassiveRagdoll, PhysicsConfig, PoseRagdoll,
+    BalanceConfig, BodyPart, CharacterDefinition, CharacterError, CommandError, LocomotionConfig,
+    LocomotionRagdoll, MotorConfig, PassiveRagdoll, PhysicsConfig, PoseRagdoll,
 };
+
+#[derive(Clone, Copy)]
+pub(crate) enum RigKind {
+    Passive,
+    Standing,
+    Locomotion,
+}
 
 pub(crate) enum RagdollFixture {
     Passive(Box<PassiveRagdoll>),
     Standing(Box<PoseRagdoll>),
+    Locomotion(Box<LocomotionRagdoll>),
 }
 
 impl RagdollFixture {
-    pub fn new(physics: PhysicsConfig, standing: bool) -> Result<Self, CharacterError> {
+    pub fn new(physics: PhysicsConfig, kind: RigKind) -> Result<Self, CharacterError> {
         let definition = CharacterDefinition::bundled()?;
-        if standing {
+        if matches!(kind, RigKind::Locomotion) {
+            return Ok(Self::Locomotion(Box::new(LocomotionRagdoll::new(
+                physics,
+                LocomotionConfig::bundled()?,
+                [0.0; 3],
+            )?)));
+        }
+        if matches!(kind, RigKind::Standing) {
             let mut rig =
                 PoseRagdoll::new(physics, definition, MotorConfig::standing()?, [0.0; 3])?;
             rig.configure_balance(Some(BalanceConfig::bundled()?))?;
@@ -25,10 +40,37 @@ impl RagdollFixture {
         }
     }
 
+    pub fn kind(&self) -> RigKind {
+        match self {
+            Self::Passive(_) => RigKind::Passive,
+            Self::Standing(_) => RigKind::Standing,
+            Self::Locomotion(_) => RigKind::Locomotion,
+        }
+    }
+    pub fn walking(&self) -> Option<&LocomotionRagdoll> {
+        match self {
+            Self::Locomotion(rig) => Some(rig),
+            _ => None,
+        }
+    }
+    pub fn set_movement(
+        &mut self,
+        direction: [f32; 2],
+        running: bool,
+    ) -> Result<(), CharacterError> {
+        match self {
+            Self::Locomotion(rig) => rig.set_input(direction, running),
+            _ => Err(CharacterError::Invalid(
+                "this rig has no locomotion controller",
+            )),
+        }
+    }
+
     pub fn view(&self) -> &PassiveRagdoll {
         match self {
             Self::Passive(rig) => rig,
             Self::Standing(rig) => rig.rig(),
+            Self::Locomotion(rig) => rig.pose().rig(),
         }
     }
 
@@ -36,12 +78,17 @@ impl RagdollFixture {
         match self {
             Self::Passive(_) => None,
             Self::Standing(rig) => Some(rig),
+            Self::Locomotion(rig) => Some(rig.pose()),
         }
     }
 
     pub fn set_enabled(&mut self, enabled: bool) -> Result<(), CharacterError> {
         match self {
             Self::Passive(_) => Err(CharacterError::Invalid("passive rig has no controller")),
+            Self::Locomotion(rig) => {
+                rig.set_enabled(enabled);
+                Ok(())
+            }
             Self::Standing(rig) => {
                 rig.set_enabled(enabled);
                 Ok(())
@@ -53,6 +100,7 @@ impl RagdollFixture {
         match self {
             Self::Passive(rig) => rig.step(),
             Self::Standing(rig) => rig.step(),
+            Self::Locomotion(rig) => rig.step(),
         }
     }
 
@@ -60,6 +108,7 @@ impl RagdollFixture {
         match self {
             Self::Passive(rig) => rig.reset(),
             Self::Standing(rig) => rig.reset(),
+            Self::Locomotion(rig) => rig.reset(),
         }
     }
 
@@ -67,6 +116,7 @@ impl RagdollFixture {
         match self {
             Self::Passive(rig) => rig.collider_lines(),
             Self::Standing(rig) => rig.collider_lines(),
+            Self::Locomotion(rig) => rig.collider_lines(),
         }
     }
 
@@ -74,6 +124,7 @@ impl RagdollFixture {
         match self {
             Self::Passive(rig) => rig.queue_impulse(part, impulse),
             Self::Standing(rig) => rig.queue_impulse(part, impulse),
+            Self::Locomotion(rig) => rig.queue_impulse(part, impulse),
         }
     }
 }

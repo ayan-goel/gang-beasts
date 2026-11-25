@@ -15,7 +15,7 @@ export function RagdollInspector({ state, act }: InspectorProps) {
     <label className="check"><input type="checkbox" checked={state.showJoints}
       onChange={event => act(p => { p.showJoints = event.target.checked; })} />Show joint frames</label>
     {state.showJoints && <p className="hint">Paired anchor dots; X red, Y green, Z blue. Frames: <span id="joint-frame-count">{rig.jointCount}</span>.</p>}
-    {state.showJoints && rig.controller && <p className="hint">Pale parent axes show the bind-pose target. Saturated child axes show actual orientation.</p>}
+    {state.showJoints && rig.controller && <p className="hint">{rig.movement ? 'Pale axes show the requested gait pose on the completed parent frame.' : 'Pale parent axes show the bind-pose target.'} Saturated child axes show actual orientation.</p>}
     <dl><div><dt>Max anchor separation</dt><dd id="anchor-error">{(rig.maxAnchorError * 1000).toFixed(2)} mm</dd></div></dl>
     <details><summary>Selected joint limits</summary>
       {rig.limits ? <dl>{rig.limits.map(([min, max], axis) => <div key={axis}><dt>{'XYZ'[axis]}</dt>
