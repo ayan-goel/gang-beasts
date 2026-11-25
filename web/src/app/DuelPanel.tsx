@@ -22,9 +22,9 @@ export function DuelPanel({ viewport }: { viewport: RefObject<HTMLDivElement | n
       <button onClick={() => runtime.current?.reset()}>Reset encounter</button>
     </div>
     <h3>Coral controls</h3>
-    <p className="hint">WASD to move, left Shift to run, Space to jump. Tap J/K or a mouse button to punch. Hold to grab and release to let go.</p>
+    <p className="hint">WASD to move, left Shift to run, Space to jump. Tap J/K or a mouse button to punch. Hold to grab. Hold E to lift, then release a hand to let go.</p>
     <h3>Blue controls</h3>
-    <p className="hint">Arrow keys to move, right Shift to run, Enter to jump. Tap comma/period to punch, or hold to grab.</p>
+    <p className="hint">Arrow keys to move, right Shift to run, Enter to jump. Tap comma/period to punch, or hold to grab. Hold slash to lift.</p>
     <dl>
       <div><dt>Coral hits</dt><dd id="coral-hits">{state.hits[0]}</dd></div>
       <div><dt>Blue hits</dt><dd id="blue-hits">{state.hits[1]}</dd></div>

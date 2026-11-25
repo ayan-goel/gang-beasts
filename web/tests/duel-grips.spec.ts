@@ -23,3 +23,29 @@ test('a held sparring hand identifies its target and clears on key release or fo
     await page.getByRole('button', { name: 'Reset encounter' }).click();
   }
 });
+
+test('shared keyboard lift reaches the correct fighter and blur releases both', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('status')).toHaveText('Simulation ready');
+  await page.evaluate(async () => {
+    const { LocalDuel } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
+    const original = LocalDuel.prototype.set_lift;
+    const held = [false, false];
+    Object.assign(window, { liftInputs: held });
+    LocalDuel.prototype.set_lift = function (who: number, down: boolean) {
+      held[who] = down;
+      return original.call(this, who, down);
+    };
+  });
+  await page.getByLabel('Test scene').selectOption('duel');
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
+  const held = () => page.evaluate(() => (window as unknown as { liftInputs: boolean[] }).liftInputs);
+  await page.keyboard.down('Slash');
+  await expect.poll(held).toEqual([false, true]);
+  await page.keyboard.down('KeyE');
+  await expect.poll(held).toEqual([true, true]);
+  await page.getByLabel('Test scene').focus();
+  await expect.poll(held).toEqual([false, false]);
+  await page.keyboard.up('KeyE');
+  await page.keyboard.up('Slash');
+});

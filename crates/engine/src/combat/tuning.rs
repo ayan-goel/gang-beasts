@@ -10,6 +10,9 @@ pub(crate) struct HandTuning {
     pub recovery_ticks: u8,
     pub windup_pose_rad: [f32; 2],
     pub strike_pose_rad: [f32; 2],
+    pub lift_pose_rad: [f32; 2],
+    pub lift_force_per_hand_n: f32,
+    pub lift_chest_clearance_m: f32,
     pub reach_pose_rad: [f32; 2],
     pub stiffness_nm_per_rad: f32,
     pub damping_nm_s_per_rad: f32,
@@ -34,9 +37,12 @@ impl HandTuning {
                 tuning.windup_pose_rad,
                 tuning.strike_pose_rad,
                 tuning.reach_pose_rad,
+                tuning.lift_pose_rad,
             ]
             .into_iter()
             .all(valid_pose)
+            || !(0.0..=450.).contains(&tuning.lift_force_per_hand_n)
+            || !(0.05..=0.5).contains(&tuning.lift_chest_clearance_m)
             || !(0.0..=600.0).contains(&tuning.stiffness_nm_per_rad)
             || !(0.0..=20.0).contains(&tuning.damping_nm_s_per_rad)
             || !(0.0..=150.0).contains(&tuning.max_torque_nm)

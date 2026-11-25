@@ -8,7 +8,7 @@ fn main() {
     let mut hits = Vec::new();
     let mut stamina = Vec::new();
     let mut grips = Vec::new();
-    for tick in 0..=240 {
+    for tick in 0..=375 {
         if tick == 61 {
             for id in players {
                 duel.set_hand(id, Hand::Left, true);
@@ -30,6 +30,21 @@ fn main() {
             156 => duel.set_input(FighterId::Second, [0., 0.], false).unwrap(),
             205 => duel.clear_hands(FighterId::First),
             220 => duel.set_hand(FighterId::Second, Hand::Left, false),
+            241 => {
+                duel.reset();
+                duel.set_input(FighterId::First, [-0.5, -1.], false)
+                    .unwrap();
+                duel.set_hand(FighterId::First, Hand::Right, true);
+            }
+            266 => duel.set_hand(FighterId::First, Hand::Left, true),
+            323 => {
+                duel.set_input(FighterId::First, [0., 0.], false).unwrap();
+                duel.set_lift(FighterId::First, true);
+            }
+            344 => {
+                duel.clear_hands(FighterId::First);
+                duel.set_lift(FighterId::First, false);
+            }
             _ => {}
         }
         if tick > 0 {

@@ -62,18 +62,28 @@ impl Fighter {
         physics: &PhysicsConfig,
         tick: u64,
         presets: &MotorPresets,
+        lifting: [bool; 2],
     ) {
         let mut rig = RigFrame {
             parts: self.parts(definition, physics, tick),
             world,
         };
-        let targets = presets.prepare(
+        let mut targets = presets.prepare(
             &mut rig,
             &mut self.motors,
             &mut self.walking,
             &mut self.hands,
             true,
         );
+        if lifting.contains(&true) {
+            super::lifting::apply(
+                &mut rig,
+                &self.hands.tuning,
+                lifting,
+                &self.balance.config,
+                &mut targets,
+            );
+        }
         implicit_motor::drive(
             &mut rig,
             &self.motors,

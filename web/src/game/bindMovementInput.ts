@@ -2,7 +2,7 @@ import type { MovementInput } from './MovementInput';
 
 const secondPlayerKeys: Record<string, string> = {
   ArrowUp: 'ArrowUp', ArrowDown: 'ArrowDown', ArrowLeft: 'ArrowLeft', ArrowRight: 'ArrowRight',
-  Comma: 'KeyJ', Period: 'KeyK', Enter: 'Space', ShiftRight: 'ShiftRight',
+  Slash: 'KeyE', Comma: 'KeyJ', Period: 'KeyK', Enter: 'Space', ShiftRight: 'ShiftRight',
 };
 
 export function bindMovementInput(canvas: HTMLCanvasElement, input: MovementInput, second?: MovementInput) {
@@ -12,7 +12,7 @@ export function bindMovementInput(canvas: HTMLCanvasElement, input: MovementInpu
     const mapped = secondPlayerKeys[code];
     return second && mapped ? second.key(mapped, down, repeat) : input.key(code, down, repeat);
   };
-  if (second) canvas.setAttribute('aria-description', 'Coral uses WASD, J and K, Space and left Shift. Blue uses arrows, comma and period, Enter and right Shift.');
+  if (second) canvas.setAttribute('aria-description', 'Coral uses WASD, J and K, E to lift, Space and left Shift. Blue uses arrows, comma and period, slash to lift, Enter and right Shift.');
   const keydown = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (key(event.code, true, event.repeat)) event.preventDefault();

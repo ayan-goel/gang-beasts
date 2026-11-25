@@ -58,3 +58,12 @@ test('a held Space key submits one edge, release retains taps, and blur cancels 
   expect(port.setJump).toHaveBeenCalledTimes(4);
   expect(port.clearJumpInput).toHaveBeenCalledOnce();
 });
+
+test('lift is held independently and focus cleanup releases it', () => {
+  const port = { setInput: vi.fn(), setJump: vi.fn(), clearJumpInput: vi.fn(), setHand: vi.fn(), clearHands: vi.fn(), setLift: vi.fn() };
+  const input = new MovementInput(port, () => true);
+  expect(input.key('KeyE', true)).toBe(true);
+  input.key('KeyE', true, true);
+  input.clear();
+  expect(port.setLift.mock.calls).toEqual([[true], [false]]);
+});

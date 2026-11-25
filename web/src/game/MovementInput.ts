@@ -13,7 +13,7 @@ export class MovementInput {
   private running = false;
   command: readonly [number, number, boolean] = [0,0,false];
   constructor(
-    private movement: Pick<MovementPort, 'setInput' | 'setJump' | 'clearJumpInput' | 'setHand' | 'clearHands'>,
+    private movement: Pick<MovementPort, 'setInput' | 'setJump' | 'clearJumpInput' | 'setHand' | 'clearHands'> & { setLift?(held: boolean): void },
     private allowed: () => boolean,
   ) {
     this.hands = new HandInput((side, held) => movement.setHand(side, held), () => movement.clearHands(), allowed);
@@ -27,6 +27,12 @@ export class MovementInput {
   setRun(run: boolean): void { this.running = run; this.publish(); }
   key(code: string, down: boolean, repeat = false): boolean {
     if (repeat) return this.keys.has(code);
+    if (code === 'KeyE') {
+      if (!this.movement.setLift || (down && !this.allowed())) return false;
+      if (down !== this.keys.has(code)) this.movement.setLift(down);
+      if (down) this.keys.add(code); else this.keys.delete(code);
+      return true;
+    }
     if (!(code in directions) && !['ShiftLeft','ShiftRight','Space','KeyJ','KeyK'].includes(code)) return false;
     if (down && !this.allowed()) return false;
     if (code === 'KeyJ' || code === 'KeyK') {
@@ -46,7 +52,11 @@ export class MovementInput {
     if (this.allowed()) { this.pointers.set(id, direction); this.publish(); }
   }
   releasePointer(id: number): void { this.pointers.delete(id); this.publish(); }
-  clear(): void { this.keys.clear(); this.pointers.clear(); this.hands.clear(); this.movement.clearJumpInput(); this.publish(); }
+  clear(): void {
+    if (this.keys.has('KeyE')) this.movement.setLift?.(false);
+    this.keys.clear(); this.pointers.clear(); this.hands.clear();
+    this.movement.clearJumpInput(); this.publish();
+  }
   private publish(): void {
     let x = 0, z = 0;
     // Aliased keys represent one direction, so W+Up cannot double analog input.

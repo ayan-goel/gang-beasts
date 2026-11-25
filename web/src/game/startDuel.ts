@@ -46,6 +46,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     const canvas = container.querySelector('canvas')!;
     const playerInput = (id: Player) => new MovementInput({
       setInput: (x, z, run) => duel.set_input(id, x, z, run),
+      setLift: held => duel.set_lift(id, held),
       setJump: held => duel.set_jump(id, held),
       clearJumpInput: () => duel.clear_jump(id),
       setHand: (side, held) => duel.set_hand(id, side, held),

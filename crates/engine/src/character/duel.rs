@@ -28,6 +28,7 @@ pub struct Duel {
     definition: CharacterDefinition,
     presets: MotorPresets,
     impact: crate::combat::ImpactTuning,
+    lifting: [bool; 2],
     grips: super::duel_grips::Grips,
     hits: Vec<super::StrikeHit>,
     physics: PhysicsConfig,
@@ -56,6 +57,7 @@ impl Duel {
             definition,
             presets: MotorPresets::bundled()?,
             impact: crate::combat::ImpactTuning::bundled()?,
+            lifting: [false; 2],
             hits: Vec::with_capacity(4),
             grips: super::duel_grips::Grips::new()?,
             physics,
@@ -83,13 +85,16 @@ impl Duel {
     pub fn step(&mut self) {
         // Both controllers publish their bounded commands before the one room-wide
         // solve. Stepping per fighter would double gravity and age contacts unevenly.
-        for fighter in &mut self.fighters {
-            fighter.prepare(
+        for id in [FighterId::First, FighterId::Second] {
+            let lifting = [Hand::Left, Hand::Right]
+                .map(|h| self.lifting[id as usize] && self.grip(id, h).is_some());
+            self.fighters[id as usize].prepare(
                 &mut self.world,
                 &self.definition,
                 &self.physics,
                 self.tick,
                 &self.presets,
+                lifting,
             );
         }
         let contacts = super::duel_contacts::ContactFrame::capture(&self.world, &self.fighters);
@@ -119,6 +124,9 @@ impl Duel {
         self.fighters[who as usize]
             .walking
             .set_input(direction, running)
+    }
+    pub fn set_lift(&mut self, who: FighterId, held: bool) {
+        self.lifting[who as usize] = held;
     }
     pub fn set_jump(&mut self, who: FighterId, held: bool) {
         self.fighters[who as usize].walking.set_jump(held);
@@ -180,3 +188,7 @@ impl Duel {
         *self = Self::new(self.physics.clone()).expect("validated duel configuration");
     }
 }
+
+#[cfg(test)]
+#[path = "duel_lift_tests.rs"]
+mod lift_tests;

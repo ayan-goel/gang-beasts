@@ -70,6 +70,10 @@ impl LocalDuel {
             .set_input(fighter(who)?, [axis(x)?, axis(z)?], boolean(run)?)
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
+    pub fn set_lift(&mut self, who: JsValue, held: JsValue) -> Result<(), JsValue> {
+        self.duel.set_lift(fighter(who)?, boolean(held)?);
+        Ok(())
+    }
     pub fn set_jump(&mut self, who: JsValue, held: JsValue) -> Result<(), JsValue> {
         self.duel.set_jump(fighter(who)?, boolean(held)?);
         Ok(())

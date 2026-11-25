@@ -8,6 +8,7 @@ mod duel_fighter;
 mod duel_grips;
 mod grip_contact;
 mod grip_joint;
+mod lifting;
 pub use duel::{Duel, FighterId};
 pub use duel_contacts::StrikeHit;
 pub use duel_grips::GripState;

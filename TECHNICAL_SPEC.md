@@ -658,6 +658,8 @@ Lift raises gripping-arm targets and applies bounded torso assistance. Opponent 
 
 Release removes grips while preserving target linear/angular momentum. Optional release assistance is a small capped impulse aligned with the existing swing/intended direction. Apply it once per throw episode and target, not once for each hand. When only one hand releases, the remaining grip stays valid; avoid injecting the full two-hand throw bonus. Record the impulse in events/replays. Never guarantee an arbitrary travel distance or teleport the target outside an arena.
 
+Local sparring uses E for Coral and slash for Blue. Each gripping arm can request up to 400 N of upward assistance on fixed or kinematic footing. The hand receives 75% of that budget and the lifter’s chest receives 25%. Losing footing disables the assistance while retaining internal arm targets. The initial release preset uses existing momentum without a bonus impulse. [Controller and test evidence](docs/slices/10a-lift-release.md).
+
 ### 13.9 Climbing
 
 Basic sequence: grab a ledge → press/hold pull input → drive elbow/shoulder targets and bounded upward/inward assistance → align torso → clear the ledge → regain support.
