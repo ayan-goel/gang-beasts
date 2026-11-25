@@ -6,6 +6,10 @@ use crate::TICK_SECONDS;
 use rapier3d::na::RealField;
 use rapier3d::prelude::*;
 
+#[cfg(test)]
+#[path = "walking_controller_tests.rs"]
+mod tests;
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct LocomotionState {
     pub motor_strength: f32,
@@ -40,6 +44,7 @@ pub(super) struct WalkingController {
     support: BalanceConfig,
     intent: Vector<Real>,
     support_motion: SupportMotion,
+    reversal: super::reversal::ReversalBrake,
     running: bool,
     blend: f32,
     braking_ticks: u32,
@@ -53,6 +58,7 @@ impl WalkingController {
             support: BalanceConfig::bundled().expect("bundled support config"),
             intent: Vector::zeros(),
             support_motion: SupportMotion::default(),
+            reversal: Default::default(),
             running: false,
             blend: 0.0,
             braking_ticks: 0,
@@ -62,6 +68,7 @@ impl WalkingController {
     pub fn reset(&mut self) {
         self.intent = Vector::zeros();
         self.support_motion = SupportMotion::default();
+        self.reversal = Default::default();
         self.running = false;
         self.blend = 0.0;
         self.braking_ticks = 0;
@@ -79,8 +86,13 @@ impl WalkingController {
         } else if vector.norm_squared() > 0.0 {
             self.braking_ticks = 0;
         }
-        self.intent = vector / vector.norm().max(1.0);
-        self.running = running;
+        let next = vector / vector.norm().max(1.0);
+        self.intent = next;
+        // Neutral UI events clear the run flag, but changing cadence mid-stride
+        // perturbs a braking footfall. Keep cadence until a new movement request.
+        if self.intent.norm_squared() > 0.0 {
+            self.running = running;
+        }
         Ok(())
     }
     pub fn advance(&mut self, rig: &mut PassiveRagdoll, enabled: bool) -> [Rotation<Real>; 14] {
@@ -114,6 +126,7 @@ impl WalkingController {
         let upright = (root.rotation() * Vector::y()).y > self.config.minimum_upright_y;
         if count == 0 || !upright {
             self.support_motion = SupportMotion::default();
+            self.reversal = Default::default();
             self.blend = 0.0;
             self.state.motor_strength =
                 (strength - TICK_SECONDS / self.config.motor_release_s).max(0.0);
@@ -144,12 +157,20 @@ impl WalkingController {
             self.state.motor_strength =
                 (self.state.motor_strength - TICK_SECONDS / self.config.motor_release_s).max(0.0);
         }
+        let relative_velocity = velocity - surface;
+        let reversal_weight = self.reversal.advance(
+            self.intent,
+            relative_velocity,
+            self.config.maximum_acceleration_m_s2 * TICK_SECONDS,
+            self.config.braking_ticks,
+        );
+        let intent = self.intent * (1.0 - reversal_weight);
         let speed = if self.running {
             self.config.run_speed_m_s
         } else {
             self.config.walk_speed_m_s
         };
-        let desired = self.intent * speed + surface;
+        let desired = intent * speed + surface;
         let mut acceleration = (desired - velocity) / self.config.velocity_response_s;
         acceleration.y = 0.0;
         // A short release brake gives way to weaker velocity damping. Neither
@@ -168,33 +189,37 @@ impl WalkingController {
             acceleration += carry / TICK_SECONDS;
         }
         acceleration = acceleration.cap_magnitude(self.config.maximum_acceleration_m_s2);
-        let local = root.rotation().inverse() * self.intent;
+        let local = root.rotation().inverse() * intent;
         let forward = root.rotation() * -Vector::z();
-        if self.intent.norm_squared() > 0.0 {
+        if intent.norm_squared() > 0.0 {
             // Rapier's enhanced-determinism feature selects libm through RealField.
             // Native f32 intrinsics can round differently from WASM and diverge.
             let angle = <f32 as RealField>::atan2(
-                forward.z * self.intent.x - forward.x * self.intent.z,
-                forward.x * self.intent.x + forward.z * self.intent.z,
+                forward.z * intent.x - forward.x * intent.z,
+                forward.x * intent.x + forward.z * intent.z,
             );
             self.state.turn_torque = (angle * self.config.turn_stiffness_nm_rad
                 - root.angvel().y * self.config.turn_damping_nm_s_rad)
                 .clamp(-self.config.turn_cap_nm, self.config.turn_cap_nm);
         }
+        self.state.turn_torque *= 1.0 - reversal_weight;
         let direction = acceleration.try_normalize(0.001).unwrap_or(Vector::zeros());
         let lean = (root.rotation() * Vector::y()).dot(&direction);
         let lean_rate = root.angvel().dot(&Vector::y().cross(&direction));
-        // Release braking can oppose foot drag while slowing the torso. Active
-        // steering retains its existing allocation; direction changes need gait control.
-        let braking = !idle && self.intent.norm_squared() == 0.0;
-        let relative = velocity - surface;
-        let horizontal = vector![relative.x, 0.0, relative.z];
+        // Release and reversal braking counter foot drag while slowing the torso.
+        // Ordinary steering retains its nonnegative foot allocation.
+        let brake_weight = if !idle && self.intent.norm_squared() == 0.0 {
+            1.0
+        } else {
+            reversal_weight
+        };
+        let horizontal = vector![relative_velocity.x, 0.0, relative_velocity.z];
         let motion_speed = horizontal.norm();
         let resolved =
             (motion_speed / (self.config.maximum_acceleration_m_s2 * TICK_SECONDS)).min(1.0);
         let motion = horizontal.try_normalize(0.000001).unwrap_or(direction);
-        let friction_alignment = if braking {
-            1.0 + resolved * (motion.dot(&direction) - 1.0)
+        let friction_alignment = if brake_weight > 0.0 {
+            1.0 + brake_weight * resolved * (motion.dot(&direction) - 1.0)
         } else {
             1.0
         };
@@ -214,7 +239,14 @@ impl WalkingController {
                 / acceleration.norm().max(0.001)
                 + self.config.drive_tilt_gain * lean
                 + self.config.drive_tilt_damping_s * lean_rate)
-                .clamp(if braking { -1.0 } else { 0.0 }, 1.0)
+                .clamp(
+                    if brake_weight > 0.0 {
+                        -brake_weight
+                    } else {
+                        0.0
+                    },
+                    1.0,
+                )
         };
         // Counteracting foot friction may require an opposing foot impulse.
         // Normalize both shares so their absolute sum keeps the original budget.
@@ -241,7 +273,7 @@ impl WalkingController {
         }
         rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]]
             .apply_torque_impulse(Vector::y() * self.state.turn_torque * TICK_SECONDS, true);
-        self.blend += (self.intent.norm() - self.blend) * (TICK_SECONDS / self.config.gait_blend_s);
+        self.blend += (intent.norm() - self.blend) * (TICK_SECONDS / self.config.gait_blend_s);
         let frequency = if self.running {
             self.config.run_frequency_hz
         } else {

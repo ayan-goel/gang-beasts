@@ -2,6 +2,8 @@
 
 Date: November 25, 2026. Status: implemented; verification is recorded in [slice 06c2a](../slices/06c2a-native-slopes.md). Scope: the native locomotion controller, not general terrain acceptance.
 
+**Extension:** [ADR 0012](0012-reversal-braking.md) adds bounded reversal braking to the signed-allocation eligibility described here. The original release-only policy below records this decision’s historical scope.
+
 ## Problem
 
 The flat gait requests level soles and does not account for the height change along a stride. The original +15° fixture fell during idle at tick 115 even after increasing spawn clearance to 0.08 m and proving both feet initially clear of the surface. The short original spawn at 0.04 m penetrated the uphill toe by about 14 mm, so it was unsuitable for attributing the failure solely to control.

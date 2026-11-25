@@ -13,6 +13,7 @@ mod motor_tests;
 mod parts;
 mod passive;
 mod pose;
+mod reversal;
 mod rig;
 #[cfg(test)]
 mod rig_tests;

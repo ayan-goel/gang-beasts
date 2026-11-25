@@ -1,6 +1,9 @@
 #[path = "slope_contract_tests.rs"]
 mod contracts;
 
+#[path = "turning_tests.rs"]
+mod turning;
+
 use super::*;
 use rapier3d::na::ComplexField;
 use rapier3d::prelude::*;

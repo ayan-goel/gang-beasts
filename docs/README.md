@@ -16,7 +16,8 @@
 - [Browser locomotion](slices/06b-browser-locomotion.md): movement input, native/WASM parity, live gait targets and input/resource lifecycle.
 - [Moving-support transitions](slices/06c1-moving-supports.md): bounded native deck response, impact compliance and support removal.
 - [Native slope gait](slices/06c2a-native-slopes.md): supported leg/sole targets and bounded braking on inclined planes.
-- [Open terrain scenarios](verification/terrain-gaps.md): remaining slope, stair and reversal reproductions.
+- [Reversal braking](slices/06c2b1-reversals.md): tick-sampled direction changes, bounded braking, neutral key gaps and native/WASM evidence.
+- [Open terrain scenarios](verification/terrain-gaps.md): remaining slope, stair and stop-phase reproductions.
 - [Foundation evidence](verification/foundation.md): native/WASM tests, build identity and browser smoke.
 - [Decisions](decisions/): numbered records of context, alternatives, and consequences.
 - [Slices](slices/): behavior, contracts, tests, and remaining work for each completed increment.
