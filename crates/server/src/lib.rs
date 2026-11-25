@@ -6,3 +6,6 @@ mod room;
 
 pub use inbox::SubmitError;
 pub use room::Room;
+
+mod snapshot;
+pub use snapshot::RoomFrame;

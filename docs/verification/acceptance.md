@@ -15,7 +15,7 @@ No release criteria have passed yet. Update each row with a slice, build/config 
 | Skyline mechanics/reset | [Native Skyline fixtures](../slices/11a-skyline-physics.md) exercise movable crates, timed panel failure, sensor versus root crossing, and full reconstruction. Ledge gameplay and online acceptance remain open. |
 | Camera readability | [Local group framing](../slices/12b-play-skyline.md) checks portrait/landscape view bounds and follows both visible fighters. Occlusion, spectating and human readability remain open. |
 | Server authority | [Headless room fixtures](../slices/14a-room-input.md) apply validated intent to the native solver, reproduce a physical ring-out, and reject stale-round submissions. Transport, session authorization and multiclient acceptance remain open. |
-| Smooth multiplayer/latency | Pending |
+| Smooth multiplayer/latency | Chromium decodes five [native room captures](../slices/14a-room-input.md#state-publication) through physical grip, score, reset and panel retirement. Live socket, interpolation and latency tests remain open. |
 | Round/match scoring | [Local melee](../slices/12a-local-rounds.md) verifies three real ring-outs, simultaneous eliminations and deadline draws. [The browser match](../slices/12b-play-skyline.md) exercises keyboard ring-outs and rematch. Online client agreement pending. |
 | Disconnect/reconnect/host transfer | Pending |
 | Repeated rematch | [Local round fixtures](../slices/12a-local-rounds.md) verify score, body, prop and round identity reset. Endurance and network baselines pending. |

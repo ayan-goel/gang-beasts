@@ -1,14 +1,33 @@
 use super::{Snapshot, SnapshotError};
 use crate::VERSION;
 
+pub struct SharedSnapshot(Vec<u8>);
+
+impl SharedSnapshot {
+    pub fn for_recipient(&self, applied: Option<u32>) -> Vec<u8> {
+        let mut bytes = self.0.clone();
+        // Only the full/ack flags and recipient sequence vary between recipients.
+        bytes[2..4].copy_from_slice(&flags(applied).to_le_bytes());
+        bytes[8..12].copy_from_slice(&applied.unwrap_or(0).to_le_bytes());
+        bytes
+    }
+}
+
+fn flags(applied: Option<u32>) -> u16 {
+    if applied.is_some() { 3 } else { 1 }
+}
+
 impl Snapshot {
+    pub fn encode_shared(&self) -> Result<SharedSnapshot, SnapshotError> {
+        Ok(SharedSnapshot(self.encode()?))
+    }
+
     pub fn encode(&self) -> Result<Vec<u8>, SnapshotError> {
         self.validate()?;
         let gameplay = 24 + 24 * self.fighters.len();
         let mut bytes = Vec::with_capacity(20 + 32 * self.bodies.len() + gameplay);
-        let flags = if self.applied.is_some() { 3u16 } else { 1 };
         bytes.extend([2, VERSION]);
-        bytes.extend(flags.to_le_bytes());
+        bytes.extend(flags(self.applied).to_le_bytes());
         for n in [self.tick, self.applied.unwrap_or(0), 0] {
             bytes.extend(n.to_le_bytes());
         }

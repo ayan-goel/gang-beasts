@@ -1,4 +1,5 @@
 mod encode;
+pub use encode::SharedSnapshot;
 
 pub const ARENA_BASE: u32 = 1 << 16;
 pub const MAX_BODIES: usize = 256;
