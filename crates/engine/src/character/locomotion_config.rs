@@ -16,6 +16,7 @@ pub struct LocomotionConfig {
     pub turn_stiffness_nm_rad: f32,
     pub turn_damping_nm_s_rad: f32,
     pub turn_cap_nm: f32,
+    pub stopping_moment_cap_nm: f32,
     pub braking_ticks: u32,
     pub motor_release_s: f32,
     pub settle_speed_m_s: f32,
@@ -44,7 +45,7 @@ impl LocomotionConfig {
         Ok(config)
     }
     pub fn validate(&self) -> Result<(), CharacterError> {
-        if self.schema_version != 1
+        if self.schema_version != 2
             || self.run_speed_m_s < self.walk_speed_m_s
             || self.braking_ticks > 120
         {
@@ -67,6 +68,7 @@ impl LocomotionConfig {
             (self.turn_stiffness_nm_rad, 0.0, 100.0),
             (self.turn_damping_nm_s_rad, 0.0, 20.0),
             (self.turn_cap_nm, 0.0, 30.0),
+            (self.stopping_moment_cap_nm, 0.0, 120.0),
             (self.drive_tilt_gain, 0.0, 4.0),
             (self.motor_release_s, 0.1, 2.0),
             (self.settle_speed_m_s, 0.01, 0.5),

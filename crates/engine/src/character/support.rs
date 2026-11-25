@@ -16,6 +16,8 @@ fn current_pose(world: &PhysicsWorld, collider: &Collider) -> Isometry<Real> {
 #[derive(Clone, Copy, Debug)]
 pub(super) struct FootSupport {
     pub velocity: Vector<Real>,
+    pub angular_velocity: Vector<Real>,
+    pub contact_point: Point<Real>,
     pub normal: Vector<Real>,
     pub friction: f32,
     collider: ColliderHandle,
@@ -105,6 +107,10 @@ pub(super) fn foot_support(
                         .min_by(f32::total_cmp)
                         .unwrap_or(0.0),
                     velocity: surface_velocity,
+                    contact_point: contact.point2,
+                    angular_velocity: other
+                        .parent()
+                        .map_or(Vector::zeros(), |body| *world.bodies[body].angvel()),
                     normal: *contact.normal2,
                     collider: other_handle,
                     distance: contact.dist,

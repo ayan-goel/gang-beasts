@@ -13,22 +13,25 @@ test('walking WASM validates intent atomically and preserves its variant and own
     }
     for(let step=0;step<60;step++) {rig.step();reference.step();}
     const unchanged = Array.from(rig.body_states()), expected = Array.from(reference.body_states());
-    const owned = [rig.movement_state(), rig.pose_targets()] as Float32Array[];
+    rig.set_movement(0,0,false); rig.step();
+    const owned = [rig.movement_state(), rig.pose_targets(), rig.stopping_moment()] as Float32Array[];
     const retained = owned.map(v=>Array.from(v));
     rig.set_enabled(false);
     rig.configure(JSON.stringify({schema_version:1,gravity_y:-6,solver_iterations:12}));
-    const configured = {state:Array.from(rig.movement_state()),enabled:rig.controller_state()[0],tick:String(rig.tick()),poses:Array.from(rig.pose_targets())};
+    const configured = {state:Array.from(rig.movement_state()),moment:Array.from(rig.stopping_moment()),enabled:rig.controller_state()[0],tick:String(rig.tick()),poses:Array.from(rig.pose_targets())};
     rig.reset(); rig.free(); reference.free();
     const unsupported=[];
     for(const fixture of [new LocalRagdoll(config), LocalRagdoll.standing(config)]) {
       let error=false; try {fixture.set_movement(1,0,false);}catch{error=true;}
-      unsupported.push([fixture.movement_state().length,error]);fixture.free();
+      unsupported.push([fixture.movement_state().length,fixture.stopping_moment().length,error]);fixture.free();
     }
     return {rejected,unchanged,expected,retained,afterFree:owned.map(v=>Array.from(v)),configured,unsupported};
   });
   expect(result.rejected).toEqual(Array(7).fill(true)); expect(result.unchanged).toEqual(result.expected);
+  expect(Math.hypot(...result.retained[2]!)).toBeGreaterThan(1);
   expect(result.retained).toEqual(result.afterFree); expect(result.configured.tick).toBe('0'); expect(result.configured.enabled).toBe(0);
   expect(result.configured.state).toEqual(Array(11).fill(0));
+  expect(result.configured.moment).toEqual([0,0,0]);
   expect(result.configured.poses).toEqual(Array.from({length:14},()=>[0,0,0,1]).flat());
-  expect(result.unsupported).toEqual([[0,true],[0,true]]);
+  expect(result.unsupported).toEqual([[0,0,true],[0,0,true]]);
 });

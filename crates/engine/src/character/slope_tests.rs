@@ -4,6 +4,9 @@ mod contracts;
 #[path = "turning_tests.rs"]
 mod turning;
 
+#[path = "stopping_tests.rs"]
+mod stopping;
+
 use super::*;
 use rapier3d::na::ComplexField;
 use rapier3d::prelude::*;
@@ -69,6 +72,10 @@ fn bounded(rig: &LocomotionRagdoll, normal: Vector<Real>) {
     assert!(Vector::from(rig.state().acceleration).norm() <= 12.0001);
     assert_eq!(rig.state().acceleration[1], 0.0);
     assert!(rig.state().turn_torque.abs() <= 20.0001);
+    assert!(
+        Vector::from(rig.state().stopping_moment).norm()
+            <= 120.0 * rig.state().motor_strength + 0.001
+    );
     assert!(Vector::from(rig.pose.balance_state().unwrap().torque).norm() <= 30.0001);
     for joint in rig.pose.rig.joint_states() {
         assert!(joint.anchor_error < 0.05);

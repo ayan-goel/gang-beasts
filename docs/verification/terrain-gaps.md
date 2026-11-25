@@ -26,11 +26,23 @@ On the ordinary flat fixture, settle 60 ticks. Alternate +X and −X input every
 
 The original walk case failed on the fourth leg, at tick 43 of that leg. The later flat-plane fixture reproduced walking/running falls at total ticks 225/127. [Slice 06c2b1](../slices/06c2b1-reversals.md) adds tick-sampled reversal braking and preserves the eight-leg, 45-tick, posture and signed-speed requirements. Its evidence includes four world orientations, default spawn, analog updates, keyboard neutral gaps and native/WASM traces. This does not certify arbitrary curved turns or reversing on terrain.
 
-## Varied stopping phases: open
+## Varied stopping phases: addressed within the recorded scope
 
 On the 30 m half-extent flat fixture with spawn elevation 0.08 m, settle 60 ticks, run +X for 45 ticks, then release to `(0,0,false)` for 180 ticks. The original controller falls even without a reversal. A related case reverses to −X for five ticks before releasing; it failed the head >1.1 m gate at total tick 223 (head 1.095 m). Keep both cases and the existing effort/finite-state bounds.
 
-Diagnostics show speed nearly reaches zero with both feet behind the pelvis, after which it tips forward. This is a support-placement/capture deficit, not stale queued input. Earlier successful release fixtures used different directions and phases; they do not cover this case. A temporary low-amplitude catch-step experiment improved this one case but is not implemented or broadly verified. Test varied stop phases, terrain stops, impact compliance and signed momentum before accepting a correction.
+Diagnostics showed speed nearly reaching zero with both feet behind the pelvis, followed by forward tipping. [Slice 06c2b2](../slices/06c2b2-stopping.md) and [ADR 0013](../decisions/0013-stopping-force-pair.md) add a horizontal force pair with separately measured/capped moment. The original cases, 32 phase cases and 84 broader flat/forward-slope cases retain posture, speed, finite-state and force/effort gates. Sixty-four short deck cases additionally require motor and moment release. This evidence does not certify arbitrary terrain or human feel.
+
+## Rotating-deck traversal: open
+
+The tracked `longer_rotating_deck_runs_keep_posture_when_released` test is explicitly ignored by default because it remains a known movement-acceptance failure; it is not a passed or waived release gate. Spawn at [0,0,0] on a kinematic velocity-driven deck with half extents [6,.5,6], center [0,-.5,0], angular velocity [0,.4,0]. Settle 60, run each world cardinal for 60 ticks, then release 360. Require head >1.1 m, finite state, bounded command/moment, anchor error <.05 m and supported relaxation. Current +X fails head clearance at release tick 11.
+
+Independent comparison against `d9e6533` reproduced failure at release tick 10. Keeping run input held instead of releasing also failed after another 10/11/10/15 ticks for the four directions. This is an existing moving traversal deficiency that appears around the same motion phase, not caused by the new settling predicate. Shorter stops do not establish general moving traversal. Continue this regression before closing movement acceptance.
+
+```sh
+cargo test --locked --release -p brawler-engine --lib longer_rotating_deck_runs -- --ignored --nocapture
+```
+
+Independent backward-slope probes also retain failures, including some during movement before release. They remain distinct from the verified forward uphill/downhill cases; do not describe these as general slope support.
 
 ## Browser and human gates
 

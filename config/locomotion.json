@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "walk_speed_m_s": 2.5,
   "run_speed_m_s": 4.5,
   "maximum_acceleration_m_s2": 12.0,
@@ -11,6 +11,7 @@
   "turn_stiffness_nm_rad": 50.0,
   "turn_damping_nm_s_rad": 5.0,
   "turn_cap_nm": 20.0,
+  "stopping_moment_cap_nm": 120.0,
   "drive_tilt_gain": 2.0,
   "drive_tilt_damping_s": 0.2,
   "braking_ticks": 60,

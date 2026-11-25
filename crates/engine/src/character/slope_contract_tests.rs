@@ -81,3 +81,117 @@ fn braking_counteracts_foot_drag_without_exceeding_the_absolute_impulse_budget()
         assert_eq!(total.y, 0.0);
     }
 }
+
+#[test]
+fn stopping_pair_limits_actual_moment_even_with_zero_net_acceleration() {
+    for strength in [0.25, 1.0] {
+        let (mut walking, _, _) = slope(0.0, 0.0);
+        for _ in 0..60 {
+            walking.step();
+        }
+        let rig = &mut walking.pose.rig;
+        for handle in rig.bodies {
+            rig.world.bodies[handle].set_linvel(Vector::zeros(), true);
+            rig.world.bodies[handle].set_angvel(Vector::zeros(), true);
+        }
+        rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]]
+            .set_rotation(Rotation::from_axis_angle(&Vector::x_axis(), 0.4), true);
+        let mut config = LocomotionConfig::bundled().unwrap();
+        config.stopping_moment_cap_nm = 30.0;
+        let mut controller = crate::character::walking_controller::WalkingController::new(config);
+        controller.state.motor_strength = strength;
+        let before = rig.body_states();
+        let center = rig.bodies.iter().fold(Vector::zeros(), |sum, h| {
+            let body = &rig.world.bodies[*h];
+            sum + body.center_of_mass().coords * body.mass()
+        }) / 40.0;
+        let positions = rig
+            .bodies
+            .map(|h| rig.world.bodies[h].center_of_mass().coords);
+        controller.advance(rig, true);
+        let mut total = Vector::zeros();
+        let mut absolute = 0.0;
+        let mut angular = Vector::zeros();
+        for (index, (old, new)) in before.iter().zip(rig.body_states()).enumerate() {
+            assert_eq!(old.state.position, new.state.position);
+            assert_eq!(old.state.rotation, new.state.rotation);
+            let impulse = (Vector::from(new.state.linear_velocity)
+                - Vector::from(old.state.linear_velocity))
+                * old.state.mass;
+            total += impulse;
+            absolute += impulse.norm();
+            angular += (positions[index] - center).cross(&impulse);
+            assert_eq!(impulse.y, 0.0);
+        }
+        assert!(total.norm() < 0.0001);
+        assert!(absolute <= 8.0001);
+        let moment = angular / crate::TICK_SECONDS;
+        assert!((moment - Vector::from(controller.state.stopping_moment)).norm() < 0.001);
+        assert!(moment.norm() > 20.0 * strength);
+        assert!(
+            moment.norm() <= 30.0 * strength + 0.001,
+            "moment {moment:?}, strength {strength}"
+        );
+    }
+}
+
+#[test]
+fn stopping_allocator_respects_zero_budgets_and_low_speed_continuity() {
+    let (mut walking, _, _) = slope(0.0, 0.0);
+    for _ in 0..60 {
+        walking.step();
+    }
+    let contacts = supports(&walking);
+    assert!(contacts.iter().all(Option::is_some));
+    let config = LocomotionConfig::bundled().unwrap();
+    for contacts in [contacts, [contacts[0], None], [None, contacts[1]]] {
+        for (acceleration, cap, strength) in
+            [(0.0, 120.0, 1.0), (12.0, 0.0, 1.0), (12.0, 120.0, 0.0)]
+        {
+            let mut tuning = config.clone();
+            tuning.maximum_acceleration_m_s2 = acceleration;
+            tuning.stopping_moment_cap_nm = cap;
+            let drive = crate::character::stopping_drive::allocate(
+                &walking.pose.rig,
+                Vector::zeros(),
+                Vector::x(),
+                contacts,
+                strength,
+                &tuning,
+            );
+            assert_eq!(drive.foot, Vector::zeros());
+            assert_eq!(drive.moment, Vector::zeros());
+            assert_eq!(drive.net, Vector::zeros());
+        }
+        let command = |v| {
+            crate::character::stopping_drive::allocate(
+                &walking.pose.rig,
+                Vector::zeros(),
+                Vector::x() * v,
+                contacts,
+                1.0,
+                &config,
+            )
+        };
+        assert!((command(0.000001).foot - command(-0.000001).foot).norm() < 0.001);
+        let low_gravity = crate::character::PassiveRagdoll::new(
+            PhysicsConfig {
+                gravity_y: -0.1,
+                ..PhysicsConfig::default()
+            },
+            CharacterDefinition::bundled().unwrap(),
+            [0.0, 0.08, 0.0],
+        )
+        .unwrap();
+        let drive = crate::character::stopping_drive::allocate(
+            &low_gravity,
+            Vector::zeros(),
+            Vector::x(),
+            contacts,
+            1.0,
+            &config,
+        );
+        assert!(drive.foot.norm() < 0.2);
+        assert!(drive.moment.norm() < 10.0);
+    }
+}

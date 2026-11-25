@@ -18,6 +18,7 @@ pub struct LocomotionState {
     pub feet: [bool; 2],
     pub phase: f32,
     pub turn_torque: f32,
+    pub stopping_moment: [f32; 3],
     pub targets: [[f32; 3]; 14],
 }
 
@@ -149,9 +150,18 @@ impl WalkingController {
             mass += body.mass();
         }
         velocity /= mass;
+        // Settling is relative to the support: riding a turning deck must not
+        // keep stopping actuators engaged solely because world-space yaw persists.
+        let surface_spin = supports
+            .iter()
+            .flatten()
+            .fold(Vector::zeros(), |sum, support| {
+                sum + support.angular_velocity
+            })
+            / count as f32;
         if idle
             && (velocity - surface).norm() < self.config.settle_speed_m_s
-            && root.angvel().norm() < self.config.settle_spin_rad_s
+            && (root.angvel() - surface_spin).norm() < self.config.settle_spin_rad_s
             && (root.rotation() * Vector::y()).y > self.config.settle_minimum_up_y
         {
             self.state.motor_strength =
@@ -250,25 +260,45 @@ impl WalkingController {
         };
         // Counteracting foot friction may require an opposing foot impulse.
         // Normalize both shares so their absolute sum keeps the original budget.
+        let stop_drive = if self.intent.norm_squared() == 0.0 && self.state.motor_strength > 0.0 {
+            Some(super::stopping_drive::allocate(
+                rig,
+                acceleration,
+                relative_velocity,
+                supports,
+                self.state.motor_strength,
+                &self.config,
+            ))
+        } else {
+            None
+        };
         acceleration /= 1.0 - fraction + fraction.abs();
+        if let Some(drive) = stop_drive {
+            acceleration = drive.net;
+            self.state.stopping_moment = drive.moment.into();
+        }
         self.state.acceleration = acceleration.into();
         // Tick-scoped assistance preserves the total linear impulse budget.
         for handle in rig.bodies {
             let body = &mut rig.world.bodies[handle];
-            body.apply_impulse(
-                acceleration * body.mass() * TICK_SECONDS * (1.0 - fraction),
-                true,
-            );
+            let impulse = if let Some(drive) = stop_drive {
+                (drive.net - drive.foot) * body.mass() * TICK_SECONDS
+            } else {
+                acceleration * body.mass() * TICK_SECONDS * (1.0 - fraction)
+            };
+            body.apply_impulse(impulse, true);
         }
         for (index, part) in [BodyPart::LeftFoot, BodyPart::RightFoot]
             .into_iter()
             .enumerate()
         {
             if supports[index].is_some() {
-                rig.world.bodies[rig.bodies[part.index()]].apply_impulse(
-                    acceleration * mass * TICK_SECONDS * fraction / count as f32,
-                    true,
-                );
+                let impulse = if let Some(drive) = stop_drive {
+                    drive.foot * mass * TICK_SECONDS / count as f32
+                } else {
+                    acceleration * mass * TICK_SECONDS * fraction / count as f32
+                };
+                rig.world.bodies[rig.bodies[part.index()]].apply_impulse(impulse, true);
             }
         }
         rig.world.bodies[rig.bodies[BodyPart::Pelvis.index()]]

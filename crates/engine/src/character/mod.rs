@@ -18,6 +18,7 @@ mod rig;
 #[cfg(test)]
 mod rig_tests;
 mod shape;
+mod stopping_drive;
 mod support;
 mod support_motion;
 mod terrain_gait;

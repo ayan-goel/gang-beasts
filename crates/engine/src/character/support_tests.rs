@@ -124,6 +124,7 @@ fn support_reports_velocity_at_the_current_contact_including_rotation() {
     let support = foot_support(&world, foot, &[foot], &BalanceConfig::bundled().unwrap()).unwrap();
     assert!((support.velocity - vector![1.0, 0.0, -1.0]).norm() < 1e-5);
     assert!(support.normal.y > 0.999);
+    assert_eq!(support.angular_velocity, vector![0.0, 2.0, 0.0]);
 }
 
 #[test]

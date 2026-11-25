@@ -49,6 +49,11 @@ impl LocalRagdoll {
             .walking()
             .map_or_else(Vec::new, |rig| rig.state().to_buffer().to_vec())
     }
+    pub fn stopping_moment(&self) -> Vec<f32> {
+        self.rig
+            .walking()
+            .map_or_else(Vec::new, |rig| rig.state().stopping_moment.to_vec())
+    }
     pub fn pose_targets(&self) -> Vec<f32> {
         if let Some(rig) = self.rig.walking() {
             return rig.pose_targets().into_iter().flatten().collect();

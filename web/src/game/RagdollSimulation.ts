@@ -24,7 +24,7 @@ export class RagdollSimulation implements SimulationPort, RigInspection {
         state: () => this.native.controller_state(), efforts: () => this.native.motor_efforts(),
         targets: () => this.native.motor_targets(), setEnabled: enabled => this.native.set_enabled(enabled),
       };
-      if (kind === 'locomotion') this.movement = { state: () => native.movement_state(), setInput: (x,z,run) => native.set_movement(x,z,run) };
+      if (kind === 'locomotion') this.movement = { state: () => native.movement_state(), stoppingMoment: () => native.stopping_moment(), setInput: (x,z,run) => native.set_movement(x,z,run) };
     }
     catch (error) { this.native.free(); throw error; }
   }
