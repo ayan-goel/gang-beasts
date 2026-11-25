@@ -83,6 +83,12 @@ async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: 
                             if !send(socket, vec![21, 1, 2]).await { return; }
                             Some(false)
                         }
+                        Some(Command::StartMatch) => {
+                            if let Err(reason) = super::matches::start(state, code, owner).await {
+                                if !send(socket, vec![25, 1, reason]).await { return; }
+                            }
+                            None
+                        }
                         Some(Command::SetReady(value)) => Some(value),
                         _ => return,
                     },
@@ -91,6 +97,19 @@ async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: 
                 }
             }
         };
+        if loaded && previous.is_some() {
+            let game = {
+                let mut dir = state.directory.lock().unwrap();
+                if dir.live_state(code, owner, None).is_none() {
+                    return;
+                }
+                dir.rooms.get(code).and_then(|r| r.game.clone())
+            };
+            if let Some(game) = game {
+                super::stream::play(socket, state, code, owner, game).await;
+                return;
+            }
+        }
         let (current, bytes) = {
             let mut directory = state.directory.lock().unwrap();
             let Some(current) = directory.live_state(code, owner, ready) else {
@@ -120,7 +139,7 @@ async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: 
     }
 }
 
-async fn send(socket: &mut WebSocket, bytes: Vec<u8>) -> bool {
+pub(super) async fn send(socket: &mut WebSocket, bytes: Vec<u8>) -> bool {
     matches!(
         timeout(
             Duration::from_secs(2),

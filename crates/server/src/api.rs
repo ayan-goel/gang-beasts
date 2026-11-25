@@ -48,7 +48,7 @@ pub fn api(pool: Arc<WorkerPool>) -> Result<Router, CharacterError> {
 pub fn api_for_origin(pool: Arc<WorkerPool>, origin: &str) -> Result<Router, CharacterError> {
     let map = MapDefinition::skyline()?;
     let state = ApiState {
-        pool,
+        pool: Arc::clone(&pool),
         catalog: Catalog {
             protocol_version: brawler_protocol::VERSION,
             engine_hash: ENGINE_HASH,
@@ -68,7 +68,7 @@ pub fn api_for_origin(pool: Arc<WorkerPool>, origin: &str) -> Result<Router, Cha
             get(|State(s): State<ApiState>| async move { Json(s.catalog) }),
         )
         .with_state(state)
-        .merge(crate::admission::routes(origin)?))
+        .merge(crate::admission::routes(origin, pool)?))
 }
 
 async fn readiness(State(s): State<ApiState>) -> impl axum::response::IntoResponse {

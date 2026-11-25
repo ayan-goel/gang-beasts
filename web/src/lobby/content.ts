@@ -2,7 +2,7 @@ import type { RigDefinition } from '../game/rigDefinition';
 import type { SkylineMap } from '../rendering/SkylineView';
 
 export interface SkylineContent {
-  map: SkylineMap;
+  map: SkylineMap & { schedule: { warn_tick: number; west_tick: number; east_tick: number; gust_tick: number; end_tick: number } };
   fighter: RigDefinition;
   engineHash: string;
   mapHash: string;

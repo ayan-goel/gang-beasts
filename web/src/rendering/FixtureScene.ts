@@ -8,6 +8,7 @@ import { fixtureTerrain } from './fixtureTerrain';
 import { JointOverlay } from './JointOverlay';
 
 interface SceneOptions {
+  color?: string;
   focusHeight?: number;
   followRig?: boolean;
   terrainBoxes?: Float32Array;
@@ -49,7 +50,7 @@ export class FixtureScene {
       this.camera.position.set(14, 13, 16);
       this.camera.lookAt(0, 0.8, 0);
       if (definition) {
-        this.rig = new RagdollView(definition);
+        this.rig = new RagdollView(definition, options.color);
         this.joints = new JointOverlay(definition.joints.length);
         this.scene.add(this.rig.root, this.joints.root);
         this.cube.visible = false;
@@ -100,8 +101,8 @@ export class FixtureScene {
     }
   }
 
-  addOpponent(definition: RigDefinition): void {
-    this.opponent = new RagdollView(definition, '#559ed8');
+  addOpponent(definition: RigDefinition, color = '#559ed8'): void {
+    this.opponent = new RagdollView(definition, color);
     this.scene.add(this.opponent.root);
     this.renderer.domElement.setAttribute('aria-label', this.skyline ? 'Two fighters on the Skyline rooftop' : 'Two fighters on the local sparring platform');
   }

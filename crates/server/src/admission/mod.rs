@@ -2,8 +2,10 @@ mod connection;
 mod content;
 mod directory;
 mod lobby;
+mod matches;
 mod sessions;
 mod socket;
+mod stream;
 mod types;
 
 use axum::{
@@ -26,12 +28,13 @@ use types::{Create, Empty, Fault, Join, PublicRoom, Seat};
 
 #[derive(Clone)]
 struct Admission {
+    pool: Arc<crate::WorkerPool>,
     directory: Arc<Mutex<Directory>>,
     origin: HeaderValue,
     sockets: Arc<tokio::sync::Semaphore>,
 }
 
-pub(crate) fn routes(origin: &str) -> Result<Router, CharacterError> {
+pub(crate) fn routes(origin: &str, pool: Arc<crate::WorkerPool>) -> Result<Router, CharacterError> {
     let uri: axum::http::Uri = origin
         .parse()
         .map_err(|_| CharacterError::Invalid("invalid public origin"))?;
@@ -47,6 +50,7 @@ pub(crate) fn routes(origin: &str) -> Result<Router, CharacterError> {
         ));
     }
     let state = Admission {
+        pool,
         directory: Arc::default(),
         sockets: Arc::new(tokio::sync::Semaphore::new(512)),
         origin: HeaderValue::from_str(origin.trim_end_matches('/'))

@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useLiveRoom } from './liveRoom';
 import { colors, errorText, leave, roster, type Roster } from './api';
+
+const OnlineMatch = lazy(() => import('../online/OnlineMatch'));
 
 export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => void }) {
   const [fallback, setFallback] = useState<Roster | null>(null);
   const [error, setError] = useState('');
-  const {connection, disconnected, load, setReady, reconnect} = useLiveRoom(code);
+  const {connection, disconnected, game, start, startError, load, setReady, reconnect} = useLiveRoom(code);
   const state = connection ?? (disconnected ? fallback : null);
   const mySlot = connection?.slot ?? fallback?.you;
   const myReady = !!(connection && (connection.ready & (1 << connection.slot)));
@@ -30,6 +32,8 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
     setLeaving(true);
     try { await leave(code); onLeave(); } catch (err) { setError(errorText(err)); setLeaving(false); }
   }
+  if (game) return <Suspense fallback={<p role="status">Opening Skyline…</p>}><OnlineMatch feed={game} exit={exit}/>{error && <p role="alert">{error}</p>}</Suspense>;
+  const canStart = connection?.players.length === 2 && connection.occupied === connection.ready;
   return <section className="room-panel">
     <h1>Room lobby</h1>
     <div className="room-code"><span>Room code</span><strong>{code}</strong></div>
@@ -48,7 +52,11 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
       : <button className="room-primary" disabled={!connection || load.loading} onClick={() => setReady(!myReady)}>
         {load.loading ? 'Loading Skyline…' : myReady ? 'Cancel ready' : 'Ready up'}
       </button>}
-    {(error || load.error) && <p role="alert">{error || load.error}</p>}
+    {connection?.host === mySlot && connection && <>
+      <button className="room-primary" disabled={!canStart} onClick={start}>Start match</button>
+      {!canStart && <small>{connection.players.length !== 2 ? 'Online matches currently need two players.' : 'Waiting for both players to ready up.'}</small>}
+    </>}
+    {(error || load.error || startError) && <p role="alert">{error || load.error || startError}</p>}
     <button className="room-secondary" onClick={exit} disabled={leaving}>{leaving ? 'Leaving…' : 'Leave room'}</button>
   </section>;
 }

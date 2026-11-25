@@ -56,6 +56,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 14c — verified native workers | Fixed-size worker pool and live snapshot delivery | Bounded catch-up, independent rooms, stale commands, shutdown and clean reuse |
 | 14d — verified HTTP service | Axum/Tokio listener with liveness, worker readiness and map catalog | In-process router and real loopback requests against the native binary |
 | 14 | Dedicated room server | Single owner, bounded queues, authoritative inputs, scheduling tests |
+| 15a — online startup | Two ready players enter one native match | Host authorization, real worker capacity, both views agree on round and score, reload |
 | 15 | Two-to-eight online clients | Interpolation, resync, backpressure and latency matrix |
 | 16a — verified private admission | Anonymous secure cookies, create/join and room metadata | Scoped retry, eight distinct seats, ninth rejected, real Chromium cookie isolation |
 | 16b — browser lobby | Create, join, copy invite, reload and leave | Separate browser sessions, host transfer, narrow viewport and switching rooms from an invite |

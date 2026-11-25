@@ -16,6 +16,9 @@ impl RoomFrame {
     pub fn tick(&self) -> u64 {
         self.tick
     }
+    pub fn for_spectator(&self) -> Vec<u8> {
+        self.world.for_recipient(None)
+    }
     pub fn for_recipient(&self, id: FighterId) -> Vec<u8> {
         self.world.for_recipient(self.applied[id as usize])
     }

@@ -13,6 +13,7 @@ pub(super) struct Member {
     color: u8,
 }
 pub(super) struct Lobby {
+    pub game: Option<std::sync::Arc<super::matches::Match>>,
     pub code: String,
     pub request: String,
     pub creator: SessionId,
@@ -43,6 +44,7 @@ impl Lobby {
             color: color.unwrap_or(0),
         });
         Self {
+            game: None,
             code,
             request,
             creator: session,
@@ -61,12 +63,25 @@ impl Lobby {
     pub fn metadata(&self) -> PublicRoom {
         PublicRoom {
             code: self.code.clone(),
-            phase: "lobby",
+            phase: if self.game.is_some() {
+                "match"
+            } else {
+                "lobby"
+            },
             capacity: self.capacity,
             players: self.members.iter().flatten().count(),
         }
     }
     pub fn update_host(&mut self, now: Instant) {
+        if self.game.as_ref().is_some_and(|g| {
+            !self
+                .members
+                .iter()
+                .flatten()
+                .any(|p| g.fighter(p.session).is_some())
+        }) {
+            self.game = None;
+        }
         if self.members[self.host].is_some() {
             return;
         }

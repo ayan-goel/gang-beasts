@@ -128,3 +128,75 @@ fn replacing_a_connection_or_reusing_a_seat_fences_late_messages_and_disconnects
     d.disconnect(code, successor);
     assert!(d.live_state(code, successor, None).is_none());
 }
+
+#[tokio::test]
+async fn only_a_ready_host_can_allocate_one_worker_for_the_current_roster() {
+    use std::sync::Arc;
+    let pool = Arc::new(crate::WorkerPool::new(1).unwrap());
+    let state = super::Admission {
+        pool: pool.clone(),
+        directory: Arc::default(),
+        origin: "http://localhost".parse().unwrap(),
+        sockets: Arc::new(tokio::sync::Semaphore::new(2)),
+    };
+    let now = Instant::now();
+    let (code, host, guest) = {
+        let mut directory = state.directory.lock().unwrap();
+        let a = issue(&mut directory, now);
+        let b = issue(&mut directory, now);
+        let a = directory.sessions.authenticate(&a, now).ok().unwrap();
+        let b = directory.sessions.authenticate(&b, now).ok().unwrap();
+        let (_, seat) = directory
+            .create(
+                a,
+                Create {
+                    request_id: "b".repeat(32),
+                    name: "Mint".into(),
+                    color: None,
+                    capacity: 8,
+                },
+            )
+            .ok()
+            .unwrap();
+        directory
+            .join(
+                b,
+                &seat.code,
+                Join {
+                    name: "Gold".into(),
+                    color: None,
+                },
+            )
+            .ok()
+            .unwrap();
+        let host = directory.connect(&seat.code, a).unwrap();
+        let guest = directory.connect(&seat.code, b).unwrap();
+        directory.live_state(&seat.code, host, Some(true)).unwrap();
+        (seat.code, host, guest)
+    };
+    assert_eq!(super::matches::start(&state, &code, host).await, Err(1));
+    state
+        .directory
+        .lock()
+        .unwrap()
+        .live_state(&code, guest, Some(true))
+        .unwrap();
+    assert_eq!(super::matches::start(&state, &code, guest).await, Err(1));
+    let busy = pool.open().unwrap();
+    assert_eq!(super::matches::start(&state, &code, host).await, Err(2));
+    drop(busy);
+    tokio::time::timeout(Duration::from_secs(2), async {
+        while pool.available() == 0 {
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .unwrap();
+    super::matches::start(&state, &code, host).await.unwrap();
+    assert_eq!(super::matches::start(&state, &code, host).await, Err(1));
+    let mut d = state.directory.lock().unwrap();
+    assert_eq!(d.metadata(&code).ok().unwrap().phase, "match");
+    d.leave(host.session, &code, now).ok().unwrap();
+    d.leave(guest.session, &code, now).ok().unwrap();
+    assert_eq!(d.metadata(&code).ok().unwrap().phase, "lobby");
+}

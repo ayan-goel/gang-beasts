@@ -1,0 +1,13 @@
+.rooms:has(.online-match) .room-layout { display: block; }
+.rooms:has(.online-match) .room-console { display: block; padding: 0; }
+.rooms:has(.online-match) figure { display: none; }
+.online-match { background: #19313c; position: relative; color: #faf7ee; }
+.online-header, .online-score { display:flex; gap: 1rem; align-items:center; flex-wrap:wrap; padding: .7rem clamp(1rem, 3vw, 3rem); }
+.online-header { justify-content:space-between; }
+.online-header h1 { margin:0; font-size:1.5rem; }
+.online-header button { color:inherit; background:transparent; border:1px solid #92acaf; padding:.4rem .8rem; }
+.online-scene { height:clamp(300px,65dvh,760px); width:100%; }
+.online-scene canvas { width:100%; height:100%; display:block; }
+.online-score { background:#19313c; }
+.online-score b,.online-callout { color:#f8c660; }
+.online-callout { position:absolute; top:30%; left:50%; transform:translateX(-50%); padding:.5rem 1rem; background:#19313c; font-size:2rem; }
