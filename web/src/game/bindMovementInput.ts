@@ -2,7 +2,7 @@ import type { MovementInput } from './MovementInput';
 
 export function bindMovementInput(canvas: HTMLCanvasElement, input: MovementInput) {
   canvas.tabIndex = 0;
-  canvas.setAttribute('aria-label', 'Movement viewport: WASD or arrow keys, Shift to run');
+  canvas.setAttribute('aria-description', 'Use WASD or arrow keys to move and Shift to run.');
   const keydown = (event: KeyboardEvent) => {
     if (event.ctrlKey || event.metaKey || event.altKey || event.repeat) return;
     if (input.key(event.code, true)) event.preventDefault();

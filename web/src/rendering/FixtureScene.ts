@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { RigDefinition } from '../game/rigDefinition';
 import { RagdollView } from './RagdollView';
+import { fixtureTerrain } from './fixtureTerrain';
 import { JointOverlay } from './JointOverlay';
 
 export class FixtureScene {
@@ -19,7 +20,7 @@ export class FixtureScene {
   private readonly rig?: RagdollView;
   private readonly joints?: JointOverlay;
 
-  constructor(private readonly container: HTMLElement, definition?: RigDefinition, rigFocusHeight = 1.7, private readonly followRig = false) {
+  constructor(private readonly container: HTMLElement, definition?: RigDefinition, rigFocusHeight = 1.7, private readonly followRig = false, terrainBoxes?: Float32Array) {
     try {
       this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
       this.renderer.shadowMap.enabled = true;
@@ -36,17 +37,11 @@ export class FixtureScene {
         this.cube.visible = false;
         this.camera.position.set(4, 3.8, 6);
         this.camera.lookAt(0, rigFocusHeight, 0);
-        this.renderer.domElement.setAttribute('aria-label', 'Live fifteen-body physical ragdoll on a platform');
+        this.renderer.domElement.setAttribute('aria-label', terrainBoxes && terrainBoxes.length > 6 ? 'Live physical ragdoll on low stairs' : 'Live fifteen-body physical ragdoll on a platform');
       }
 
-      const platform = new THREE.Mesh(
-        new THREE.BoxGeometry(12, 1, 12),
-        new THREE.MeshStandardMaterial({ color: '#789a96', roughness: 0.95 }),
-      );
-      platform.position.y = -0.5;
-      platform.receiveShadow = true;
       this.cube.castShadow = true;
-      this.scene.add(platform, this.cube);
+      this.scene.add(fixtureTerrain(terrainBoxes), this.cube);
       this.colliders.frustumCulled = false;
       this.colliders.renderOrder = 1;
       this.scene.add(this.colliders);

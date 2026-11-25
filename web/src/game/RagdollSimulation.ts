@@ -6,16 +6,18 @@ import type { MotorConfiguration, RigControl } from './motorInspection';
 
 export class RagdollSimulation implements SimulationPort, RigInspection {
   private readonly native: LocalRagdoll;
+  readonly terrainBoxes: Float32Array;
   readonly definition: RigDefinition;
   readonly rig = this;
   readonly controller?: RigControl;
   readonly movement?: MovementPort;
   selectedBody = 2;
 
-  constructor(configuration: string, kind: 'ragdoll' | 'standing' | 'locomotion' = 'ragdoll') {
-    this.native = kind === 'locomotion' ? LocalRagdoll.locomotion(configuration) : kind === 'standing' ? LocalRagdoll.standing(configuration) : new LocalRagdoll(configuration);
+  constructor(configuration: string, kind: 'ragdoll' | 'standing' | 'locomotion' | 'stairs' = 'ragdoll') {
+    this.native = kind === 'ragdoll' ? new LocalRagdoll(configuration) : LocalRagdoll[kind](configuration);
     const native = this.native;
     try {
+      this.terrainBoxes = native.terrain_boxes();
       this.definition = JSON.parse(this.native.definition_json()) as RigDefinition;
       const motorJson = this.native.motor_configuration_json();
       if (motorJson) this.controller = {
@@ -24,7 +26,7 @@ export class RagdollSimulation implements SimulationPort, RigInspection {
         state: () => this.native.controller_state(), efforts: () => this.native.motor_efforts(),
         targets: () => this.native.motor_targets(), setEnabled: enabled => this.native.set_enabled(enabled),
       };
-      if (kind === 'locomotion') this.movement = { state: () => native.movement_state(), stoppingMoment: () => native.stopping_moment(), supportMoment: () => native.support_moment(), setInput: (x,z,run) => native.set_movement(x,z,run) };
+      if (kind === 'locomotion' || kind === 'stairs') this.movement = { state: () => native.movement_state(), stoppingMoment: () => native.stopping_moment(), supportMoment: () => native.support_moment(), setInput: (x,z,run) => native.set_movement(x,z,run) };
     }
     catch (error) { this.native.free(); throw error; }
   }

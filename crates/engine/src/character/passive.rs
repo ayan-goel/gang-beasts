@@ -145,6 +145,23 @@ impl PassiveRagdoll {
             .collect()
     }
 
+    /// Diagnostic terrain uses axis-aligned cuboids. Return center and half extents
+    /// from live colliders so the playground renders the actual contact surfaces.
+    pub fn terrain_boxes(&self) -> Vec<[f32; 6]> {
+        self.world
+            .colliders
+            .iter()
+            .filter_map(|(_, collider)| {
+                if collider.parent().is_some() || !collider.is_enabled() {
+                    return None;
+                }
+                let center = collider.translation();
+                let half = collider.shape().as_cuboid()?.half_extents;
+                Some([center.x, center.y, center.z, half.x, half.y, half.z])
+            })
+            .collect()
+    }
+
     pub fn collider_lines(&mut self) -> Vec<f32> {
         self.world.collider_lines()
     }

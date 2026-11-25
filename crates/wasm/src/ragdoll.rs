@@ -21,6 +21,19 @@ impl LocalRagdoll {
     pub fn locomotion(configuration: &str) -> Result<LocalRagdoll, JsValue> {
         build(configuration, RigKind::Locomotion)
     }
+    pub fn stairs(configuration: &str) -> Result<LocalRagdoll, JsValue> {
+        build(configuration, RigKind::Stairs)
+    }
+
+    pub fn terrain_boxes(&self) -> Vec<f32> {
+        self.rig
+            .view()
+            .terrain_boxes()
+            .into_iter()
+            .flatten()
+            .collect()
+    }
+
     pub fn set_movement(
         &mut self,
         x: JsValue,

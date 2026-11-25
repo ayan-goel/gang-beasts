@@ -11,6 +11,14 @@ import type { InspectorProps } from './types';
 import { RagdollInspector } from './RagdollInspector';
 import { MotorInspector } from './MotorInspector';
 
+const environments: Record<Scenario, { name: string; title: string; description: string }> = {
+  cube: { name: 'Cuboid fixture', title: 'Floating platform', description: 'One body. Real contact. Fixed timestep.' },
+  ragdoll: { name: 'Passive ragdoll', title: 'Passive ragdoll', description: 'Fifteen bodies. Physical joints. No motors.' },
+  standing: { name: 'Standing ragdoll', title: 'Standing ragdoll', description: 'Bounded motors. Foot support. Physical balance.' },
+  locomotion: { name: 'Locomotion', title: 'Locomotion playground', description: 'Walk. Run. Turn. Keep your balance.' },
+  stairs: { name: 'Low stairs', title: 'Low stairs', description: 'Walk forward to approach three 10 cm risers.' },
+};
+
 export function App() {
   const viewport = useRef<HTMLDivElement>(null);
   const runtime = useRef<PlaygroundRuntime | null>(null);
@@ -42,17 +50,15 @@ export function App() {
       <section className="viewport" aria-label="Physics scene">
         <div className="scene-canvas" ref={viewport} />
         <div className="scene-label"><p className="eyebrow">Test environment</p>
-          <h2>{scenario === 'locomotion' ? 'Locomotion playground' : scenario === 'standing' ? 'Standing ragdoll' : scenario === 'ragdoll' ? 'Passive ragdoll' : 'Floating platform'}</h2>
-          <p>{scenario === 'locomotion' ? 'Walk. Run. Turn. Keep your balance.' : scenario === 'standing' ? 'Bounded motors. Foot support. Physical balance.' : scenario === 'ragdoll' ? 'Fifteen bodies. Physical joints. No motors.' : 'One body. Real contact. Fixed timestep.'}</p></div>
+          <h2>{environments[scenario].title}</h2>
+          <p>{environments[scenario].description}</p></div>
         {state && <MovementControls state={state} act={act} focus={()=>viewport.current?.querySelector('canvas')?.focus({preventScroll:true})} />}
       </section>
       <aside aria-label="Playground tools">
         {error ? <p role="alert">{error}</p> : <p role="status">{state ? 'Simulation ready' : 'Loading simulation…'}</p>}
         <label className="field">Test scene
           <select value={scenario} onChange={event => setScenario(event.target.value as Scenario)}>
-            <option value="cube">Cuboid fixture</option><option value="ragdoll">Passive ragdoll</option>
-            <option value="standing">Standing ragdoll</option>
-            <option value="locomotion">Locomotion</option>
+            {Object.entries(environments).map(([key, scene]) => <option key={key} value={key}>{scene.name}</option>)}
           </select>
         </label>
         {state && <>

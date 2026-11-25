@@ -24,7 +24,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 06c2b2 — verified fixtures | Varied stopping phases and support-frame cleanup | Bounded force/moment accounting, flat/forward-slope phase grid, short deck stops, impact compliance and native/WASM traces |
 | 06c2b3 — verified native fixtures | Rotating-support traversal and carry moment | Held/stop grids, twenty-second idle observation, measured force/moment limits, lifecycle and diagnostics |
 | 06c2b4a — verified | Native backward/cross-slope traversal | 48 slope cases, stopping and overpowering fixtures, native/WASM flat traces |
-| 06c2b4b | Low stairs and terrain transitions | Ascend three physical treads, cross flat/slope boundaries and handle distinct support normals |
+| 06c2b4b — shared native/browser fixture verified, ascent failing | Low stairs and terrain transitions | Ascend three physical treads, cross flat/slope boundaries and handle distinct support normals |
 | 06c3 | Browser terrain and human movement assessment | Matching scenes/traces, visible contact transitions and human playability |
 | 07 | Jump, fall and recovery | Buffered edge consumed once; total impulse bounded; physical get-up |
 | 08 | Independent strikes and contact damage | Real contact, attack deduplication, no resting damage |

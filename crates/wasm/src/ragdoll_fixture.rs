@@ -8,6 +8,7 @@ pub(crate) enum RigKind {
     Passive,
     Standing,
     Locomotion,
+    Stairs,
 }
 
 pub(crate) enum RagdollFixture {
@@ -18,7 +19,12 @@ pub(crate) enum RagdollFixture {
 
 impl RagdollFixture {
     pub fn new(physics: PhysicsConfig, kind: RigKind) -> Result<Self, CharacterError> {
-        let definition = CharacterDefinition::bundled()?;
+        if matches!(kind, RigKind::Stairs) {
+            return Ok(Self::Locomotion(Box::new(LocomotionRagdoll::stairs(
+                physics,
+                LocomotionConfig::bundled()?,
+            )?)));
+        }
         if matches!(kind, RigKind::Locomotion) {
             return Ok(Self::Locomotion(Box::new(LocomotionRagdoll::new(
                 physics,
@@ -26,6 +32,7 @@ impl RagdollFixture {
                 [0.0; 3],
             )?)));
         }
+        let definition = CharacterDefinition::bundled()?;
         if matches!(kind, RigKind::Standing) {
             let mut rig =
                 PoseRagdoll::new(physics, definition, MotorConfig::standing()?, [0.0; 3])?;
@@ -44,6 +51,7 @@ impl RagdollFixture {
         match self {
             Self::Passive(_) => RigKind::Passive,
             Self::Standing(_) => RigKind::Standing,
+            Self::Locomotion(rig) if rig.is_stair_fixture() => RigKind::Stairs,
             Self::Locomotion(_) => RigKind::Locomotion,
         }
     }

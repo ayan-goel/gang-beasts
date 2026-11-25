@@ -21,6 +21,7 @@ mod rig;
 #[cfg(test)]
 mod rig_tests;
 mod shape;
+mod stair_fixture;
 mod stopping_drive;
 mod support;
 mod support_drive;

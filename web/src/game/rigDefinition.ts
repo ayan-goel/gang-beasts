@@ -13,6 +13,7 @@ export interface RigDefinition {
 }
 
 export interface RigInspection {
+  readonly terrainBoxes?: Float32Array;
   readonly controller?: RigControl;
   readonly movement?: MovementPort;
   definition: RigDefinition;

@@ -39,6 +39,7 @@ mod rotating_traversal_tests;
 
 pub struct LocomotionRagdoll {
     pose: PoseRagdoll,
+    stair_fixture: bool,
     controller: WalkingController,
     idle_motors: MotorConfig,
     active_motors: MotorConfig,
@@ -60,11 +61,26 @@ impl LocomotionRagdoll {
         pose.configure_balance(Some(BalanceConfig::bundled()?))?;
         Ok(Self {
             pose,
+            stair_fixture: false,
             controller: WalkingController::new(config),
             idle_motors: MotorConfig::standing()?,
             active_motors: MotorConfig::locomotion()?,
         })
     }
+    pub fn stairs(
+        physics: PhysicsConfig,
+        config: LocomotionConfig,
+    ) -> Result<Self, CharacterError> {
+        let mut rig = Self::new(physics, config, [0.0, 0.08, 0.0])?;
+        super::stair_fixture::install(&mut rig.pose.rig);
+        rig.stair_fixture = true;
+        Ok(rig)
+    }
+
+    pub fn is_stair_fixture(&self) -> bool {
+        self.stair_fixture
+    }
+
     pub fn pose(&self) -> &PoseRagdoll {
         &self.pose
     }
@@ -109,6 +125,9 @@ impl LocomotionRagdoll {
     }
     pub fn reset(&mut self) {
         self.pose.reset();
+        if self.stair_fixture {
+            super::stair_fixture::install(&mut self.pose.rig);
+        }
         self.controller.reset();
         self.pose
             .blend_motors(&self.idle_motors, &self.active_motors, 0.0);

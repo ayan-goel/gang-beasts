@@ -16,6 +16,8 @@ The 06c2b probes confirmed a cross-slope running failure on +15° about world Z,
 
 ## Low steps
 
+The [current stair regression](../slices/06c2b4b-stairs.md) reproduces failure at total tick 143 on the verified cross-slope controller. The following numbers describe the earlier investigation.
+
 Spawn at the origin, settle 60 ticks, then walk toward −Z for 150 ticks. Three risers begin at Z = −1.0, −1.8 and −2.6 m, with heights 0.1, 0.2 and 0.3 m. Half-width is 3 m. Use adjacent tread boxes and extend the final landing to Z = −12; a short landing ending at −6 could eliminate a successful walker before the last assertion.
 
 The initial overlapping-slab probe tripped by movement tick 78. A corrected adjacent-tread/long-landing probe on the 0.08 m-clearance flat fixture still failed: head height was 1.094 m at total tick 111 (movement tick 51). Its geometry no longer contains overlapping stair slabs, so tread sensing/clearance remains an implementation gap. Retain head >1.1 m, final pelvis Z <−3 and Y >0.85 m, and per-tick pelvis displacement <0.15 m alongside effort/finite-state gates. The flat gait's ideal symmetric 1 rad knee flexion raises a 0.62 m leg by only about 0.076 m, less than the riser. A bounded forward tread query and swing-clearance correction need implementation and verification.
@@ -46,4 +48,4 @@ Independent backward-slope probes also retain failures, including some during mo
 
 ## Browser and human gates
 
-After native terrain fixtures pass, expose matching browser scenarios, compare native/WASM trajectories, inspect soles/targets/contacts visually, and obtain human movement feedback. Current screenshot inspection and flat-floor automation do not establish terrain or game-feel acceptance. All specification §33 release gates remain open.
+The low-stair scenario now reproduces the failing native approach in Chromium. Other terrain scenarios still need matching browser traces and visual inspection. Physical stair traversal and human movement feedback remain open. Current screenshot inspection and flat-floor automation do not establish terrain or game-feel acceptance. All specification §33 release gates remain open.
