@@ -70,6 +70,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 16e — disconnect grace | Reserve an offline seat for 20 seconds and reclaim abandoned rooms | Reconnect, batch forfeits, stable scoring and host transfer |
 | 16f — online rematch | Replay a completed match in the same room | Host-only return, fresh serial, scores and ready roster |
 | 16 | Private sessions and lobby | Link/code, ready/start, auth, reconnect, host transfer, late joining |
+| 17a — hazard warnings | Show the current walkway and wind warnings during online play | Shared text, server timing, reconnect and round cleanup |
 | 17 | Original presentation and audio | Original skinned characters, effects, warnings, licensed asset manifest |
 | 18 | Settings, accessibility and product flows | Input isolation, keyboard navigation, loading/errors, quality/audio settings |
 | 19 | Performance and endurance | Declared hardware measurements, 60-minute soak, 100 resets, eight-player stress |

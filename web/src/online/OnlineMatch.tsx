@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { colors } from '../lobby/api';
+import { hazardWarnings } from '../game/skylineHazards';
 import { loadSkyline } from '../lobby/content';
 import type { MatchView } from '../rendering/SkylineView';
 import type { StreamStatus } from './SnapshotTimeline';
@@ -24,7 +25,12 @@ export default function OnlineMatch({feed, exit, rematch}: {feed: MatchFeed; exi
   const winner = match?.winner == null ? 'Draw' : feed.fighters[match.winner]!.name + ' wins';
   return <section className="online-match" aria-label="Online Skyline arena">
     <div className="online-header"><h1>{feed.own === null ? 'Spectating Skyline' : 'Playing as ' + feed.fighters[feed.own]!.name}</h1><button onClick={exit}>Leave room</button></div>
-    <div className="online-scene" ref={container}/>
+    <div className="online-stage">
+      <div className="online-scene" ref={container}/>
+      <p className="online-hazard" role="status" aria-label="Arena hazard">
+        {match?.phase === 'playing' ? hazardWarnings[match.hazard] : ''}
+      </p>
+    </div>
     {match && <div className="online-score">
       <span aria-label="Round number">Round {match.round}</span>
       <span aria-label="Round phase">{phaseNames[match.phase]}</span>

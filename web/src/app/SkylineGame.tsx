@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { startDuel, type DuelState } from '../game/startDuel';
+import { hazardWarnings } from '../game/skylineHazards';
 import './skyline.css';
 
 const names = ['Coral', 'Blue'];
 const phases = { countdown: 'Countdown', playing: 'Playing', round_results: 'Round results', match_results: 'Match results' };
-const hazards = { quiet: '', west_warning: 'West walkway failing', east_warning: 'East walkway failing', gust_warning: 'High winds approaching', gust: 'Sudden death · Crosswind' };
 
 export function SkylineGame() {
   const viewport = useRef<HTMLDivElement>(null);
@@ -54,7 +54,7 @@ export function SkylineGame() {
         {started && !menu && match && <div className="match-callout" aria-live="polite">
           {match.phase === 'countdown' && <strong>{Math.max(1, Math.ceil(match.remaining / 60))}</strong>}
           {match.phase === 'round_results' && <strong>{winner}</strong>}
-          {match.phase === 'playing' && hazards[match.hazard] && <span>{hazards[match.hazard]}</span>}
+          {match.phase === 'playing' && hazardWarnings[match.hazard] && <span>{hazardWarnings[match.hazard]}</span>}
           {match.phase === 'playing' && state?.conditions.map((c, i) => c.phase === 'knocked_out' ? <span key={i}>{names[i]} knocked out</span> : null)}
         </div>}
         {started && !menu && match?.phase === 'playing' && <div className="match-grips">
