@@ -34,3 +34,5 @@ The new native/WASM trace evidence remains in [04b1](04b1-ragdoll-wasm-contract.
 ## Sources
 
 Three.js **0.180.0** installed sources were used to verify `CapsuleGeometry` and `examples/jsm/geometries/RoundedBoxGeometry.js` dimension conventions, alongside the [official geometry documentation](https://threejs.org/docs/). The physical buffer/frame contracts are in [04b1](04b1-ragdoll-wasm-contract.md), and anatomy/frame conventions are in [ADR 0005](../decisions/0005-passive-character-rig.md).
+
+The inspection, fall, reset and tuning browser check uses the suite-wide 120-second test budget. Under parallel load its previous 30-second override expired during the reset assertion. The same full suite passed 55/55 after removing that override. Its state assertions and per-assertion waits are unchanged.

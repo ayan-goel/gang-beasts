@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 
 test('ragdoll scene supports inspection, impulses, tuning and a clean switch back', async ({ page }) => {
-  test.setTimeout(30_000);
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.goto('/');
