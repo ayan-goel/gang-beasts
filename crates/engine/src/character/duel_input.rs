@@ -8,7 +8,7 @@ impl Duel {
         direction: [f32; 2],
         running: bool,
     ) -> Result<(), CharacterError> {
-        if self.vitals(who).phase != crate::Consciousness::Active {
+        if !self.accepts_input(who) {
             if !direction.iter().all(|v| v.is_finite()) {
                 return Err(CharacterError::Invalid("movement intent must be finite"));
             }
@@ -19,20 +19,17 @@ impl Duel {
             .set_input(direction, running)
     }
     pub fn set_lift(&mut self, who: FighterId, held: bool) {
-        self.lifting[who as usize] = held && self.vitals(who).phase == crate::Consciousness::Active;
+        self.lifting[who as usize] = held && self.accepts_input(who);
     }
     pub fn set_jump(&mut self, who: FighterId, held: bool) {
-        if self.vitals(who).phase == crate::Consciousness::Active {
+        if self.accepts_input(who) {
             self.fighters[who as usize].walking.set_jump(held);
         }
     }
     pub fn set_hand(&mut self, who: FighterId, hand: Hand, held: bool) {
         // A fall can switch the arm to its get-up pose while the grip persists.
         // A repeated held input cannot start a punch with that attached hand.
-        if held
-            && (self.grip(who, hand).is_some()
-                || self.vitals(who).phase != crate::Consciousness::Active)
-        {
+        if held && (self.grip(who, hand).is_some() || !self.accepts_input(who)) {
             return;
         }
         if !held {

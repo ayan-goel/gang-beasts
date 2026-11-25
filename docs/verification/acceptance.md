@@ -16,9 +16,9 @@ No release criteria have passed yet. Update each row with a slice, build/config 
 | Camera readability | Pending |
 | Server authority | Pending |
 | Smooth multiplayer/latency | Pending |
-| Round/match scoring | Pending |
+| Round/match scoring | [Local melee](../slices/12a-local-rounds.md) verifies three real ring-outs, simultaneous eliminations and deadline draws. Online client agreement pending. |
 | Disconnect/reconnect/host transfer | Pending |
-| Repeated rematch | Pending |
+| Repeated rematch | [Local round fixtures](../slices/12a-local-rounds.md) verify score, body, prop and round identity reset. Endurance and network baselines pending. |
 | Measured eight-player performance | Pending |
 | Endurance/stability | Pending |
 | Original assets/provenance | Pending |

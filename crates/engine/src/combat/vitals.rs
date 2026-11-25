@@ -49,6 +49,7 @@ pub enum Consciousness {
     Active,
     KnockedOut,
     Recovering,
+    Eliminated,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

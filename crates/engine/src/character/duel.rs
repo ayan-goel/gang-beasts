@@ -25,6 +25,7 @@ impl FighterId {
 pub struct Duel {
     world: PhysicsWorld,
     arena: Option<crate::arena::Skyline>,
+    melee: Option<crate::MeleeState>,
     fighters: [Fighter; 2],
     definition: CharacterDefinition,
     presets: MotorPresets,
@@ -82,6 +83,7 @@ impl Duel {
         Ok(Self {
             world,
             arena,
+            melee: None,
             fighters: [first, second],
             definition,
             presets: MotorPresets::bundled()?,
@@ -106,6 +108,14 @@ impl Duel {
         self.tick
     }
     pub fn step(&mut self) {
+        if !self.playing_tick() {
+            self.hits.clear();
+            self.changes.clear();
+            if let Some(a) = &mut self.arena {
+                a.events.clear();
+            }
+            return;
+        }
         // Both controllers publish their bounded commands before the one room-wide
         // solve. Stepping per fighter would double gravity and age contacts unevenly.
         for id in [FighterId::First, FighterId::Second] {
@@ -113,6 +123,7 @@ impl Duel {
                 .map(|h| self.lifting[id as usize] && self.grip(id, h).is_some());
             let vitals = self.vitals(id);
             let control = match vitals.phase {
+                crate::Consciousness::Eliminated => continue,
                 crate::Consciousness::Active => Control::Active { lifting },
                 crate::Consciousness::KnockedOut => Control::Incapacitated { effort: 0. },
                 crate::Consciousness::Recovering => Control::Incapacitated {
@@ -149,6 +160,7 @@ impl Duel {
             );
         }
         self.resolve_health();
+        self.score_round();
     }
     pub fn hand_state(&self, who: FighterId, hand: Hand) -> HandState {
         let mut state = self.fighters[who as usize].hands.state(hand);
@@ -190,8 +202,13 @@ impl Duel {
             .sum()
     }
     pub fn reset(&mut self) {
+        let melee = self
+            .melee
+            .as_ref()
+            .map(|m| crate::MeleeState::new(2, m.round_id + 1));
         *self = Self::create(self.physics.clone(), self.arena.is_some())
             .expect("validated duel configuration");
+        self.melee = melee;
     }
 }
 
@@ -207,3 +224,6 @@ mod input;
 
 #[path = "duel_arena.rs"]
 mod map;
+
+#[path = "duel_match.rs"]
+mod rounds;

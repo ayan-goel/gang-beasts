@@ -26,6 +26,7 @@
 - [Settling and support velocity](verification/settling-and-support-velocity.md): completed-rotation feedback, whole-trunk recovery, rotating drag and rejected stride history.
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
+- [Local melee rounds](slices/12a-local-rounds.md) records fall elimination, first-to-three scoring, round epochs and rematch.
 - [Skyline physics](slices/11a-skyline-physics.md) covers authored geometry, validation, debris, hazards and fall detection.
 - [Knockouts and recovery](slices/10b-consciousness.md) describes damage, controller ownership and the full-health replay.
 - [Local lift and release](slices/10a-lift-release.md) records support gates, effort allocation and airborne release evidence.
