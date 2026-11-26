@@ -5,8 +5,6 @@ body { margin:0; }
 .menu { display:grid;grid-template-columns:minmax(22rem,38%) 1fr;min-height:100svh; }
 .poster { grid-area:1/2;position:relative;overflow:hidden;background:#f8a567; }
 .poster img { width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:53% 52%; }
-.stage-ticket { position:absolute;right:4%;bottom:5%;display:flex;gap:.5em;align-items:center;transform:rotate(-4deg);background:var(--press-lemon);border:3px solid var(--press-ink);border-radius:.35em;padding:.28em .65em;box-shadow:4px 5px var(--press-ink);font-weight:800;font-size:clamp(1.1rem,2vw,2rem); }
-.stage-ticket small { padding-left:.55em;border-left:2px solid;font-size:.5em;text-transform:uppercase;letter-spacing:.05em; }
 .choices { position:relative;grid-area:1/1;display:flex;flex-direction:column;justify-content:center;min-width:0;padding:clamp(2rem,5vh,5rem) clamp(1.5rem,3.9vw,5rem);background-color:var(--press-paper);background-image:radial-gradient(#81485424 .65px,transparent 1px);background-size:5px 5px;border-right:5px solid var(--press-ink); }
 h1 { margin:0 0 .27em -.045em;font-size:clamp(4.5rem,7.7vw,9rem);letter-spacing:-.09em;line-height:.78;font-weight:800;transform:rotate(-5deg);padding-bottom:.12em; }
 h1 span { width:fit-content;display:block;paint-order:stroke fill;-webkit-text-stroke:.058em var(--press-ink);text-shadow:.035em .072em 0 var(--press-ink); }
@@ -52,7 +50,6 @@ nav a { text-decoration:none; }
   .menu { display:flex;flex-direction:column; }
   .poster { height:clamp(12rem,32svh,23rem); }
   .poster img { object-position:50% 42%; }
-  .stage-ticket { bottom:7%;font-size:1rem; }
   .choices { flex:1;padding:1.6rem max(1.15rem,6vw);border:0;border-top:4px solid; }
   h1 { font-size:min(14vw,4.4rem);margin:.1em 0 .3em;line-height:1; }
   h1 span { display:inline; } h1 span:first-child { margin:0; }
