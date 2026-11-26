@@ -37,6 +37,25 @@ it('samples focused controls from network publications even when window timers n
     expect(next.getUint32(2,true)).toBe(1);
     expect(next.getInt8(10)).toBeGreaterThan(120);
     expect(next.getInt8(11)).toBeGreaterThan(-30);
+
+    const beforeJump = frames.length;
+    down('Space');
+    expect(frames.length).toBe(beforeJump + 1);
+    expect(new DataView(frames.at(-1)!.buffer).getUint16(14,true) & 1).toBe(1);
+    // Repeated key events between publications cannot spend a second expedited send.
+    canvas.dispatchEvent(Object.assign(new Event('keyup'),{code:'Space'}));
+    down('Space');
+    expect(frames.length).toBe(beforeJump + 1);
+    vi.advanceTimersByTime(34);
+    publish(2n, 1);
+    expect(new DataView(frames.at(-1)!.buffer).getUint16(14,true) & 1).toBe(1);
+    canvas.dispatchEvent(Object.assign(new Event('keyup'),{code:'Space'}));
+    vi.advanceTimersByTime(101);
+    const beforeStall = frames.length;
+    down('Space');
+    expect(frames.length).toBe(beforeStall);
+    publish(2n, 1);
+    expect(frames.length).toBeGreaterThan(beforeStall);
   } finally {
     stop();
     vi.unstubAllGlobals();

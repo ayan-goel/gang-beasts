@@ -11,13 +11,21 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, c
   let sampler = new InputSampler();
   let active = false;
   let lastSent = -Infinity;
+  let jumpSendUntil = -Infinity;
   const playing = () => feed.latest?.phase === 1 && feed.latest.fighters[feed.own!]!.consciousness !== 3;
   const button = (name: Parameters<InputSampler['setButton']>[0], down: boolean) => {
     try { sampler.setButton(name, down); } catch { sampler.neutralize(); }
   };
   const movement = new MovementInput({
     setInput(x,z,run) { sampler.setMovement(...camera.movement(x,z)); button('run',run); },
-    setJump: held => button('jump',held), clearJumpInput: () => button('jump',false),
+    setJump(held) {
+      button('jump', held);
+      if (held && performance.now() <= jumpSendUntil && !document.hidden) {
+        jumpSendUntil = -Infinity;
+        transmit();
+      }
+    },
+    clearJumpInput: () => button('jump',false),
     setHand: (side,held) => button(side === 0 ? 'leftHand' : 'rightHand',held),
     clearHands: () => { button('leftHand',false); button('rightHand',false); },
     setHeadbutt: held => button('headbutt',held),
@@ -31,12 +39,14 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, c
     if (feed.latest) for (const packet of sampler.sample(feed.latest.tick)) feed.transmit(packet);
   };
   const neutralize = () => {
+    jumpSendUntil = -Infinity;
     movement.clear();
     sampler.neutralize();
     if (active && playing()) transmit();
     active = false;
   };
   feed.onRoundChange = () => {
+    jumpSendUntil = -Infinity;
     movement.clear();
     sampler = new InputSampler();
     lastSent = -Infinity;
@@ -48,6 +58,8 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, c
       return;
     }
     active = true;
+    // Permit one immediate takeoff press per fresh publication. A stalled stream cannot keep issuing inputs.
+    jumpSendUntil = performance.now() + 100;
     // Coalesce queued publications after a stall. Fresh network frames provide the input cadence.
     if (performance.now() - lastSent >= 25) transmit();
   };

@@ -1,37 +1,10 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { measureLink } from './support/measureLink';
 import { delayRelay } from './support/delayRelay';
 import { gripMatch } from './support/gripMatch';
 
 // Two software WebGL contexts on the same host can delay JavaScript delivery beyond the injected RTT.
 if (process.platform === 'darwin') test.use({launchOptions:{args:['--use-gl=angle','--use-angle=metal']}});
-
-async function measureLink(page: Page, port: number) {
-  await page.addInitScript(port => {
-    const samples: number[] = [], sent = new Map<number, number>();
-    Object.assign(window, {matchRtts:samples});
-    window.WebSocket = class extends WebSocket {
-      constructor(url: string | URL, protocols?: string | string[]) {
-        const path = new URL(url, location.href);
-        if (path.pathname === '/ws') path.port = String(port);
-        super(path, protocols);
-        this.addEventListener('message', event => {
-          if (!(event.data instanceof ArrayBuffer) || event.data.byteLength !== 6) return;
-          const bytes = new DataView(event.data);
-          if (bytes.getUint8(0) !== 37) return;
-          const id = bytes.getUint32(2,true), at = sent.get(id);
-          if (at !== undefined) { samples.push(performance.now() - at); sent.delete(id); }
-        });
-      }
-      override send(data: Parameters<WebSocket['send']>[0]) {
-        if (data instanceof Uint8Array && data.length === 6 && data[0] === 36) {
-          sent.set(new DataView(data.buffer, data.byteOffset).getUint32(2,true),performance.now());
-        }
-        super.send(data);
-      }
-    };
-  }, port);
-  return () => page.evaluate(() => Reflect.get(window,'matchRtts') as number[]);
-}
 
 test('private players see sustained high delay and recover on the same match connection', async ({page,browser,baseURL}, info) => {
   const relay = await delayRelay(baseURL!);

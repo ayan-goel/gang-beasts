@@ -954,6 +954,8 @@ The [initial browser implementation](docs/slices/15c-interpolation.md) uses one 
 
 Interpolation-only controls may incur one-way input delay, simulation scheduling and interpolation buffering before visible response. At 60 ms RTT, 67–100 ms buffer and one tick of scheduling, visible response can exceed 100 ms even before render delay. This is a planning estimate, not a measured latency result. If friend playtests find it sluggish, responsiveness work is required before declaring the MVP complete.
 
+The private client can expedite one jump press per fresh snapshot. This retains server-authoritative takeoff and mantle decisions. The [regional jump benchmark](docs/slices/15h-jump-feedback.md) measures the rendered response from a standing start.
+
 A grabbed opponent, stacked prop or contact chain couples local and remote dynamics. Replaying only the local pelvis is invalid. Prediction checkpoints need velocities, controller state, timers, grips, RNG and relevant solver/world state, not just transforms. Expand islands when new contacts occur; when the necessary state is unavailable, fall back safely to authority.
 
 Reconcile actual simulated state from an authoritative checkpoint, replay still-unacknowledged inputs, and smooth only the rendered correction within limits. Never let a visual correction create an authoritative hit. Suppress duplicate predicted sound/events. Do not rewind server hits merely because the client supplies an old tick.
