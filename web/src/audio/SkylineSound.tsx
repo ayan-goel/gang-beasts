@@ -1,12 +1,10 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { MatchView } from '../rendering/SkylineView';
 import type { FighterPhase } from '../game/fighterCondition';
-import { MatchCues } from './MatchCues';
+import { MatchCues, type MatchAudioState } from './MatchCues';
 import { RoundCues } from './RoundCues';
 import { SoundOutput } from './SoundOutput';
 import { readVolume, saveVolume, type VolumeSettings, type VolumeChannel } from './volumeSettings';
-import type { GripAudioState } from './gripCues';
-import type { ImpactSource } from './impactSound';
 import './sound.css';
 
 const AudioSettings = createContext<{
@@ -61,7 +59,7 @@ export function VolumeControls() {
   </fieldset>;
 }
 
-export function useMatchSound(match: MatchView | undefined, active: boolean, phases: readonly FighterPhase[], audio?: GripAudioState & {impacts?: readonly ImpactSource[]}) {
+export function useMatchSound(match: MatchView | undefined, active: boolean, phases: readonly FighterPhase[], audio?: MatchAudioState) {
   const output = useContext(AudioSettings)?.output;
   const playing = active && match?.phase === 'playing';
   useEffect(() => {

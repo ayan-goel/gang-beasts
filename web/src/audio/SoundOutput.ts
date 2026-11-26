@@ -1,3 +1,4 @@
+import { playBreakaway } from './breakawaySound';
 import { playFootstep } from './footstepSound';
 import { playLanding } from './landingSound';
 import { playGrip } from './gripSound';
@@ -67,6 +68,10 @@ export class SoundOutput {
     if (cues.footstep) {
       this.voices.footstep = playFootstep(effects.context, cues.footstep, effects);
       return;
+    }
+    if (cues.breakaway) {
+      this.voices.breakaway?.();
+      this.voices.breakaway = playBreakaway(effects.context, cues.breakaway, effects);
     }
     if (cues.warning || cues.condition || cues.impact) this.voices.impact?.();
     this.voices.landing?.();

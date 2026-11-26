@@ -106,6 +106,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | [17h — round audio](slices/17h-round-audio.md) | Hear when controls open and how the round ended | Match-clock beats, scored rounds, draws, final results and silent reconnect |
 | [17i — arena mix](slices/17i-arena-mix.md) | Adjust music, effects and master volume independently | Offline audio levels, saved preferences and independent live clients |
 | [17j — footsteps](slices/17j-footsteps.md) | Hear physically loaded steps during roof travel | Walk, run, silent airborne input, stereo PCM and mixed-version room delivery |
+| [17k — walkway breakaway](slices/17k-breakaway-audio.md) | Hear the failing panel from its roof attachment | Local and online collapses, stereo waveform, stale-state suppression |
 | 17 | Original presentation and audio | Original skinned characters, effects, warnings, licensed asset manifest |
 | [18a — camera motion](slices/18a-camera-motion.md) | Reduce automatic panning, zoom and orbit animation | Device preference, live menu choice, viewport framing and per-client keyboard turns |
 | [18b — adjustable text](slices/18b-text-size.md) | Read menus, controls and live scores at up to 200% | Narrow-screen reflow, saved choice, independent private clients and keyboard access |

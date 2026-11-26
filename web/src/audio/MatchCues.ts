@@ -6,10 +6,14 @@ import type { Impact, ImpactSource } from './impactSound';
 import type { MatchView } from '../rendering/SkylineView';
 import type { FighterPhase } from '../game/fighterCondition';
 
+import type { CameraPosition } from './spatialMix';
+
+export interface MatchAudioState extends GripAudioState { impacts?: readonly ImpactSource[]; breakaway?: CameraPosition }
+
 type Hazard = MatchView['hazard'];
 export type AudibleHazard = Exclude<Hazard, 'quiet'>;
 export type ConditionCue = 'knocked_out' | 'recovering';
-export interface Cues { warning?: AudibleHazard; condition?: ConditionCue; impact?: Impact; grip?: GripCue; landing?: LandingCue; footstep?: FootstepCue }
+export interface Cues { warning?: AudibleHazard; breakaway?: CameraPosition; condition?: ConditionCue; impact?: Impact; grip?: GripCue; landing?: LandingCue; footstep?: FootstepCue }
 const stages: readonly Hazard[] = ['quiet', 'west_warning', 'east_warning', 'gust_warning', 'gust'];
 
 export class MatchCues {
@@ -27,12 +31,15 @@ export class MatchCues {
 
   reset() { this.epoch = undefined; }
 
-  observe(epoch: string, hazard: Hazard, phases: readonly FighterPhase[], now: number, sources: readonly ImpactSource[] = [], grips?: GripAudioState): Cues {
+  observe(epoch: string, hazard: Hazard, phases: readonly FighterPhase[], now: number, sources: readonly ImpactSource[] = [], grips?: MatchAudioState): Cues {
     const stage = stages.indexOf(hazard);
     const cues: Cues = {};
     // A full snapshot after a rendering or network gap describes the present, not a new event.
     if (epoch === this.epoch && now - this.observedAt <= 500) {
       if (stage > this.stage && hazard !== 'quiet') cues.warning = hazard;
+      if (stage === this.stage + 1 && (hazard === 'east_warning' || hazard === 'gust_warning') && grips?.breakaway) {
+        cues.breakaway = grips.breakaway;
+      }
       if (phases.some((phase, i) => phase === 'knocked_out' && this.phases[i] === 'active')) {
         cues.condition = 'knocked_out';
       } else if (phases.some((phase, i) => phase === 'recovering' && this.phases[i] === 'knocked_out')) {

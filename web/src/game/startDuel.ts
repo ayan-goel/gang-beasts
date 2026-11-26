@@ -5,7 +5,9 @@ import { arenaGripName, fighterGripName, handGripLabels } from './gripLabels';
 import { fixedLedge } from './ledgeHint';
 import type { FighterPhase } from './fighterCondition';
 import type { Object3D } from 'three';
-import type { MatchView, SkylineMap } from '../rendering/SkylineView';
+import type { CameraPosition } from '../audio/spatialMix';
+import type { SkylineContent } from '../lobby/content';
+import type { MatchView } from '../rendering/SkylineView';
 import { LocalDuel } from '../generated/wasm/brawler_wasm';
 import configuration from '../generated/physics.json?raw';
 import { FixtureScene } from '../rendering/FixtureScene';
@@ -29,6 +31,7 @@ export interface FighterCondition {
 export interface DuelState {
   match?: MatchView;
   impacts: ImpactSource[];
+  breakaway?: CameraPosition;
   conditions: [FighterCondition, FighterCondition];
   tick: string;
   paused: boolean;
@@ -65,7 +68,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
   };
   try {
     const definition: RigDefinition = JSON.parse(duel.definition_json());
-    const map: SkylineMap | undefined = skyline ? JSON.parse(duel.map_json()!) : undefined;
+    const map: SkylineContent['map'] | undefined = skyline ? JSON.parse(duel.map_json()!) : undefined;
     scene = new FixtureScene(container, definition, { map, model });
     scene.addOpponent(definition);
     const renderer = scene;
@@ -114,6 +117,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
         gripTargets: [first.targets, second.targets],
         grips: [first.labels, second.labels], fixedLedge: [first.onLedge, second.onLedge],
         stamina: [duel.stamina(0), duel.stamina(1)],
+        breakaway: map && renderer.breakawaySource(map, Number(duel.tick())),
         conditions, impacts: renderer.impactSources(conditions, Number(duel.tick())),
       });
     };

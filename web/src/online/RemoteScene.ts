@@ -1,4 +1,4 @@
-import type { ImpactSource } from '../audio/impactSound';
+import type { MatchAudioState } from '../audio/MatchCues';
 import { fighterPhases, type FighterPhase } from '../game/fighterCondition';
 import { writePose } from './samplePose';
 import type { StreamStatus } from './SnapshotTimeline';
@@ -13,7 +13,7 @@ import { followedFighter, type CameraChoice } from './spectatorCamera';
 const colors = ['#f38e66','#64b7dd','#e8bd59','#7dd3b1','#bd9ae6','#e69eb9','#bbd17e','#a7b4c9'];
 const phases = ['countdown','playing','round_results','match_results'] as const;
 
-type RemoteMatch = MatchView & {impacts?: ImpactSource[]; conditions: FighterPhase[]; gripTargets: [number,number][]; stamina: number[]};
+type RemoteMatch = MatchView & MatchAudioState & { conditions: FighterPhase[]; gripTargets: [number,number][]; stamina: number[]};
 
 export function matchView(frame: Snapshot, content: SkylineContent): RemoteMatch {
   const t = frame.arenaTick;
@@ -55,6 +55,7 @@ export function startRemoteScene(container: HTMLElement, content: SkylineContent
       if (match) scene.renderSkyline(bodies, objects, match, (now-priorTime)/1000,
         feed.own === null ? undefined : bodies[feed.own], followedFighter(match, feed.own, choice.current));
       if (sample && match && sample.state !== prior) {
+        match.breakaway = scene.breakawaySource(content.map, sample.state.arenaTick);
         match.impacts = scene.impactSources(sample.state.fighters, sample.state.arenaTick);
         update(match);
         prior = sample.state;

@@ -1,4 +1,4 @@
-import { observeWarningAudio, warningSamples } from './support/warningAudio';
+import { breakawayPans, observeWarningAudio, warningSamples } from './support/warningAudio';
 import { expect, test } from '@playwright/test';
 
 // The local warning follows 5,400 physics ticks on the render clock. Use the Mac GPU for this real-time scene.
@@ -19,8 +19,8 @@ test('muting Skyline persists on reload and into private rooms', async ({page}) 
   await expect(mute).toHaveAttribute('aria-pressed','false');
 });
 
-test('a local match unlocks audio on start and plays one walkway cue from physical arena time', async ({page}) => {
-  test.setTimeout(180_000);
+test('local warnings and breakaway audio follow physical arena time and survive pause', async ({page}) => {
+  test.setTimeout(240_000);
   await observeWarningAudio(page);
   await page.goto('/play/');
   const start = page.getByRole('button', {name:'Start match'});
@@ -33,6 +33,13 @@ test('a local match unlocks audio on start and plays one walkway cue from physic
   await page.getByRole('button',{name:'Resume match'}).click();
   await expect(page.getByText('West walkway failing')).toBeVisible();
   expect(await warningSamples(page)).toHaveLength(1);
+  expect(await breakawayPans(page)).toEqual([]);
+  await expect(page.getByText('East walkway failing')).toBeVisible({timeout:65_000});
+  await expect.poll(() => breakawayPans(page)).toHaveLength(1);
+  await expect(page.getByText('High winds approaching')).toBeVisible({timeout:65_000});
+  await expect.poll(() => breakawayPans(page)).toHaveLength(2);
+  const [west,east] = await breakawayPans(page);
+  expect(west! * east!).toBeLessThan(0);
 });
 
 test('match warnings, condition and round cues render bounded pulse patterns in the browser audio graph', async ({page}) => {

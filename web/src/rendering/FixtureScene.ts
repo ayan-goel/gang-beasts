@@ -1,3 +1,5 @@
+import { recentBreakawayMount } from '../audio/breakawaySound';
+import type { SkylineContent } from '../lobby/content';
 import { createSceneRenderer } from './createSceneRenderer';
 import { GraphicsRecovery } from './GraphicsRecovery';
 import type { LandingEvent } from '../audio/landingSound';
@@ -183,11 +185,20 @@ export class FixtureScene {
   private playerPoses: Float32Array[] = [];
   private readonly soundPoint = new THREE.Vector3();
 
+  breakawaySource(map: SkylineContent['map'], tick: number) {
+    const mount = recentBreakawayMount(map, tick);
+    return mount && this.audioPosition(this.soundPoint.fromArray(mount));
+  }
+
+  private audioPosition(point: THREE.Vector3) {
+    const distance = point.distanceTo(this.camera.position);
+    return { distance, pan: THREE.MathUtils.clamp(point.project(this.camera).x, -1, 1) };
+  }
+
   impactSources(fighters: readonly {health: number; footstep?: number | null; landing?: LandingEvent | null}[], arenaTick: number) {
     return this.playerPoses.map((pose, slot) => {
       const pelvis = this.soundPoint.fromArray(pose, 28);
-      const distance = pelvis.distanceTo(this.camera.position);
-      const pan = THREE.MathUtils.clamp(pelvis.project(this.camera).x, -1, 1);
+      const { distance, pan } = this.audioPosition(pelvis);
       const {health, landing, footstep} = fighters[slot]!;
       return {health, distance, pan, footstep: footstep && arenaTick - footstep <= 12 ? footstep : undefined,
         landing: landing && arenaTick - landing.tick <= 12 ? landing : undefined};

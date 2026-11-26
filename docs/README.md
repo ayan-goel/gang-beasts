@@ -35,6 +35,7 @@
 - [Eight-fighter grip loop](verification/eight-fighter-grip-loop.md) records joint stretch, load, energy and release in two closed-ring fights.
 - [Eight-player reset endurance](verification/reset-endurance.md) covers repeated Skyline fights, score continuity, clean spawns and timed hazards.
 - [Playable match rig](verification/match-rig.md) records solver masses, joint endpoints and live motor effort for two and eight fighters.
+- [Walkway breakaway audio](slices/17k-breakaway-audio.md) covers the metal crack at each panel mount and its private-room timing.
 - [Rooftop footsteps](slices/17j-footsteps.md) covers walking and running contacts, stereo levels and multiplayer delivery.
 - [Rooftop landing feedback](slices/17g-landing-audio.md) covers physical contact thresholds, local and private match sound, and measured stereo levels.
 - [Grip feedback](slices/17f-grip-audio.md) records catch, low-stamina and release sounds in local and private play.

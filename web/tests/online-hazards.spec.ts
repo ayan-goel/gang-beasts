@@ -1,4 +1,4 @@
-import { observeWarningAudio, warningSamples } from './support/warningAudio';
+import { breakawayPans, observeWarningAudio, warningSamples } from './support/warningAudio';
 import { arenaMeshes, authoredMeshes, observeArenaMeshes } from './support/arenaMeshes';
 import {releaseRoom} from './support/releaseRoom';
 import { expect, test } from '@playwright/test';
@@ -42,17 +42,26 @@ test('the online rooftop warns both players before each hazard and clears the wa
           (await arenaMeshes(player)).filter(mesh => mesh.visible && mesh.emissive !== 0).map(mesh => mesh.name)
         ).toEqual(['panel-8'])));
         expect(await warningSamples(guest)).toHaveLength(0);
+        expect(await breakawayPans(guest)).toEqual([]);
         await guest.getByRole('button',{name:'Mute game audio'}).click();
       }
       if (message === 'East walkway failing') {
         await expect.poll(() => warningSamples(guest)).toHaveLength(1);
+        for (const player of players) await expect.poll(() => breakawayPans(player)).toHaveLength(1);
         await guest.reload();
         await expect(notices[1]!).toHaveText(message);
         await guest.locator('canvas').focus();
         await guest.keyboard.press('Shift');
         expect(await warningSamples(guest)).toHaveLength(0);
+        expect(await breakawayPans(guest)).toEqual([]);
+      }
+      if (message === 'High winds approaching') {
+        await expect.poll(() => breakawayPans(host)).toHaveLength(2);
+        await expect.poll(() => breakawayPans(guest)).toHaveLength(1);
       }
     }
+    const [west,east] = await breakawayPans(host);
+    expect(west! * east!).toBeLessThan(0);
     await expect.poll(() => warningSamples(guest)).toEqual([{wave:'sine',state:'running'}, {wave:'sine',state:'running'}]);
     await Promise.all(players.map(async player => {
       await expect(player.getByLabel('Round phase')).toHaveText('Round results', {timeout:45_000});
