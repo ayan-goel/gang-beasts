@@ -16,6 +16,11 @@ export class Playground {
   readonly movementInput?: MovementInput;
   showColliders = false;
   showJoints = false;
+  showContacts = false;
+
+  selectedContacts(): Float32Array | undefined {
+    return this.showContacts ? this.simulation.rig?.externalContacts() : undefined;
+  }
 
   constructor(readonly simulation: SimulationPort, private readonly now = () => performance.now()) {
     this.previousTime = now();
@@ -97,11 +102,17 @@ export class Playground {
 
   snapshot() {
     const state = this.simulation.fixture_state();
+    const contacts = this.selectedContacts();
+    let totalImpulse = 0;
+    if (contacts) {
+      for (let i = 6; i < contacts.length; i += 7) totalImpulse += contacts[i]!;
+    }
     return {
       movementInput: this.movementInput ? { command: this.movementInput.command, run: this.movementInput.run } : undefined,
       tick: this.simulation.tick().toString(), height: state[1]!,
       verticalSpeed: state[8]!, mass: state[13]!,
       paused: this.paused, rate: this.rate, impulsePending: this.impulsePending,
+      contacts: contacts ? { count: contacts.length / 7, totalImpulse } : undefined,
       showColliders: this.showColliders, stepMs: this.stepMs,
       droppedSeconds: this.clock.droppedSeconds,
       debugSegments: this.showColliders ? this.simulation.collider_lines().length / 6 : 0,

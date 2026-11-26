@@ -20,6 +20,7 @@ export interface RigInspection {
   definition: RigDefinition;
   selectedBody: number;
   selectBody(index: number): void;
+  externalContacts(): Float32Array;
   bodyStates(): Float32Array;
   jointStates(): Float32Array;
 }

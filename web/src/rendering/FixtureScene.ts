@@ -1,3 +1,4 @@
+import { ContactNormals } from './ContactNormals';
 import { GroupCamera } from './GroupCamera';
 import { SkylineView, type SkylineMap, type MatchView } from './SkylineView';
 import * as THREE from 'three';
@@ -34,6 +35,7 @@ export class FixtureScene {
   readonly groupCamera?: GroupCamera;
   private readonly practice?: PracticeTargetView;
   private readonly rig?: RagdollView;
+  readonly contactNormals?: ContactNormals;
   private readonly joints?: JointOverlay;
 
   private readonly followRig: boolean;
@@ -50,6 +52,10 @@ export class FixtureScene {
       this.camera.position.set(14, 13, 16);
       this.camera.lookAt(0, 0.8, 0);
       if (definition) {
+        if (!map) {
+          this.contactNormals = new ContactNormals();
+          this.scene.add(this.contactNormals);
+        }
         this.rig = new RagdollView(definition, options.color);
         this.joints = new JointOverlay(definition.joints.length);
         this.scene.add(this.rig.root, this.joints.root);

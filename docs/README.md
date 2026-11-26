@@ -46,6 +46,7 @@
 - [Pulling onto the roof](slices/10c3-mantling.md) covers climbing controls, support transfer and obstruction tests.
 - [Ledge catches](slices/10c2-ledge-catch.md) documents falling-hand targeting, physical slip and break loads.
 - [Arena grips](slices/10c1-arena-grips.md) covers physical interaction with rooftop props and edges.
+- [Limb contact inspection](slices/06c2b4c-contact-inspector.md) covers contact directions and impulses from the Rapier solver.
 - [Skyline framing](slices/12e-skyline-framing.md) covers limb geometry, screen margins and the online fighter’s framing priority.
 - [Skyline camera turns](slices/12d-camera-orbit.md) covers the shared local view, personal online views and movement during turns.
 - [Local countdown and results timing](slices/12c-local-phase-clock.md) explains how slow render frames affect phase transitions.

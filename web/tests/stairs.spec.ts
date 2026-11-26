@@ -70,3 +70,26 @@ test('stair terrain and every body frame survive reset and configuration replace
   }
   expect(largestDifference).toBeLessThan(1e-5);
 });
+
+test('inspection follows the selected limb and clears the solved contacts on reset', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Test scene').selectOption('stairs');
+  await page.getByLabel('Inspect body').selectOption({ label: 'right foot' });
+  const toggle = page.getByLabel('Show external contact normals');
+  await toggle.check();
+  const count = page.locator('#contact-count');
+  await expect(count).toHaveText('0');
+  await page.getByRole('button', { name: 'Resume', exact: true }).click();
+  await expect.poll(async () => Number(await page.locator('#tick').textContent())).toBeGreaterThan(60);
+  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await expect(count).toHaveText(/^[1-9]\d*$/);
+  await expect(page.locator('#contact-impulse')).not.toHaveText('0.000 N·s');
+  await page.getByLabel('Inspect body').selectOption({ label: 'head' });
+  await expect(count).toHaveText('0');
+  await page.getByLabel('Inspect body').selectOption({ label: 'right foot' });
+  await expect(count).toHaveText(/^[1-9]\d*$/);
+  await page.getByRole('button', { name: 'Reset fixture' }).click();
+  await expect(count).toHaveText('0');
+  await toggle.uncheck();
+  await expect(count).toHaveCount(0);
+});

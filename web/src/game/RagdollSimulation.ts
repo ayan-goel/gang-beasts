@@ -55,6 +55,7 @@ export class RagdollSimulation implements SimulationPort, RigInspection {
   free(): void { this.native.free(); }
   configure(json: string): void { this.native.configure(json); }
   configuration_json(): string { return this.native.configuration_json(); }
+  externalContacts(): Float32Array { return this.native.external_contacts(this.selectedBody); }
   bodyStates(): Float32Array { return this.native.body_states(); }
   jointStates(): Float32Array { return this.native.joint_states(); }
   collider_lines(): Float32Array { return this.native.collider_lines(); }

@@ -1425,6 +1425,8 @@ The locomotion scene adds focused-canvas WASD/arrows, Shift running and captured
 | Solver iterations | 8 | Benchmark candidate |
 | Explicit substeps | 1 / 2 / 4 | Separate from solver/CCD settings |
 
+In the single-fighter playgrounds, **Show external contact normals** draws a 0.20 m line at each loaded external contact on the selected limb. The direction shows the normal impulse acting on that limb. The inspector reports the number of loaded points and the sum of their normal impulse magnitudes in N·s for the completed solve. Selecting another body, stepping and resetting refresh the readings. [Contact inspection and stair measurements](docs/slices/06c2b4c-contact-inspector.md)
+
 The **Low stairs** playground scene and native regression share the same physical fixture. Three adjacent 10 cm risers lead to a long landing. The browser draws the enabled terrain colliders from owned center/half-extent records, and reset or valid tuning reconstructs the same terrain. The default approach settles for 60 ticks and walks forward for 150. Native/WASM body traces agree through this sequence, including the current fall. Physical ascent and human playability remain open. [Stair fixture and verification](docs/slices/06c2b4b-stairs.md)
 
 Provide test scenes for flat ground, slopes, stairs, ledges, overhead obstructions, rotating platforms, hanging weights and closed grip loops. Record configuration hash, build/toolchain versions, seed and input stream with every useful bug reproduction. This is the main tool for evaluating feel, not merely a debug screenshot generator.

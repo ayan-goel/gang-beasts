@@ -6,6 +6,7 @@ mod duel;
 mod duel_contacts;
 mod duel_fighter;
 mod duel_grips;
+mod external_contacts;
 mod grip_contact;
 mod grip_joint;
 mod ledge_reach;

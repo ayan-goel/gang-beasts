@@ -34,12 +34,15 @@ export function startPlayground(container: HTMLElement, publish: (state: Playgro
     if (simulation.rig) playground.setPaused(true);
     if (playground.movementInput) releaseInput = bindMovementInput(container.querySelector('canvas')!, playground.movementInput);
     let previousDisplay = 0;
-    const render = () => liveScene.render(
-      simulation.rig?.bodyStates() ?? simulation.fixture_state(),
-      playground.showColliders ? simulation.collider_lines() : undefined,
-      playground.showJoints ? simulation.rig?.jointStates() : undefined, simulation.rig?.selectedBody, playground.showJoints ? simulation.rig?.controller?.poses() : undefined,
-      simulation.rig?.practiceState?.(),
-    );
+    const render = () => {
+      liveScene.contactNormals?.update(playground.selectedContacts());
+      liveScene.render(
+        simulation.rig?.bodyStates() ?? simulation.fixture_state(),
+        playground.showColliders ? simulation.collider_lines() : undefined,
+        playground.showJoints ? simulation.rig?.jointStates() : undefined, simulation.rig?.selectedBody, playground.showJoints ? simulation.rig?.controller?.poses() : undefined,
+        simulation.rig?.practiceState?.(),
+      );
+    };
     const refresh = () => {
       render();
       publish(playground.snapshot());

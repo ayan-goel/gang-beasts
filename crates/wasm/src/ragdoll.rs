@@ -178,6 +178,11 @@ impl LocalRagdoll {
             .collect()
     }
 
+    pub fn external_contacts(&self, part: JsValue) -> Result<Vec<f32>, JsValue> {
+        let samples = self.rig.view().external_contacts(body_part(part)?);
+        Ok(samples.into_iter().flatten().collect())
+    }
+
     pub fn collider_lines(&mut self) -> Vec<f32> {
         self.rig.collider_lines()
     }
@@ -247,18 +252,21 @@ impl LocalRagdoll {
     }
 
     pub fn queue_impulse(&mut self, part: JsValue, x: f32, y: f32, z: f32) -> Result<(), JsValue> {
-        // Validate the JS number before integer conversion; narrow WASM integer
-        // arguments would wrap/truncate invalid indices into a different limb.
-        let part = part
-            .as_f64()
-            .ok_or_else(|| JsValue::from_str("body-part index must be a number"))?;
-        if !part.is_finite() || part.fract() != 0.0 || !(0.0..15.0).contains(&part) {
-            return Err(JsValue::from_str("invalid body-part index"));
-        }
         self.rig
-            .queue_impulse(BodyPart::ALL[part as usize], [x, y, z])
+            .queue_impulse(body_part(part)?, [x, y, z])
             .map_err(js_error)
     }
+}
+
+fn body_part(value: JsValue) -> Result<BodyPart, JsValue> {
+    // Validate before narrowing so a fractional or overflowing index cannot select another limb.
+    let index = value
+        .as_f64()
+        .ok_or_else(|| JsValue::from_str("body-part index must be a number"))?;
+    if index.fract() != 0.0 || !(0.0..BodyPart::ALL.len() as f64).contains(&index) {
+        return Err(JsValue::from_str("invalid body-part index"));
+    }
+    Ok(BodyPart::ALL[index as usize])
 }
 
 fn build(configuration: &str, kind: RigKind) -> Result<LocalRagdoll, JsValue> {
