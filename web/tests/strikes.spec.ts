@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('mouse chords and keyboard alternatives independently punch, hold and release the two hands', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('locomotion');
   await expect(page.getByRole('button', { name: 'Left hand', exact: true })).toBeDisabled();
@@ -33,7 +33,7 @@ test('mouse chords and keyboard alternatives independently punch, hold and relea
 });
 
 test('WASM tap moves the correct limb, enforces cooldown and retains owned hand records', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const result = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
@@ -80,7 +80,7 @@ test('WASM tap moves the correct limb, enforces cooldown and retains owned hand 
 });
 
 test('a two-hand reach remains supported for twenty seconds and either hand can retract', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const result = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));

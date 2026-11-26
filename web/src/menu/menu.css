@@ -1,0 +1,74 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, sans-serif;
+  color: #faf6eb;
+  background: #132b35;
+  --gold: #ffca67;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+.menu {
+  display: grid;
+  grid-template-columns: minmax(23rem, 42%) 1fr;
+  min-height: 100svh;
+}
+.poster {
+  grid-column: 2;
+  grid-row: 1;
+  position: relative;
+  overflow: hidden;
+  background: #acbdbe;
+}
+.poster img { position: absolute; width: 100%; height: 100%; object-fit: cover; object-position: 54% center; }
+.choices {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  padding: clamp(2.5rem, 7vh, 6rem) clamp(1.7rem, 4.5vw, 6rem);
+  border-top: .45rem solid var(--gold);
+}
+h1 {
+  margin: 0;
+  font-family: "Archivo Black", Inter, system-ui, sans-serif;
+  font-size: clamp(3.8rem, 7.4vw, 9rem);
+  font-weight: 950;
+  line-height: .85;
+  letter-spacing: -.075em;
+  text-transform: uppercase;
+}
+h1 span { display: block; color: var(--gold); }
+.intro p { max-width: 30rem; margin: 1.6rem 0 0; color: #deebea; font-size: clamp(1rem, 1.25vw, 1.25rem); line-height: 1.55; }
+nav { margin-top: clamp(2rem, 5vh, 4.5rem); }
+h2, .local { display: flex; align-items: baseline; gap: .6rem; }
+h2 { flex-wrap: wrap; margin: 0 0 .8rem; font-size: 1.08rem; }
+small { color: #b9cbcd; font-size: .83rem; font-weight: 500; }
+a { color: inherit; text-underline-offset: .24em; }
+a:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
+.rooms { display: flex; flex-wrap: wrap; gap: .65rem; }
+.rooms a {
+  display: inline-flex; align-items: center; justify-content: center; gap: .8rem;
+  min-height: 3.1rem; padding: .65rem 1.15rem;
+  border-radius: .2rem; font-weight: 750; text-decoration: none;
+}
+.host { background: var(--gold); color: #132b35; }
+.host:hover { background: #ffda92; }
+.join { border: 1px solid #90a6ab; }
+.join:hover, .local:hover { background: #203e49; }
+.local { position: relative; flex-wrap: wrap; margin-top: 1.35rem; padding: 1rem 1.8rem 1rem 0; border-block: 1px solid #496069; text-decoration: none; }
+.local span { position: absolute; right: .35rem; top: 50%; transform: translateY(-50%); }
+footer { margin-top: 1.4rem; }
+footer a { display: inline-block; padding-block: .55rem; color: #b9cbcd; font-size: .85rem; }
+@media (max-width: 740px) {
+  .menu { display: flex; flex-direction: column; }
+  .poster { height: clamp(11rem, 36svh, 23rem); }
+  .poster img { object-position: center 50%; }
+  .choices { flex: 1; justify-content: flex-start; padding: 1.8rem clamp(1.25rem, 6vw, 3rem); }
+  h1 { font-size: clamp(2.85rem, 9.3vw, 4.8rem); line-height: .95; letter-spacing: -.055em; }
+  h1 span { display: inline; }
+  .intro p { margin-top: .8rem; }
+  nav { margin-top: 1.5rem; }
+  .local { margin-top: 1.1rem; }
+  footer { margin-top: .75rem; }
+}

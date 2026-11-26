@@ -1,13 +1,34 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="data:," />
-    <title>Physics Brawler · Playground</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#132b35">
+    <meta name="description" content="Grab, lift and throw your friends off the Skyline rooftop. Play in a private room or share a keyboard.">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="/src/menu/menu.css">
+    <title>Skyline Melee</title>
   </head>
   <body>
-    <main id="app"><p role="status">Loading simulation…</p></main>
-    <script type="module" src="/src/main.tsx"></script>
+    <main class="menu">
+      <div class="poster">
+        <img src="/src/menu/rooftop-throw.webp" alt="Coral throws Blue onto a breakaway walkway at the edge of the Skyline roof." width="1152" height="880" fetchpriority="high">
+      </div>
+      <section class="choices" aria-labelledby="title">
+        <div class="intro">
+          <h1 id="title">Skyline <span>Melee</span></h1>
+          <p>Grab, lift and throw your rivals off the rooftop. Win three rounds to take the match.</p>
+        </div>
+        <nav aria-label="Play Skyline Melee">
+          <h2>Private multiplayer <small>2–8 players</small></h2>
+          <div class="rooms">
+            <a class="host" href="/rooms/">Host a room <span aria-hidden="true">↗</span></a>
+            <a class="join" href="/rooms/?action=join">Join a room</a>
+          </div>
+          <a class="local" href="/play/"><strong>Local match</strong><small>Two players, one keyboard</small><span aria-hidden="true">→</span></a>
+        </nav>
+        <footer><a href="/playground/">Physics playground</a></footer>
+      </section>
+    </main>
   </body>
 </html>

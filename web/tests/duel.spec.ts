@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('two players land independent punches in the sparring scene and reset the encounter', async ({page}, testInfo) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await expect(page.locator('option[value="duel"]')).toHaveText('Local sparring');
   await page.getByLabel('Test scene').selectOption('duel');
@@ -27,7 +27,7 @@ test('two players land independent punches in the sparring scene and reset the e
 });
 
 test('native and WASM agree on both rigs, reciprocal grips and hit events at each completed tick', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const result = await page.evaluate(async () => {
     const { default: init, LocalDuel } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
@@ -142,7 +142,7 @@ test('native and WASM agree on both rigs, reciprocal grips and hit events at eac
 });
 
 test('shared keyboard routes directions to separate fighters and blur clears both', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.evaluate(async () => {
     const { LocalDuel } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));

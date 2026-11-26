@@ -1027,6 +1027,8 @@ Elimination cancels input, motors and all affected gameplay grips. It is permane
 
 Open site → create private room → share link/code → friends join → choose name/color → ready → host starts → play rounds → results → rematch. No required account, installation, command line or exposed implementation settings.
 
+The site root opens the [Skyline Melee main menu](docs/slices/16k-game-entry.md). Hosting or joining opens the private-room form. Local match opens `/play/`, and the simulation inspector is available at `/playground/`. The menu uses static HTML and an original in-game still, so visitors can choose a destination before loading a simulation or opening a room session.
+
 The [private lobby](docs/slices/16b-browser-lobby.md) lives at `/rooms/`. Its share link carries the room code in `?code=`. Opening an invite while seated preserves the new destination until the player chooses to leave their current room.
 
 Show actionable states for unavailable server, full room, wrong code, incompatible version, loading timeout and reconnect failure. A browser tab becoming hidden is not permission to pause everyone else's game.

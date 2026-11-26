@@ -8,7 +8,7 @@ test('stopping at varied phases preserves native posture, settling and moment li
   const native: Case[] = JSON.parse(execFileSync('cargo', ['run', '--quiet', '--locked', '--release', '-p', 'brawler-engine', '--example', 'stopping_trace'], {
     cwd: '..', encoding: 'utf8', maxBuffer: 32 * 1024 * 1024,
   }));
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const traces: Frame[][] = await page.evaluate(async (cases) => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
@@ -53,7 +53,7 @@ test('stopping at varied phases preserves native posture, settling and moment li
 });
 
 test('visible stopping effort rises during braking and clears after settling and reset', async ({page}) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('locomotion');
   await expect(page.locator('#stopping-moment')).toHaveText('0.00 N·m');

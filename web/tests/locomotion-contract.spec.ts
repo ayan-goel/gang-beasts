@@ -1,7 +1,7 @@
 import {expect,test} from '@playwright/test';
 
 test('walking WASM validates intent atomically and preserves its variant and owned diagnostics', async({page})=>{
-  await page.goto('/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
+  await page.goto('/playground/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const result = await page.evaluate(async()=>{
     const {default:init,LocalRagdoll} = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js')); await init();
     const config = await (await fetch('/src/generated/physics.json')).text();

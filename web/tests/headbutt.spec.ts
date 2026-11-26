@@ -3,7 +3,7 @@ import {decodeSnapshot} from '../src/net/snapshot';
 import {releaseRoom} from './support/releaseRoom';
 
 test('the shared keyboard spends stamina only for the fighter whose headbutt key was pressed', async ({page}) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await page.getByLabel('Test scene').selectOption('duel');
   await page.getByRole('button',{name:'Resume',exact:true}).click();
   for (const [key,name] of [['KeyQ','Coral'],['KeyM','Blue']] as const) {

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
 test('WASM ragdoll reproduces native body and joint-frame traces', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const browser = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
@@ -40,7 +40,7 @@ test('WASM ragdoll reproduces native body and joint-frame traces', async ({ page
 });
 
 test('WASM rig tuning and reset preserve ownership and reject invalid requests', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const result = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));

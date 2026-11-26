@@ -14,7 +14,7 @@ async function fixtureRecording(page: import('@playwright/test').Page, gravity: 
 }
 
 test('tuning and exported browser recordings replay in the native engine and visible page', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('button', { name: 'Apply tuning' })).toBeVisible();
   await page.getByLabel('Gravity Y (m/s²)').fill('-3');
   await page.getByLabel('Solver iterations').fill('12');
@@ -51,7 +51,7 @@ test('tuning and exported browser recordings replay in the native engine and vis
 });
 
 test('nondefault config and impulses reproduce all 14 state fields across native and WASM', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const browser = await page.evaluate(async () => {
     const { default: init, LocalSimulation } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
@@ -93,7 +93,7 @@ test('a file read started before tuning cannot replace the newer fixture', async
       });
     };
   });
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const json = await fixtureRecording(page, -7);
   await page.getByLabel('Import recording').setInputFiles({ name: 'delayed.json', mimeType: 'application/json', buffer: Buffer.from(json) });
@@ -108,7 +108,7 @@ test('a file read started before tuning cannot replace the newer fixture', async
 });
 
 test('a solver-only tuning change preserves valid fractional imported gravity', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const json = await fixtureRecording(page, -9.815);
   await page.getByLabel('Import recording').setInputFiles({ name: 'fractional.json', mimeType: 'application/json', buffer: Buffer.from(json) });

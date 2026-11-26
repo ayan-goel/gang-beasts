@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
 test('stair playground exposes the physical staircase and locomotion controls', async ({ page }, testInfo) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await expect(page.locator('option[value="stairs"]')).toHaveText('Low stairs');
   await page.getByLabel('Test scene').selectOption('stairs');
@@ -22,7 +22,7 @@ test('stair playground exposes the physical staircase and locomotion controls', 
 });
 
 test('stair terrain and every body frame survive reset and configuration replacement', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const observed = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
@@ -79,7 +79,7 @@ test('stair terrain and every body frame survive reset and configuration replace
 });
 
 test('inspection follows the selected limb and clears the solved contacts on reset', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await page.getByLabel('Test scene').selectOption('stairs');
   await page.getByLabel('Inspect body').selectOption({ label: 'right foot' });
   const toggle = page.getByLabel('Show external contact normals');

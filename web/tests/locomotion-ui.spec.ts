@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('focused movement walks, runs, releases on blur and pause, and resets cleanly', async ({page}) => {
-  await page.goto('/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
+  await page.goto('/playground/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await expect(page.locator('option[value="locomotion"]')).toHaveCount(1);
   await page.getByLabel('Test scene').selectOption('locomotion');
   await expect(page.locator('#movement-command')).toHaveText('Idle');
@@ -29,7 +29,7 @@ test('focused movement walks, runs, releases on blur and pause, and resets clean
 });
 
 test('keyboard direction holds ignore unrelated releases and cannot restart from stale repeats', async ({page}) => {
-  await page.goto('/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
+  await page.goto('/playground/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('locomotion');
   await page.getByRole('button', {name:'Resume',exact:true}).click();
   const forward = page.getByRole('button', {name:'Move forward',exact:true});
@@ -54,7 +54,7 @@ test('keyboard direction holds ignore unrelated releases and cannot restart from
 });
 
 test('pointer capture releases outside the button, visibility clears input, and scene changes remove handlers', async({page})=>{
-  await page.goto('/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
+  await page.goto('/playground/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('locomotion');
   await page.getByRole('button',{name:'Resume',exact:true}).click();
   const forward=page.getByRole('button',{name:'Move forward',exact:true});
@@ -76,7 +76,7 @@ test('pointer capture releases outside the button, visibility clears input, and 
 
 test('narrow layouts reserve scene space above movement controls', async ({page}) => {
   await page.setViewportSize({width:320,height:700});
-  await page.goto('/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
+  await page.goto('/playground/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('locomotion');
   const layout = await page.evaluate(() => ({
     sceneBottom:document.querySelector('canvas')!.getBoundingClientRect().bottom,

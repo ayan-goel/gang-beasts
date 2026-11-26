@@ -1,22 +1,22 @@
 # Physics brawler
 
-A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline Melee is playable locally with two people on one keyboard. Two friends can also play Skyline from separate browser sessions through a private lobby.
+A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline Melee is playable locally with two people on one keyboard. Two to eight friends can also play from separate browser sessions in a private room.
 
 The [technical specification](TECHNICAL_SPEC.md) is canonical. See the [documentation index](docs/README.md) for implementation order, decisions, and acceptance evidence.
 
 ## Play Skyline Melee
 
-Start the browser project using the setup below and open `/play/`, or select **Play Skyline Melee** from the playground. The match is first to three rooftop ring-outs. A countdown starts each round, and rematch is available after the winning round. Coral uses WASD and J/K, Blue uses the arrow keys and comma/period. The start and pause screens show the full bindings.
+Start the browser project using the setup below and open the printed address. Choose **Host a room**, **Join a room**, or **Local match** from the main menu. Local play also opens directly at `/play/`. The match is first to three rooftop ring-outs. A countdown starts each round, and rematch is available after the winning round. Coral uses WASD and J/K, Blue uses the arrow keys and comma/period. The start and pause screens show the full bindings.
 
 Hold a hand control near a crate, vent or exposed roof edge to grab it. The HUD shows which hand has the grip. Use the lift control to raise movable crates.
 
 If a walkway falls, keep a hand held within reach of the main roof to catch the lip. Hold Space (Coral) or Enter (Blue) to pull onto a clear roof. Release jump to stop pulling. Releasing your last hand lets you fall. [Catch behavior](docs/slices/10c2-ledge-catch.md) and [pull-up controls](docs/slices/10c3-mantling.md).
 
-For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open the printed local address with `/play/` appended. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
+For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open the printed local address and choose **Local match**. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
 
 ## Open a private room
 
-Start the API and web app in separate terminals using `cargo run --release --locked -p brawler-server` and `npm --prefix web run dev`. Open [Private rooms](http://127.0.0.1:5173/rooms/) and create a room. Copy the invite into a separate browser profile to try joining as a second player on the same machine. Use **Ready up** to mark your seat ready. When both seats are ready, the host can start a two-player online match. Focus the arena and use WASD, Shift, Space, J/K and E. Both browsers receive the server’s physical outcomes and scores. Reloading retains your seat and clears readiness. The host role passes to the next occupied slot when the host leaves. [Lobby design and tests](docs/slices/16b-browser-lobby.md)
+Start the API and web app in separate terminals using `cargo run --release --locked -p brawler-server` and `npm --prefix web run dev`. Open [Private rooms](http://127.0.0.1:5173/rooms/) and create a room. Copy the invite into a separate browser profile to try joining as a second player on the same machine. Use **Ready up** to mark your seat ready. When all occupied seats are ready, the host can start a match with two to eight players. Focus the arena and use WASD, Shift, Space, J/K and E. Both browsers receive the server’s physical outcomes and scores. Reloading retains your seat and clears readiness. The host role passes to the next occupied slot when the host leaves. [Lobby design and tests](docs/slices/16b-browser-lobby.md)
 
 ## Native server
 
@@ -63,9 +63,11 @@ npm --prefix web run test:e2e
 npm --prefix web run build
 ```
 
-Browser integration tests start their own local server if needed. They compare a 600-tick WASM trace against the native release fixture and test canvas resize containment. The production static bundle is in `web/dist`; it includes the diagnostic playground and the local game at `play/index.html`.
+Browser integration tests start their own local server if needed. They compare a 600-tick WASM trace against the native release fixture and test canvas resize containment. The production static bundle is in `web/dist`; its directory indexes serve the main menu, local play, private rooms and the diagnostic playground.
 
 ## Playground controls
+
+Choose **Physics playground** from the main menu or open `/playground/` directly.
 
 Choose **Passive ragdoll** to inspect the fifteen-body rig paused at tick zero. Select a limb for readings and impulses, enable joint frames/colliders, then resume to observe its unpowered fall. Joint limits and anchor separation are available in the inspector. Scene switching starts a fresh world with default tuning. Choose **Standing ragdoll** for the supported standing preset. Toggle character control, inspect support and per-joint effort/velocity targets, or shove the selected body with a 10 N·s +X impulse. Pale parent joint axes show the bind-pose target; saturated child axes show actual orientation. Reset and physics tuning preserve the control toggle. Scene changes discard unsubmitted tuning drafts. Ragdoll recording is not implemented; recording controls apply to the cuboid scene.
 

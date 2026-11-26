@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('pause, exact single step, bounded impulse, reset and collider overlay work', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByRole('button', { name: 'Pause' }).click();
   await page.getByRole('button', { name: 'Reset fixture' }).click();
@@ -32,14 +32,14 @@ test('pause, exact single step, bounded impulse, reset and collider overlay work
 
 test('long diagnostics panel does not push the desktop scene below the viewport', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const canvas = await page.locator('canvas').boundingBox();
   expect(canvas!.y + canvas!.height).toBeLessThanOrEqual(900);
 });
 
 test('exported configuration is the versioned configuration used by the fixture', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export configuration' }).click();
   const file = await download;

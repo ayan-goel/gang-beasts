@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('a held sparring hand identifies its target and clears on key release or focus loss', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('duel');
   const grips = page.getByLabel('Coral grips', { exact: true });
@@ -25,7 +25,7 @@ test('a held sparring hand identifies its target and clears on key release or fo
 });
 
 test('shared keyboard lift reaches the correct fighter and blur releases both', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.evaluate(async () => {
     const { LocalDuel } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));

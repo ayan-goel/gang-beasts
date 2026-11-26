@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
 test('standing WASM matches native control, push, disable, and reset traces', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const browser = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
@@ -67,7 +67,7 @@ test('standing WASM matches native control, push, disable, and reset traces', as
 });
 
 test('standing scene exposes support, motor targets, and independent control enable', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await expect(page.locator('option[value="standing"]')).toHaveCount(1);
   await page.getByLabel('Test scene').selectOption('standing');

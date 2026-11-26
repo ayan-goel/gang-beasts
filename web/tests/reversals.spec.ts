@@ -5,7 +5,7 @@ type Frame = { bodies: number[]; movement: number[] };
 type Trace = { running: boolean; gap: number; frames: Frame[] };
 
 test('WASM preserves native reversal traces across keyboard neutral gaps', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const traces: Trace[] = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));

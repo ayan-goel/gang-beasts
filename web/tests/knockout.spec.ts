@@ -11,7 +11,7 @@ test('real strikes, unconscious fall and physical get-up agree with native acros
   const trace: TraceFrame[] = JSON.parse(execFileSync('cargo', [
     'run','--quiet','--release','--locked','-p','brawler-engine','--example','knockout_trace',
   ], {cwd:'..',encoding:'utf8',maxBuffer:16*1024*1024}));
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const frames = await page.evaluate(async commands => {
     const { default: init, LocalDuel } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
@@ -74,7 +74,7 @@ test('real strikes, unconscious fall and physical get-up agree with native acros
 });
 
 test('sparring shows damage on the defender and reset restores both fighters', async ({page}) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('duel');
   const blue = page.getByLabel('Blue condition', {exact:true});

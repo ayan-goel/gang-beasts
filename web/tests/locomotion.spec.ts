@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
 test('locomotion WASM reproduces native movement, braking, impact and lifecycle traces', async ({ page }) => {
-  await page.goto('/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
+  await page.goto('/playground/'); await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const frames = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
     await init();

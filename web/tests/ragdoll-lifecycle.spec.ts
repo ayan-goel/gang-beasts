@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('locomotion disposal frees native and GPU resources when neutral input fails', async ({page}) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const result = await page.evaluate(async () => {
     const moduleUrl = (path: string) => performance.getEntriesByType('resource').find(entry => new URL(entry.name).pathname === path)!.name;
@@ -30,7 +30,7 @@ test('locomotion disposal frees native and GPU resources when neutral input fail
 
 for (const stage of ['render', 'constructor'] as const) {
   test(`failed ${stage} cleans up the native rig, canvas and GPU context`, async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/playground/');
     await expect(page.getByRole('status')).toHaveText('Simulation ready');
     await page.evaluate(async stage => {
       const loaded = performance.getEntriesByType('resource').find(entry => new URL(entry.name).pathname === '/src/generated/wasm/brawler_wasm.js')!;
@@ -72,7 +72,7 @@ for (const stage of ['render', 'constructor'] as const) {
 }
 
 test('playground routes the selected limb and forward impulse to the native rig', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const result = await page.evaluate(async () => {
     const moduleUrl = (path: string) => performance.getEntriesByType('resource').find(entry => new URL(entry.name).pathname === path)!.name;

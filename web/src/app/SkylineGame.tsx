@@ -43,8 +43,8 @@ export function SkylineGame() {
   const clock = Math.ceil((match?.timeLeft ?? 10800) / 60);
   return <main className="skyline-shell">
     <header className="skyline-header">
-      <a className="roof-brand" href="/play/"><span aria-hidden="true" className="roof-mark">▰</span> Skyline Melee</a>
-      <span>Local multiplayer</span><MuteButton /><a href="/rooms/">Private rooms</a><a href="/">Physics playground ↗</a>
+      <a className="roof-brand" href="/" aria-label="Main menu"><span aria-hidden="true" className="roof-mark">▰</span> Skyline Melee</a>
+      <span>Local multiplayer</span><MuteButton /><a href="/rooms/">Private rooms</a><a href="/playground/">Physics playground ↗</a>
     </header>
     <div className={menu ? 'skyline-layout has-menu' : 'skyline-layout'}>
       {menu && <section className="skyline-menu">

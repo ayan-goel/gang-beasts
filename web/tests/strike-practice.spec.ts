@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { expect, test } from '@playwright/test';
 
 test('strike practice shows a target that swings after a punch and resets to rest', async ({ page }, testInfo) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await expect(page.locator('option[value="practice"]')).toHaveText('Strike practice');
   await page.getByLabel('Test scene').selectOption('practice');
@@ -23,7 +23,7 @@ test('strike practice shows a target that swings after a punch and resets to res
 });
 
 test('both punches reproduce the native target trajectory across reset and tuning replacement', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const observed = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));

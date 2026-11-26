@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('a passive scene tuning draft cannot carry into a fresh standing scene', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('ragdoll');
   await page.getByLabel('Gravity Y (m/s²)').fill('-1');

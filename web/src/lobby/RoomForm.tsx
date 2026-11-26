@@ -1,8 +1,8 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { colors, enter, errorText } from './api';
 
-export function RoomForm({ invite, onEnter }: { invite: string; onEnter: (code: string) => void }) {
-  const [join, setJoin] = useState(!!invite);
+export function RoomForm({ invite, joinByCode, onEnter }: { invite: string; joinByCode: boolean; onEnter: (code: string) => void }) {
+  const [join, setJoin] = useState(!!invite || joinByCode);
   const [code, setCode] = useState(invite);
   const [name, setName] = useState('');
   const [color, setColor] = useState('');

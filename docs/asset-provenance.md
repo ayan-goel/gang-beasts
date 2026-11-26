@@ -7,6 +7,7 @@
 | Roof Crew skinned work suit, helmet, headlamp, goggles, gloves and boots | [Original mesh authoring source](../tools/fighter/model.py) and [exported GLB](../assets/fighters/roof-crew.glb) | Local and online Skyline fighters. Skin weights and joint pivots follow the physical rig |
 | Coral and Blue diagnostic fighter geometry | [Rig dimensions](../config/character.json) and [procedural view](../web/src/rendering/RagdollView.ts) | Physics playground inspection and sparring |
 | Match interface and rooftop mark | [Game screen](../web/src/app/SkylineGame.tsx) and [styles](../web/src/app/skyline.css) | Local start, scoreboard, pause and rematch |
+| Main menu rooftop throw | [Original WebP still](../web/src/menu/rooftop-throw.webp) | Two repository Roof Crew fighters in the Skyline simulation, captured ten fixed ticks after releasing a lift at the east edge with a presentation camera. [Menu capture](slices/16k-game-entry.md) |
 | Skyline lobby image | [WebP capture](../web/src/lobby/skyline.webp) of the project’s own rendered Skyline arena | The room page presents the map without loading the game renderer |
 | Walkway and wind warnings | [Original oscillator scores and envelopes](../web/src/audio/matchTone.ts) | Four runtime-synthesized global cues. [Pulse timings and peak level](slices/17c-hazard-audio.md#original-cues) |
 | Combat impact | [Original synthesized thud](../web/src/audio/impactSound.ts) | A seeded noise transient and downward pitch sweep, generated once per audio context. [Spatialization and level limits](slices/17e-strike-audio.md) |

@@ -10,7 +10,7 @@ test('browser WASM reproduces the native falling-body trace', async ({ page }) =
   const native = JSON.parse(execFileSync('cargo', [
     'run', '--quiet', '--locked', '--release', '-p', 'brawler-engine', '--example', 'foundation_trace',
   ], { cwd: '..', encoding: 'utf8' })) as number[][];
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await expect.poll(async () => Number(await page.locator('#tick').textContent())).toBeGreaterThan(90);
   await expect.poll(async () => Number.parseFloat((await page.locator('#height').textContent())!))
@@ -39,7 +39,7 @@ test('browser WASM reproduces the native falling-body trace', async ({ page }) =
 });
 
 test('canvas stays inside its viewport while resizing', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   // Shrink the host synchronously, before ResizeObserver can resize the GPU
   // buffer, to reproduce the one-frame overflow observed during window resize.

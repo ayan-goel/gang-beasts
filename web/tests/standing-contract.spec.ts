@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('driven WASM validates control types, preserves mode, and owns diagnostic buffers', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const result = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));

@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('ragdoll scene supports inspection, impulses, tuning and a clean switch back', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('ragdoll');
   await expect(page.locator('#tick')).toHaveText('0');
@@ -46,7 +46,7 @@ test('ragdoll scene supports inspection, impulses, tuning and a clean switch bac
 });
 
 test('switching scenes releases the previous WebGL context', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.evaluate(() => {
     const previous = document.querySelector('canvas')!.getContext('webgl2')!;

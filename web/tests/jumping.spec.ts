@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
 test('space and the Jump button lift the character and allow a supported landing', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('locomotion');
   const jump = page.getByRole('button', { name: 'Jump', exact: true });
@@ -21,7 +21,7 @@ test('space and the Jump button lift the character and allow a supported landing
 });
 
 test('native and WASM agree on jumping, steering, holding, and rearming', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const frames = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));

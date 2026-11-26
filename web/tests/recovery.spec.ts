@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { execFileSync } from 'node:child_process';
 
 test('re-enabled fallen character uses bounded assistance and regains a physical stance', async ({page}) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   const frames = await page.evaluate(async () => {
     const { default: init, LocalRagdoll } = await import(/* @vite-ignore */ String('/src/generated/wasm/brawler_wasm.js'));
@@ -38,7 +38,7 @@ test('re-enabled fallen character uses bounded assistance and regains a physical
 });
 
 test('playground shows physical get-up after a shove with control disabled', async ({page}) => {
-  await page.goto('/');
+  await page.goto('/playground/');
   await expect(page.getByRole('status')).toHaveText('Simulation ready');
   await page.getByLabel('Test scene').selectOption('locomotion');
   const toggle = page.getByLabel('Enable character control');
