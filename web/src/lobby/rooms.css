@@ -23,13 +23,13 @@ body { background: var(--panel); }
 .room-panel button { cursor: pointer; min-height: 2.8rem; }
 .room-panel button:disabled { opacity: .55; cursor: default; }
 .room-panel button:focus-visible, .room-panel input:focus-visible, .room-panel select:focus-visible, a:focus-visible { outline: 3px solid #e49b45; outline-offset: 3px; }
-.room-mode { display: flex; gap: .2rem; border-bottom: 1px solid #61777d; }
+.room-mode { display: flex; flex-wrap: wrap; gap: .2rem; border-bottom: 1px solid #61777d; }
 .room-mode button { color: #c4d3d1; background: none; border: none; padding: .4rem 1.3rem; border-bottom: 3px solid transparent; }
 .room-mode button[aria-pressed=true] { color: var(--gold); border-color: var(--gold); }
 .room-panel form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; display: grid; gap: 1.3rem; }
 .room-panel label { display: grid; gap: .5rem; color: #dce4df; font-size: .9rem; font-weight: 650; }
 .room-panel input, .room-panel select { width: 100%; min-width: 0; min-height: 2.85rem; padding: .65rem .7rem; background: #213e49; border: 1px solid #71878b; color: var(--paper); }
-.room-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(7.3rem, 1fr)); gap: 1rem; }
+.room-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(7.3rem, 100%), 1fr)); gap: 1rem; }
 .room-panel .room-primary, .online-callout .room-primary { background: var(--gold); color: var(--ink); font-weight: 800; border: 0; padding: .7rem 1rem; }
 .room-primary:hover:not(:disabled) { background: #ffd980; }
 .room-secondary { border: 1px solid #8aa3a5; background: transparent; color: var(--paper); }
@@ -51,9 +51,12 @@ body { background: var(--panel); }
 .room-layout figcaption strong { font-size: 2.4rem; line-height: 1; letter-spacing: -.06em; }
 .room-layout figcaption span { font-size: .86rem; }
 @media (max-width: 720px) {
-  .room-layout { grid-template-columns: 1fr; }
+  .room-layout { grid-template-columns: minmax(0, 1fr); }
   .room-console { align-items: start; padding: 1.8rem clamp(1rem, 5vw, 2rem); justify-items: center; }
   .room-layout figure { min-height: 11rem; max-height: 20rem; }
+  .room-layout figcaption { max-width: calc(100% - 2.4rem); padding-inline: min(1.4rem, 5vw); }
   .room-layout figcaption strong { font-size: 1.7rem; }
   .room-panel h1 { font-size: 2.7rem; }
 }
+.room-console, .room-panel, .room-panel form { min-width: 0; }
+.room-panel h1, .room-layout figcaption { overflow-wrap: anywhere; }

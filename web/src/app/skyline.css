@@ -24,3 +24,21 @@
 @media(max-width:720px){.skyline-shell{min-height:35rem}.skyline-header>span{display:none}.skyline-layout.has-menu{grid-template-columns:1fr;grid-template-rows:minmax(11rem,1fr) auto}.has-menu .skyline-stage{grid-row:1}.skyline-menu{grid-row:2;display:grid;grid-template-columns:1fr 1fr;padding:1rem;gap:.5rem 1rem}.skyline-menu h1{font-size:2.4rem;margin:.35rem 0}.skyline-bindings{border:0}.skyline-bindings h2{margin:.35rem 0 0}.skyline-start{align-self:end}.match-hud{left:.5rem;right:.5rem;top:.5rem;gap:.2rem}.match-round,.match-score,.match-pause{padding:.48rem .55rem;font-size:.7rem}}
 
 .match-grips{position:absolute;bottom:1rem;left:1rem;right:1rem;pointer-events:none;display:grid;gap:.25rem;justify-items:start}.match-grips>div{background:#172d38ed;padding:.4rem .65rem;color:var(--paper);font-size:.78rem}.match-grips b{margin-right:.3rem}
+
+.skyline-menu { justify-content: safe center; }
+.match-callout { width: max-content; max-width: calc(100% - 1rem); }
+.match-callout strong, .match-callout span { white-space: normal; overflow-wrap: anywhere; }
+@media (max-width: 720px) {
+  [data-text-size] .skyline-shell { height: auto; min-height: 100dvh; }
+  [data-text-size] .skyline-layout { display: flex; flex-direction: column; }
+  [data-text-size] .skyline-stage { order: -1; display: flex; flex-direction: column; }
+  [data-text-size] .skyline-stage .scene-canvas { position: relative; height: max(240px, 50dvh); }
+  [data-text-size] .skyline-menu { grid-template-columns: minmax(0, 1fr); overflow: visible; }
+  [data-text-size] .skyline-menu h1 { overflow-wrap: anywhere; }
+  [data-text-size] .match-hud { position: static; flex-wrap: wrap; padding: .3rem; }
+  [data-text-size] .local-scoreboard { flex-wrap: wrap; min-width: 0; }
+  [data-text-size] .local-scoreboard .scoreboard-hint { position: static; }
+  [data-text-size] .match-score { max-width: 100%; flex-wrap: wrap; }
+  [data-text-size] .match-score > div + div { margin: 0; padding: 0; border: 0; }
+  [data-text-size] .match-grips { position: static; }
+}

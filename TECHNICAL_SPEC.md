@@ -1266,6 +1266,8 @@ Show round timer, win markers, player identity and concise connection status. Ke
 
 Support keyboard navigation, visible focus, adjustable text size, colorblind-safe identity, reduced motion/shake and separate volume controls. Full control remapping and gamepads are required for the full release; structure actions independently of bindings from the outset. Persist settings locally with schema migration. UI overlays must not leak held input back into gameplay. No client-side pause freezes an online room.
 
+Skyline offers **Text size** at 100%, 125%, 150% and 200% of the browser default. The main menu, lobby, both match modes and playground share the saved choice. On narrow screens enlarged local scores move below the playfield. The private scoreboard and match menu resize during the same live round. [Layout and verification](docs/slices/18b-text-size.md)
+
 # Part III — Engineering implementation
 
 ## 25. Repository structure

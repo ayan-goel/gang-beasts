@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { cameraMotion, motionChoices } from '../rendering/cameraMotion';
+import { TextSizeSelect } from './TextSizeSelect';
 import { GraphicsSelect } from './GraphicsSelect';
 
 const motionLabels = {system:'Use device setting', reduced:'Reduced', full:'Full'};
@@ -13,5 +14,5 @@ export function DisplaySettings() {
     }}>
       {motionChoices.map(choice => <option key={choice} value={choice}>{motionLabels[choice]}</option>)}
     </select>
-  </label></>;
+  </label><TextSizeSelect className="skyline-graphics" /></>;
 }

@@ -1,4 +1,4 @@
-.skyline-graphics { display: inline-flex; align-items: center; gap: .4rem; color: #172d38; font: 650 .78rem system-ui, sans-serif; }
-.skyline-graphics select { color-scheme: light; width: auto; padding: .35rem; font: inherit; background: #f4f1e7; color: #172d38; border: 1px solid #74888b; border-radius: .2rem; }
+.skyline-graphics { display: inline-flex; max-width: 100%; flex-wrap: wrap; align-items: center; gap: .4rem; color: #172d38; font: 650 .78rem system-ui, sans-serif; }
+.skyline-graphics select { color-scheme: light; width: auto; max-width: 100%; min-width: 0; padding: .35rem; font: inherit; background: #f4f1e7; color: #172d38; border: 1px solid #74888b; border-radius: .2rem; }
 .skyline-graphics select:focus-visible { outline: 2px solid #286a82; outline-offset: 2px; }
 @media (max-width: 720px) { .rooms header:has(.skyline-graphics) { flex-wrap: wrap; justify-content: flex-start; gap: .45rem .9rem; } }

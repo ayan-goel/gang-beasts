@@ -7,6 +7,7 @@
     <meta name="description" content="Grab, lift and throw your friends off the Skyline rooftop. Play in a private room or share a keyboard.">
     <link rel="icon" href="data:,">
     <link rel="stylesheet" href="/src/menu/menu.css">
+    <script type="module" src="/src/menu/textSize.ts"></script>
     <title>Skyline Melee</title>
   </head>
   <body>
@@ -27,7 +28,9 @@
           </div>
           <a class="local" href="/play/"><strong>Local match</strong><small>Two players, one keyboard</small><span aria-hidden="true">→</span></a>
         </nav>
-        <footer><a href="/playground/">Physics playground</a></footer>
+        <footer><a href="/playground/">Physics playground</a>
+          <label id="menu-text-size" hidden>Text size <select></select></label>
+        </footer>
       </section>
     </main>
   </body>

@@ -11,7 +11,7 @@ The root opens Skyline Melee’s main menu. Hosting takes the player to the crea
 | Two-player local match | `/play/` |
 | Physics playground | `/playground/` |
 
-The menu uses HTML links, a stylesheet and one WebP image. It loads without JavaScript, WebGL, WASM or a room API session. Choosing a game loads its runtime. The local game and playground share WASM startup and error handling through separate application entry points. A local match works independently of the room service. [Menu](../../web/index.html) · [Simulation startup](../../web/src/app/mountSimulation.tsx)
+The menu uses HTML links, CSS and one WebP image. A small optional script provides the [text-size selector](18b-text-size.md). It loads without JavaScript, WebGL, WASM or a room API session. Choosing a game loads its runtime. The local game and playground share WASM startup and error handling through separate application entry points. A local match works independently of the room service. [Menu](../../web/index.html) · [Simulation startup](../../web/src/app/mountSimulation.tsx)
 
 The menu image comes from the original Skyline throw fixture. Coral ran to the east roof edge, gripped Blue and released the lift. The capture uses both skinned poses ten simulation ticks after release, seen from outside the walkway. The image is 1152 × 880 and occupies 58,680 bytes. [Throw fixture](../../web/tests/skyline-throw.spec.ts) · [Asset inventory](../asset-provenance.md)
 

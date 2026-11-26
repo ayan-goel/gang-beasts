@@ -1,3 +1,4 @@
+import '../settings/applyTextSize';
 import { SkylineSound, MuteButton } from '../audio/SkylineSound';
 import { createRoot } from 'react-dom/client';
 import { useEffect, useState } from 'react';

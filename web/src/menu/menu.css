@@ -58,17 +58,20 @@ a:focus-visible { outline: 3px solid #fff; outline-offset: 4px; }
 .join:hover, .local:hover { background: #203e49; }
 .local { position: relative; flex-wrap: wrap; margin-top: 1.35rem; padding: 1rem 1.8rem 1rem 0; border-block: 1px solid #496069; text-decoration: none; }
 .local span { position: absolute; right: .35rem; top: 50%; transform: translateY(-50%); }
-footer { margin-top: 1.4rem; }
+footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; margin-top: 1.4rem; }
 footer a { display: inline-block; padding-block: .55rem; color: #b9cbcd; font-size: .85rem; }
 @media (max-width: 740px) {
   .menu { display: flex; flex-direction: column; }
   .poster { height: clamp(11rem, 36svh, 23rem); }
   .poster img { object-position: center 50%; }
-  .choices { flex: 1; justify-content: flex-start; padding: 1.8rem clamp(1.25rem, 6vw, 3rem); }
-  h1 { font-size: clamp(2.85rem, 9.3vw, 4.8rem); line-height: .95; letter-spacing: -.055em; }
+  .choices { flex: 1; justify-content: flex-start; padding: 1.8rem min(1.25rem, 6vw); }
+  h1 { font-size: min(clamp(2.85rem, 9.3vw, 4.8rem), 19vw); line-height: .95; letter-spacing: -.055em; }
   h1 span { display: inline; }
   .intro p { margin-top: .8rem; }
   nav { margin-top: 1.5rem; }
   .local { margin-top: 1.1rem; }
   footer { margin-top: .75rem; }
 }
+
+#menu-text-size { font-size: .85rem; color: #deebea; }
+#menu-text-size select { margin-left: .25rem; padding: .25rem; font: inherit; }

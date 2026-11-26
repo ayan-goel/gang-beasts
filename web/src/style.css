@@ -52,10 +52,10 @@ dd { margin: 0; font-family: ui-monospace, monospace; }
 [role=alert] { padding: 2rem; color: var(--accent); }
 @media (max-width: 760px) {
   #app { height: auto; min-height: 100dvh; }
-  header { padding: 1rem; }
-  .workspace { flex: none; grid-template-columns: 1fr; }
+  header { padding: 1rem; flex-wrap: wrap; }
+  .workspace { flex: none; grid-template-columns: minmax(0, 1fr); }
   .viewport { min-height: 55dvh; }
-  aside { border-left: 0; border-top: 1px solid var(--line); padding: 1.5rem; overflow: visible; }
+  aside { min-width: 0; overflow-wrap: anywhere; border-left: 0; border-top: 1px solid var(--line); padding: 1.5rem; overflow: visible; }
   .scene-label { left: 1rem; }
   .badge { display: none; }
 }

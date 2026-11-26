@@ -6,6 +6,7 @@ import { MovementInspector } from './MovementInspector';
 import { useEffect, useRef, useState } from 'react';
 import type { PlaygroundSnapshot } from '../game/Playground';
 import { startPlayground, type PlaygroundRuntime, type Scenario } from '../game/startPlayground';
+import { TextSizeSelect } from './TextSizeSelect';
 import { Controls } from './Controls';
 import { Diagnostics } from './Diagnostics';
 import { Recordings } from './Recordings';
@@ -69,6 +70,7 @@ export function App() {
       </section>
       <aside aria-label="Playground tools">
         {fixture && (error ? <p role="alert">{error}</p> : <p role="status">{state ? 'Simulation ready' : 'Loading simulation…'}</p>)}
+        <TextSizeSelect className="field" />
         <label className="field">Test scene
           <select value={scenario} onChange={event => setScenario(event.target.value as SceneChoice)}>
             {Object.entries(environments).map(([key, scene]) => <option key={key} value={key}>{scene.name}</option>)}
