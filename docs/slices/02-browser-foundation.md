@@ -29,3 +29,7 @@ Production bundle at this slice: WASM 1,250.33 KB raw / 420.46 KB gzip; JS 484.5
 ## Next
 
 Add reproducible playground controls (pause/single-step/reset/impulse), structured diagnostics and configuration export. Then implement and stress-test the fifteen-body skeleton before actuation.
+
+## Matching builds during browser verification
+
+Playwright’s npm entry point now rebuilds WASM before starting the native verification server. The engine fingerprint includes the Rust source tree, including in-tree test modules. A native rebuild after changing the rotated-stair fixture exposed a stale browser fingerprint. Building both from the same checkout preserves the room’s normal content verification.

@@ -12,6 +12,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test": "vitest",
+    "pretest:e2e": "npm run wasm",
     "test:e2e": "playwright test",
     "prebuild": "npm run wasm",
     "build": "tsc --noEmit && vite build"
