@@ -65,7 +65,7 @@ npm --prefix web run build
 
 Browser integration tests start their own local server if needed. For WebKit private-room playtests, use the [local HTTPS setup](docs/slices/19g-graphics-recovery.md#local-https-reproduction). They compare a 600-tick WASM trace against the native release fixture and test canvas resize containment. The production static bundle is in `web/dist`; its directory indexes serve the main menu, local play, private rooms and the diagnostic playground.
 
-The [regional jump benchmark](docs/slices/15i-snapshot-clock.md#measuring-a-standing-jump) runs 20 fresh private matches and can enforce the 150 ms p95 target against the production build.
+The [jump benchmark](docs/slices/15i-snapshot-clock.md#measuring-a-standing-jump) and [punch benchmark](docs/slices/15j-punch-feedback.md#measurement) each run 20 fresh private matches and can enforce the 150 ms p95 response target against the production build.
 
 ## Playground controls
 

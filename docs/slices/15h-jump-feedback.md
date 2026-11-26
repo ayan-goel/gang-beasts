@@ -1,6 +1,6 @@
 # Jump feedback under regional network delay
 
-A focused player can send a jump press immediately after it enters the input sampler. The previous input path waited for a snapshot to trigger transmission. The new path allows one expedited press per accepted snapshot and expires that permission after 100 ms. Later edges remain ordered in the existing input sampler and the next eligible snapshot flushes them. A lost focus or round change expires the permission. The server still decides whether the fighter can take off or mantle. [Control path](../../web/src/online/RemoteControls.ts) · [Edge, stale-stream and epoch checks](../../web/src/online/RemoteControls.test.ts)
+A focused player can send a jump press immediately after it enters the input sampler. The previous input path waited for a snapshot to trigger transmission. The new path allows one expedited press per accepted snapshot and expires that permission after 100 ms. [Hand presses now share that allowance](15j-punch-feedback.md). Later edges remain ordered in the existing input sampler and the next eligible snapshot flushes them. A lost focus or round change expires the permission. The server still decides whether the fighter can take off or mantle. [Control path](../../web/src/online/RemoteControls.ts) · [Edge, stale-stream and epoch checks](../../web/src/online/RemoteControls.test.ts)
 
 ## How the measurement works
 

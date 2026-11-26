@@ -4,7 +4,7 @@ import { bindRemoteControls } from './RemoteControls';
 import { GroupCamera } from '../rendering/GroupCamera';
 import { MatchFeed } from './MatchFeed';
 
-it('samples focused controls from network publications even when window timers never fire', () => {
+function playerControls() {
   vi.useFakeTimers();
   const canvas = Object.assign(new EventTarget(), {setAttribute() {}, focus() {}});
   const doc = Object.assign(new EventTarget(), {activeElement: canvas, hidden: false});
@@ -22,6 +22,12 @@ it('samples focused controls from network publications even when window timers n
   };
   const down = (code: string) => canvas.dispatchEvent(Object.assign(new Event('keydown'), {code}));
   const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed, new GroupCamera([]));
+  const dispose = () => { stop(); vi.unstubAllGlobals(); vi.useRealTimers(); };
+  return {canvas,frames,publish,down,dispose};
+}
+
+it('samples focused controls from network publications even when window timers never fire', () => {
+  const {canvas,frames,publish,down,dispose} = playerControls();
   try {
     publish(1n, 1);
     down('KeyW');
@@ -56,11 +62,46 @@ it('samples focused controls from network publications even when window timers n
     expect(frames.length).toBe(beforeStall);
     publish(2n, 1);
     expect(frames.length).toBeGreaterThan(beforeStall);
-  } finally {
-    stop();
-    vi.unstubAllGlobals();
-    vi.useRealTimers();
-  }
+  } finally { dispose(); }
+});
+
+it('expedites either hand on a fresh snapshot and preserves a simultaneous second action', () => {
+  const {canvas,frames,publish,down,dispose} = playerControls();
+  const mask = (offset: number) => new DataView(frames.at(-1)!.buffer).getUint16(offset,true);
+  try {
+    publish(1n,1);
+    const before = frames.length;
+    down('KeyJ');
+    expect(frames).toHaveLength(before + 1);
+    expect(mask(14)).toBe(4);
+    down('KeyK');
+    down('Space');
+    expect(frames).toHaveLength(before + 1);
+    vi.advanceTimersByTime(34);
+    publish(1n,1);
+    expect(mask(14)).toBe(9);
+    expect(mask(12)).toBe(13);
+
+    canvas.dispatchEvent(Object.assign(new Event('keyup'),{code:'KeyK'}));
+    const priorRight = frames.length;
+    down('KeyK');
+    expect(frames).toHaveLength(priorRight + 1);
+    expect(mask(14)).toBe(8);
+    expect(mask(16)).toBe(8);
+    expect(mask(12)).toBe(13);
+
+    canvas.dispatchEvent(new Event('blur'));
+    expect(mask(12)).toBe(0);
+    expect(mask(16)).toBe(13);
+    vi.advanceTimersByTime(34);
+    publish(1n,1);
+    vi.advanceTimersByTime(101);
+    const beforeStall = frames.length;
+    down('KeyK');
+    expect(frames).toHaveLength(beforeStall);
+    publish(1n,1);
+    expect(mask(14)).toBe(8);
+  } finally { dispose(); }
 });
 
 it('lets a spectator turn the view without sending fighter inputs and releases its key listener', () => {
