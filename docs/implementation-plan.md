@@ -47,6 +47,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 10c1 — local arena grips | Physical prop and edge grips | Walk to a crate, lift and release it, preserve panel attachment on detachment and clean up retired bodies |
 | 10c2 — local ledge catches | Catch and hang from the roof | A falling-walkway input sequence catches the roof and release yields a ring-out |
 | 10c3 — local rescue | One- and two-hand mantle onto Skyline | Physical catch, clear landing, supported release, interruption, falling panel and passenger load; network and human assessment pending |
+| 10d — Skyline throws | Private-room throw controls and counter-grips | Two-client airborne momentum, matched physical resistance and an east-edge browser ring-out |
 | 11a — verified native | Skyline map and physics | Eight safe spawns, physical crates, vents, warning, detachable walkways and fall threshold |
 | 11 | Skyline and group camera | Spawns, props, panels, warnings, camera bounds and local round |
 | 12a — verified native local match | Two-player Skyline melee | Countdown, physical eliminations, draws, first-to-three, full reset and rematch |

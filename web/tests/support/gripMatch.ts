@@ -28,6 +28,7 @@ export async function gripMatch(host: Page, browser: Browser, run: (guest: Page,
 }
 
 export async function approachOpponent(page: Page, hand: 0 | 1) {
+  let steering = true;
   // Steer toward the opponent using the latest server positions. Hand buttons still come from the keyboard.
   await page.routeWebSocket(url => url.pathname === '/ws', client => {
     const server = client.connectToServer();
@@ -37,7 +38,7 @@ export async function approachOpponent(page: Page, hand: 0 | 1) {
       client.send(message);
     });
     client.onMessage(message => {
-      if (!latest || !Buffer.isBuffer(message) || message[0] !== 1) { server.send(message); return; }
+      if (!steering || !latest || !Buffer.isBuffer(message) || message[0] !== 1) { server.send(message); return; }
       const outgoing = Buffer.from(message);
       const self = latest.bodies.get(3)!.position, target = latest.bodies.get(19)!.position;
       const dx = target[0]-self[0], dz = target[2]-self[2], length = Math.max(.001,Math.hypot(dx,dz));
@@ -46,4 +47,5 @@ export async function approachOpponent(page: Page, hand: 0 | 1) {
       server.send(outgoing);
     });
   });
+  return () => { steering = false; };
 }

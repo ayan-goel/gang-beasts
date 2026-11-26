@@ -674,6 +674,8 @@ Release removes grips while preserving target linear/angular momentum. Optional 
 
 Local sparring uses E for Coral and slash for Blue. Each gripping arm can request up to 400 N of upward assistance on fixed or kinematic footing. The hand receives 75% of that budget and the lifter’s chest receives 25%. Losing footing disables the assistance while retaining internal arm targets. The initial release preset uses existing momentum without a bonus impulse. [Controller and test evidence](docs/slices/10a-lift-release.md).
 
+During an opponent grip, private-room controls explain how to lift and release, or how to grab back. A defender who grabs the lifter can keep the physical attachment after the lifter lets go. A matched Skyline browser fixture produces an east-edge ring-out with lift and leaves both fighters on the roof with lift omitted. [Throw and counter-grip verification](docs/slices/10d-skyline-throws.md#verification)
+
 ### 13.9 Climbing
 
 Basic sequence: grab a ledge → press/hold pull input → drive elbow/shoulder targets and bounded upward/inward assistance → align torso → clear the ledge → regain support.
@@ -1679,7 +1681,7 @@ Retain all 18 original completion checks, with explicit evidence expectations:
 - [ ] **Active ragdolls:** Characters use the physical rig and motors; body/joint/mass checks pass.
 - [ ] **Locomotion:** Walking, running, jumping and recovery are controllable in human playtests.
 - [x] **Independent hands:** Either hand can punch/grab while the other performs a different permitted action. [Physical strikes under a maintained grip and two-client hand states](docs/slices/09e-online-hand-actions.md#verification)
-- [ ] **Lifts/throws:** Opponents can be physically lifted/thrown with momentum and counterplay.
+- [x] **Lifts/throws:** Opponents can be physically lifted/thrown with momentum and counterplay. [Airborne online release, physical counter-grip and rooftop ring-out](docs/slices/10d-skyline-throws.md#verification)
 - [x] **Knockout/recovery:** Consciousness changes do not eliminate automatically or snap poses. [Per-limb continuity, score preservation and post-recovery control](docs/slices/17d-fighter-condition.md#verification)
 - [ ] **Ledge recovery:** Standard Skyline rescue cases pass and feel intentional.
 - [ ] **Arena mechanics:** Falling, crates and breakable perimeter work and reset correctly.
@@ -1809,6 +1811,6 @@ First-slice checklist:
 - [ ] The character stands, walks, runs, jumps, falls and gets up using bounded actuation.
 - [ ] Inputs and seed can be recorded and replayed under a documented build.
 - [ ] The browser stays responsive and reports real step/frame timings.
-- [ ] A second ragdoll can be spawned, gripped, lifted and physically thrown off the platform.
+- [x] A second ragdoll can be spawned, gripped, lifted and physically thrown off the platform. [Browser throw with a matched no-lift control](docs/slices/10d-skyline-throws.md#verification)
 
 Do not begin with production matchmaking, costume catalogs or elaborate environments. Once two ragdolls fighting and rescuing themselves is entertaining and stable, build the authoritative online version around that same engine. Preserve the core requirement throughout: close physical gameplay fidelity, original presentation, and effortless multiplayer with friends.
