@@ -110,7 +110,7 @@
 - [Independent hand strikes](slices/08a-hand-strikes.md) records the phase timing, control bindings and physical contact evidence.
 - [Physical get-up](slices/07b-recovery.md) covers fallen poses, contact and effort limits, obstructions, restraints and the return to standing.
 - [Jump, flight and landing](slices/07a-jumping.md) covers the takeoff impulse, timing windows, airborne budget and local controls.
-- [Low stair traversal](slices/06c2b4b-stairs.md) records verified ascent, supported stopping and the remaining starting-timing failures.
+- [Low stair traversal](slices/06c2b4b-stairs.md) records 241 starting times, the 16 stumbles and how to replay a fighter getting up and finishing the climb.
 - [Open terrain scenarios](verification/terrain-gaps.md): remaining slope, stair and stop-phase reproductions.
 - [Foundation evidence](verification/foundation.md): native/WASM tests, build identity and browser smoke.
 - [Decisions](decisions/): numbered records of context, alternatives, and consequences.

@@ -1,6 +1,6 @@
 # Low stair traversal
 
-Current results appear under [Verified ascent and landing](#verified-ascent-and-landing). The original native regression failed on controller commit `f3ceacc`. The staircase has three adjacent 0.10 m risers with 0.80 m spacing, a 3 m half-width, and a final landing extending to Z = −12 m. The ordinary flat fixture starts with 0.08 m of spawn clearance, settles for 60 ticks, then walks toward −Z for 150 ticks. The fixture checks finite body state, the existing joint and assistance limits, head height above 1.1 m, per-tick pelvis travel below 0.15 m, and final pelvis Z below −3 m and Y above 0.85 m.
+Current results appear under [Verified ascent and landing](#verified-ascent-and-landing) and [Getting up and finishing the climb](#getting-up-and-finishing-the-climb). The original native regression failed on controller commit `f3ceacc`. The staircase has three adjacent 0.10 m risers with 0.80 m spacing, a 3 m half-width, and a final landing extending to Z = −12 m. The ordinary flat fixture starts with 0.08 m of spawn clearance, settles for 60 ticks, then walks toward −Z for 150 ticks. The fixture checks finite body state, the existing joint and assistance limits, head height above 1.1 m, per-tick pelvis travel below 0.15 m, and final pelvis Z below −3 m and Y above 0.85 m.
 
 ## Reproduction
 
@@ -84,7 +84,7 @@ The synchronized Chromium suite passed 74 of 77 scenarios, including all stair c
 
 ## Inspect a starting timing
 
-Open `/playground/?scene=stairs` or select **Low stairs** in the development playground. In **Inspect a stair approach**, enter the number of settling ticks and the number of ticks since forward movement began. **Inspect frame** rebuilds the current fixture, replays the input and pauses with the selected limb, joints and contacts available for inspection. The first 240 movement ticks hold forward. The next 180 release it. Selecting an earlier frame repeats the solve from spawn. Resuming gives control back with movement released. The two input bounds limit a single inspection to 660 physics ticks.
+Open `/playground/?scene=stairs` or select **Low stairs** in the development playground. In **Inspect a stair approach**, enter the number of settling ticks and the number of ticks since forward movement began. **Inspect frame** rebuilds the current fixture, replays the input and pauses with the selected limb, joints and contacts available for inspection. By default, forward stays held for 240 ticks. Set **Ticks holding forward** to any whole number from 0 to 660 to change the release time. You can inspect up to 180 ticks after release. Selecting an earlier frame repeats the solve from spawn. Resuming gives control back with movement released. A single inspection runs at most 1,080 physics ticks, including the initial settling interval.
 
 | Settling ticks | First movement tick with head height at or below 1.1 m | Total tick |
 | --- | --- | --- |
@@ -96,7 +96,7 @@ Open `/playground/?scene=stairs` or select **Low stairs** in the development pla
 
 Inspect settling tick 25 at movement ticks 80 and 81 to see the threshold crossing. With 60 settling ticks, movement tick 420 shows the supported stop. Chromium checked the displayed head height and pelvis Z against the native trace at those frames, in reverse order, at movement onset and on both sides of release.
 
-The native integration test runs all 121 start times, including the five above. It reports the first fall per start and fails on any newly affected start. Survivors must pass Z −3 m by walking tick 150, finish beyond that point with pelvis height above 0.85 m and speed below 0.2 m/s, and report both feet supported. The posture, displacement and joint-effort checks on the original cases remain in the native library suite.
+The initial native integration sweep exercised 121 start times, including the five above. It reports the first fall per start and fails on any newly affected start. Survivors must pass Z −3 m by walking tick 150, finish beyond that point with pelvis height above 0.85 m and speed below 0.2 m/s, and report both feet supported. The posture, displacement and joint-effort checks on the original cases remain in the native library suite.
 
 ```sh
 cargo test --locked --release -p brawler-engine --test stair_fixture -- --nocapture
@@ -106,3 +106,34 @@ npm --prefix web run test:e2e -- stair-inspection.spec.ts stairs.spec.ts
 Reducing the ankle response rate to 0.8 times its usual value near a reachable step produced eight falls across 121 starts. Increasing lower-body damping to 1.35 times its usual value within the configured caps produced five falls at a different set of starts. Both comparisons used the same inputs and default terrain. The shipped controller retains the existing motor settings.
 
 On the M3 Pro, 316 native workspace tests, 105 web unit tests and all four Chromium stair scenarios passed. The production bundle passed type checking, and workspace formatting and warning-denied Clippy passed. The local production playground opened directly to Low stairs and displayed a head height of 1.081 m at total tick 106 for the 25-tick start. The browser and room server shared engine fingerprint `781eca65941f285cbf4e7ae2dfe7fd82b5af1b4f33b1b912f78f6f4da14087cd`.
+
+## Getting up and finishing the climb
+
+The native regression now covers every integer start time selectable in the playground, from 0 through 240 settling ticks. At the default release time, 225 of 241 approaches meet the uninterrupted head-height, progress and supported-stop checks. The other 16 cross the 1.1 m head-height threshold while forward is still held. Each of those same fighters can complete the climb if the player continues holding forward. No reset, second button press or change of physics settings is needed.
+
+| Initial settling ticks | First movement tick at or below 1.1 m | Movement tick to release after regaining stance and passing Z −6 m |
+| --- | --- | --- |
+| 19 | 115 | 382 |
+| 25 | 81 | 403 |
+| 26 | 161 | 368 |
+| 43 | 126 | 384 |
+| 108 | 121 | 428 |
+| 130 | 111 | 356 |
+| 134 | 123 | 292 |
+| 141 | 80 | 413 |
+| 144 | 117 | 295 |
+| 162 | 78 | 628 |
+| 163 | 78 | 409 |
+| 167 | 115 | 366 |
+| 174 | 95 | 371 |
+| 187 | 180 | 396 |
+| 191 | 114 | 410 |
+| 229 | 150 | 315 |
+
+The solver advances the existing ragdoll through recovery, forward drive and release. At the release marker the head is above 1.45 m. After 180 ticks at rest, both feet have support, the pelvis remains beyond six meters, and measured pelvis speeds range from 0.002 to 0.011 m/s. The test keeps the individual list of stumbling starts so a new fall fails even if a different start improves.
+
+To inspect the 25-tick start, set **Ticks holding forward** to **403**. Inspect movement ticks **81**, **119**, **235**, **403** and **583** for the stumble, get-up assistance, restored forward drive, release and supported stop. For the longest approach, set the settling interval to **162**, hold forward for **628** and inspect movement tick **808**. These schedules run through the same native example by appending the settling and held durations, for example `--landing 162 628`.
+
+Slowing the approach still produced the five originally documented falls. Changing how quickly the feet took over balance after support returned helped those starts but introduced falls at starts 11 and 106. The game continues to use the same controller. Uninterrupted traversal across the full range remains open.
+
+The release workspace passed 319 native tests and the web suite passed 121 unit tests. Formatting, warning-denied Clippy, TypeScript and the production bundle passed. Six development Chromium scenarios covered stairs, contact inspection and recovery. Production Chromium and WebKit reproduced both custom schedules and the default schedule against the native frame readings. The refreshed local preview passed the same comparison. The simulation fingerprint for this run was `2fed9f7d990be5b20360402ec1b29e7557da0e91fb942a9a9a39a7526e335255`.

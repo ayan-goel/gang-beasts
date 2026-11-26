@@ -10,11 +10,18 @@ test('stair inspection reproduces selected native frames and returns control at 
   await expect(settle).toBeVisible({ timeout: 3000 });
   await page.getByLabel('Inspect body').selectOption({ label: 'head' });
 
-  for (const [start, samples] of [[25, [81, 80, 81]], [60, [0, 240, 241, 420]]] as const) {
+  const duration = page.getByLabel('Ticks holding forward');
+  await expect(duration).toHaveValue('240');
+  for (const [start, walk, samples] of [
+    [25, 403, [81, 80, 81, 119, 235, 403, 583]],
+    [162, 628, [78, 256, 628, 808]],
+    [60, 240, [0, 240, 241, 420]],
+  ] as const) {
     const frames: number[][] = JSON.parse(execFileSync('cargo', [
-      'run', '--quiet', '--locked', '--release', '-p', 'brawler-engine', '--example', 'stair_trace', '--', '--landing', String(start),
+      'run', '--quiet', '--locked', '--release', '-p', 'brawler-engine', '--example', 'stair_trace', '--', '--landing', String(start), String(walk),
     ], { cwd: '..', encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 }));
     await settle.fill(String(start));
+    await duration.fill(String(walk));
     for (const sample of samples) {
       await elapsed.fill(String(sample));
       await inspect.click();
@@ -25,6 +32,9 @@ test('stair inspection reproduces selected native frames and returns control at 
       await expect(page.getByRole('button', { name: 'Resume', exact: true })).toBeVisible();
     }
   }
+  await duration.fill('661');
+  await expect(inspect).toBeDisabled();
+  await duration.fill('240');
   await elapsed.fill('421');
   await expect(inspect).toBeDisabled();
   await page.getByRole('button', { name: 'Single step' }).click();
