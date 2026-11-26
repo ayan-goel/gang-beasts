@@ -10,6 +10,7 @@
 - [Skyline throws](slices/10d-skyline-throws.md) covers lift controls, release momentum, counter-grips and an east-edge ring-out.
 - [Stamina feedback](slices/09f-stamina-feedback.md) covers the local and online meters, grip exhaustion and recovery.
 - [Online hand actions](slices/09e-online-hand-actions.md) covers grip targets, free-hand strikes and reconnect verification.
+- [Eight-player reset endurance](verification/reset-endurance.md) covers repeated Skyline fights, score continuity, clean spawns and timed hazards.
 - [Playable match rig](verification/match-rig.md) records solver masses, joint endpoints and live motor effort for two and eight fighters.
 - [Strike feedback](slices/17e-strike-audio.md) covers confirmed damage, camera-relative stereo placement and the local and online combat checks.
 - [Knockout and recovery feedback](slices/17d-fighter-condition.md) covers named fighter notices, both condition cues and the two-client combat fixture.

@@ -1,6 +1,7 @@
 //! Release-mode service-time and snapshot-size profile for a single Skyline room.
 #[cfg(test)]
 mod tests;
+#[path = "../support/combat.rs"]
 mod workload;
 
 use brawler_engine::{Consciousness, FighterId, Hand, MeleePhase};
