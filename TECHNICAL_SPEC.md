@@ -1196,6 +1196,8 @@ Use Web Audio spatial position and attenuation with a clearly chosen listener po
 
 Skyline’s [hazard audio](docs/slices/17c-hazard-audio.md) uses four original synthesized cues, centered and independent of camera distance. Each live stage transition can play once per round. The initial snapshot, reconnect and return from a pause establish the current stage silently. Local and online play share a persistent mute preference and retain their visual warnings.
 
+During active sudden death, a quiet [continuous crosswind](docs/slices/17l-crosswind.md) follows the current hazard state on the effects channel. Resuming or joining mid-gust restores the wind after audio unlock. The gust onset warning remains a one-shot.
+
 When a Skyline walkway detaches, the local or private match sounds one short metal crack from its roof-side attachment. The current arena tick, hazard transition and authored panel deadlines identify the event. Fresh arrivals and stale samples establish state silently. The centered warning for the next hazard plays alongside the break. [Walkway breakaway audio](docs/slices/17k-breakaway-audio.md)
 
 Skyline plays an original short strike thud for an observed health loss of at least one point while the defender remains active. The local physics world or the server owns that health change. The sound follows the defender’s rendered pelvis in the current view. Simultaneous contacts share one impact voice, with a 120 ms cooldown per defender. Hazard and consciousness announcements take priority. [Strike feedback](docs/slices/17e-strike-audio.md)

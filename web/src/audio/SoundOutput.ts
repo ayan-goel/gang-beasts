@@ -14,26 +14,29 @@ export class SoundOutput {
   private voices: Partial<Record<keyof Cues | 'round', () => void>> = {};
   private mix?: MatchMix;
   private wantsMusic = false;
+  private wantsWind = false;
   constructor(private levels: VolumeSettings) {}
 
   setLevels(levels: VolumeSettings) {
     this.levels = levels;
     this.mix?.setLevels(levels);
     if (levels.muted || !levels.master || !levels.effects) this.silence();
-    this.refreshMusic();
+    this.refreshLoops();
   }
-  setMusic(active: boolean) {
-    this.wantsMusic = active;
-    this.refreshMusic();
+  setRoundAudio(playing: boolean, wind: boolean) {
+    this.wantsMusic = playing;
+    this.wantsWind = playing && wind;
+    this.refreshLoops();
   }
-  private refreshMusic() {
-    this.mix?.setMusic(this.wantsMusic && !document.hidden && this.context?.state === 'running' &&
-      !this.levels.muted && this.levels.music > 0 && this.levels.master > 0);
+  private refreshLoops() {
+    const audible = !document.hidden && this.context?.state === 'running' && !this.levels.muted && this.levels.master > 0;
+    this.mix?.setMusic(audible && this.wantsMusic && this.levels.music > 0);
+    this.mix?.setWind(audible && this.wantsWind && this.levels.effects > 0);
   }
   visibility() {
     if (document.hidden) this.silence();
     else if (this.context) this.unlock();
-    this.refreshMusic();
+    this.refreshLoops();
   }
 
   unlock() {
@@ -44,11 +47,11 @@ export class SoundOutput {
         this.mix = new MatchMix(this.context, this.levels);
         this.context.onstatechange = () => {
           if (this.context?.state !== 'running') this.silence();
-          this.refreshMusic();
+          this.refreshLoops();
         };
       }
       if (this.context.state !== 'running') void this.context.resume().catch(() => {});
-      else this.refreshMusic();
+      else this.refreshLoops();
     } catch { /* Visual warnings remain available when the audio device is unavailable. */ }
   }
 

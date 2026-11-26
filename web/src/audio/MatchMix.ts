@@ -1,3 +1,4 @@
+import { playCrosswind } from './crosswindSound';
 import { renderArenaScore, scoreSampleRate } from './arenaScore';
 import type { VolumeSettings } from './volumeSettings';
 
@@ -5,6 +6,7 @@ export class MatchMix {
   private readonly master: GainNode;
   readonly effects: GainNode;
   readonly music: GainNode;
+  private stopWind?: () => void;
   private score?: AudioBuffer;
   private loop?: AudioBufferSourceNode;
 
@@ -50,7 +52,17 @@ export class MatchMix {
     this.loop = voice;
   }
 
+  setWind(active: boolean) {
+    if (active === !!this.stopWind) return;
+    if (active) this.stopWind = playCrosswind(this.context, this.effects);
+    else {
+      this.stopWind?.();
+      this.stopWind = undefined;
+    }
+  }
+
   close() {
+    this.setWind(false);
     this.setMusic(false);
     this.effects.disconnect();
     this.music.disconnect();

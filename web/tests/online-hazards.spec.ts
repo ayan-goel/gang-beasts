@@ -1,4 +1,4 @@
-import { breakawayPans, observeWarningAudio, warningSamples } from './support/warningAudio';
+import { breakawayPans, observeWarningAudio, warningSamples, windVoices } from './support/warningAudio';
 import { arenaMeshes, authoredMeshes, observeArenaMeshes } from './support/arenaMeshes';
 import {releaseRoom} from './support/releaseRoom';
 import { expect, test } from '@playwright/test';
@@ -32,7 +32,10 @@ test('the online rooftop warns both players before each hazard and clears the wa
     ] as const) {
       await Promise.all(notices.map(notice => expect(notice).toHaveText(message, {timeout:deadline})));
       await expect.poll(() => warningSamples(host)).toHaveLength(++hostCues);
-      if (message === 'Sudden death · Crosswind') {
+      if (message !== 'Sudden death · Crosswind') {
+        for (const player of players) expect(await windVoices(player)).toEqual({started:0,active:0});
+      } else {
+        await Promise.all(players.map(player => expect.poll(() => windVoices(player)).toEqual({started:1,active:1})));
         await Promise.all(players.map(player => expect.poll(async () =>
           (await arenaMeshes(player)).filter(mesh => !mesh.visible).map(mesh => mesh.name)
         ).toEqual(['panel-8', 'panel-9'])));
@@ -63,8 +66,15 @@ test('the online rooftop warns both players before each hazard and clears the wa
     const [west,east] = await breakawayPans(host);
     expect(west! * east!).toBeLessThan(0);
     await expect.poll(() => warningSamples(guest)).toEqual([{wave:'sine',state:'running'}, {wave:'sine',state:'running'}]);
+    await guest.reload();
+    await expect(notices[1]!).toHaveText('Sudden death · Crosswind');
+    await guest.locator('canvas').focus();
+    await guest.keyboard.press('Shift');
+    await expect.poll(() => windVoices(guest)).toEqual({started:1,active:1});
+    expect(await warningSamples(guest)).toHaveLength(0);
     await Promise.all(players.map(async player => {
       await expect(player.getByLabel('Round phase')).toHaveText('Round results', {timeout:45_000});
+      await expect.poll(() => windVoices(player)).toEqual({started:1,active:0});
       await expect(player.getByRole('status', {name:'Arena hazard'})).toHaveText('');
       const scores = await player.getByLabel(/^(Mint|Blue) score$/).allTextContents();
       expect(scores).toHaveLength(2);

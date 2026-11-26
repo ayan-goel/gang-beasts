@@ -1,4 +1,4 @@
-import { breakawayPans, observeWarningAudio, warningSamples } from './support/warningAudio';
+import { breakawayPans, observeWarningAudio, warningSamples, windVoices } from './support/warningAudio';
 import { expect, test } from '@playwright/test';
 
 // The local warning follows 5,400 physics ticks on the render clock. Use the Mac GPU for this real-time scene.
@@ -20,7 +20,7 @@ test('muting Skyline persists on reload and into private rooms', async ({page}) 
 });
 
 test('local warnings and breakaway audio follow physical arena time and survive pause', async ({page}) => {
-  test.setTimeout(240_000);
+  test.setTimeout(300_000);
   await observeWarningAudio(page);
   await page.goto('/play/');
   const start = page.getByRole('button', {name:'Start match'});
@@ -40,6 +40,15 @@ test('local warnings and breakaway audio follow physical arena time and survive 
   await expect.poll(() => breakawayPans(page)).toHaveLength(2);
   const [west,east] = await breakawayPans(page);
   expect(west! * east!).toBeLessThan(0);
+  expect(await windVoices(page)).toEqual({started:0,active:0});
+  await expect(page.getByText('Sudden death · Crosswind')).toBeVisible({timeout:65_000});
+  await expect.poll(() => windVoices(page)).toEqual({started:1,active:1});
+  await page.getByRole('button',{name:'Pause',exact:true}).click();
+  await expect.poll(() => windVoices(page)).toEqual({started:1,active:0});
+  await page.getByRole('button',{name:'Resume match'}).click();
+  await expect.poll(() => windVoices(page)).toEqual({started:2,active:1});
+  await expect(page.getByLabel('Round phase')).toHaveText('Round results',{timeout:40_000});
+  await expect.poll(() => windVoices(page)).toEqual({started:2,active:0});
 });
 
 test('match warnings, condition and round cues render bounded pulse patterns in the browser audio graph', async ({page}) => {

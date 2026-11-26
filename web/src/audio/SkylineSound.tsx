@@ -62,10 +62,9 @@ export function VolumeControls() {
 export function useMatchSound(match: MatchView | undefined, active: boolean, phases: readonly FighterPhase[], audio?: MatchAudioState) {
   const output = useContext(AudioSettings)?.output;
   const playing = active && match?.phase === 'playing';
-  useEffect(() => {
-    output?.setMusic(playing);
-    return () => output?.setMusic(false);
-  }, [output, playing]);
+  const gust = match?.hazard === 'gust';
+  useEffect(() => { output?.setRoundAudio(playing, gust); }, [output, playing, gust]);
+  useEffect(() => () => output?.setRoundAudio(false, false), [output]);
   const cursor = useRef(new MatchCues());
   const rounds = useRef(new RoundCues());
   useEffect(() => {
