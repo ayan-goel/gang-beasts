@@ -1,12 +1,5 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { releaseRoom } from './support/releaseRoom';
-
-function pageLoad(page: Page) {
-  return page.evaluate(() =>
-    [...performance.getEntriesByType('navigation'), ...performance.getEntriesByType('resource')]
-      .filter(entry => entry.name.startsWith(location.origin + '/'))
-      .map(entry => ({path:new URL(entry.name).pathname, bytes:(entry as PerformanceResourceTiming).encodedBodySize})));
-}
 
 test('direct game URLs reach their screens with or without a trailing slash', async ({request}) => {
   for (const [path, title] of [
@@ -38,13 +31,14 @@ test('the game menu works without JavaScript on desktop and narrow screens', asy
       await page.setViewportSize({width, height:width === 1440 ? 900 : 800});
       const fits = await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth);
       expect(fits).toBe(true);
-      await expect(page.getByRole('link', {name:'Local match'})).toBeInViewport();
+      await expect(page.getByRole('link', {name:'Join a room'})).toBeInViewport();
+      await expect(page.getByRole('link')).toHaveCount(2);
       await page.screenshot({path:info.outputPath('main-menu-' + width + '.png'), fullPage:true});
     }
   } finally { await context.close(); }
 });
 
-test('the main menu opens without a simulation or room session and reaches local play and practice', async ({page}, info) => {
+test('the title guide opens and closes by keyboard without loading a room or simulation', async ({page}, info) => {
   const heavy: string[] = [];
   page.on('request', request => {
     const pathname = new URL(request.url()).pathname;
@@ -55,24 +49,39 @@ test('the main menu opens without a simulation or room session and reaches local
   await expect(page.getByRole('link', {name:'Host a room'})).toBeVisible();
   await expect(page.getByRole('link', {name:'Join a room'})).toBeVisible();
   expect(heavy).toEqual([]);
-  const menu = await pageLoad(page);
-  await page.getByRole('link', {name:'Local match'}).click();
-  await page.getByRole('button', {name:'Start match'}).click();
-  await expect(page.getByLabel('Round phase')).toHaveText('Playing', {timeout:12000});
-  const arena = await pageLoad(page);
-  await info.attach('cold-load-to-first-arena', {body:JSON.stringify({menu, arena}), contentType:'application/json'});
-  await page.getByRole('link', {name:'Main menu'}).click();
-  await page.getByRole('link', {name:'Physics playground'}).click();
-  await expect(page.getByRole('heading', {name:'Development playground'})).toBeVisible();
-  await expect(page.getByRole('status')).toHaveText('Simulation ready');
+  await expect(page.getByRole('link')).toHaveCount(2);
+  await expect(page.getByRole('combobox')).toHaveCount(0);
+  const guide = page.getByRole('dialog', {name:'How to play'});
+  const opener = page.getByRole('button', {name:'How to play'});
+  for (const width of [1280, 320]) {
+    await page.setViewportSize({width,height:720});
+    const bounds = await opener.boundingBox();
+    expect(bounds!.x).toBeLessThan(30);
+    expect(bounds!.y).toBeLessThan(30);
+    await opener.focus();
+    await opener.press('Enter');
+    await expect(guide).toBeVisible();
+    await expect(guide).toContainText('Punch & grab');
+    await expect(guide).toContainText('3, 5, or 7 wins');
+    await expect(guide.getByRole('button',{name:'Close guide'})).toBeFocused();
+    expect(await guide.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+    await page.screenshot({path:info.outputPath('guide-' + width + '.png')});
+    if (width === 320) await guide.getByRole('button',{name:'Close guide'}).click();
+    else await page.keyboard.press('Escape');
+    await expect(guide).toBeHidden();
+    await expect(opener).toBeFocused();
+  }
+  expect(heavy).toEqual([]);
 });
 
-test('friends can host and join by code from the main menu', async ({page, browser}) => {
+test('friends can host and join by code from the main menu', async ({page, browser}, info) => {
   const guest = await browser.newContext({viewport:{width:390,height:800}});
   let invite = '';
   try {
     await page.goto('/');
     await page.getByRole('link', {name:'Host a room'}).click({timeout:3000});
+    await expect(page.locator('header')).toHaveCount(0);
+    await expect(page.getByLabel('Graphics', {exact:true})).toHaveCount(0);
     await page.getByLabel('Player name').fill('Mint');
     await page.getByRole('button', {name:'Create room', exact:true}).click();
     invite = await page.getByLabel('Invite link').inputValue();
@@ -90,6 +99,14 @@ test('friends can host and join by code from the main menu', async ({page, brows
     for (const [player, name] of [[page, 'Mint'], [friend, 'Blue']] as const) {
       await expect(player.getByRole('heading', {name:'Playing as ' + name})).toBeVisible();
       await expect(player.getByLabel('Round phase')).toHaveText('Playing', {timeout:15000});
+      const canvas = player.locator('.online-scene canvas');
+      await expect.poll(() => canvas.boundingBox()).toEqual({x:0,y:0,...player.viewportSize()});
+      await expect(player.getByRole('button')).toHaveCount(0);
+      await expect(player.getByRole('region',{name:'Scoreboard'})).toHaveCount(0);
+      await expect(player.getByLabel('Series standings')).toHaveCount(0);
+      expect(await player.evaluate(() => [[.05,.05],[.5,.5],[.95,.95]].every(([x,y]) =>
+        document.elementFromPoint(innerWidth*x!,innerHeight*y!) instanceof HTMLCanvasElement))).toBe(true);
+      await player.screenshot({path:info.outputPath('arena-' + name + '.png')});
     }
   } finally {
     try { await releaseRoom(invite,[page.context(),guest]); } finally { await guest.close(); }

@@ -2,16 +2,13 @@ import type { PreparedArena } from './preparedArena';
 import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { GripNotices } from '../app/GripNotices';
 import { MatchMenu, openMenuFromArena } from '../app/MatchMenu';
-import { Scoreboard } from '../app/Scoreboard';
 import { StaminaMeter } from '../app/StaminaMeter';
 import { onlineGripLabels } from './gripLabels';
-import { gripHint } from './gripHint';
 import { FighterNotices } from '../app/FighterNotices';
 import { useMatchSound } from '../audio/SkylineSound';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { canSpectate, followedFighter, type CameraChoice } from './spectatorCamera';
 import { SpectatorControls } from './SpectatorControls';
-import { colors } from '../lobby/api';
 import { hazardWarnings } from '../game/skylineHazards';
 import { arenaName, SeriesCard, stageWarning } from '../app/SeriesCard';
 import type { SkylineContent } from '../lobby/content';
@@ -23,12 +20,23 @@ import './match.css';
 export { PreparedArena } from './preparedArena';
 
 const phaseNames = {countdown:'Countdown', playing:'Playing', round_results:'Round results', match_results:'Match results'};
-export default function OnlineMatch({feed, content, graphics, exit, wins = 3, highLatency}: {feed: MatchFeed; graphics?: PreparedArena; highLatency?: boolean; content: SkylineContent; exit: () => void; wins?: number}) {
+interface Props {
+  feed: MatchFeed;
+  content: SkylineContent;
+  graphics?: PreparedArena;
+  wins?: number;
+  highLatency?: boolean;
+  exit: () => void;
+  leaving?: boolean;
+  leaveError?: string;
+}
+
+export default function OnlineMatch({feed, content, graphics, exit, wins = 3, highLatency, leaveError, leaving}: Props) {
   const container = useRef<HTMLDivElement>(null);
   const [match, setMatch] = useState(() => matchView(feed.latest!, content));
   const [status, setStatus] = useState<StreamStatus>('buffering');
   const [error, setError] = useState('');
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPhase, setMenuPhase] = useState<string | null>(null);
   const [graphicsAttempt, setGraphicsAttempt] = useState(0);
   const [choice, setChoice] = useState<CameraChoice | null>(null);
   const cameraChoice = useRef(choice);
@@ -37,7 +45,7 @@ export default function OnlineMatch({feed, content, graphics, exit, wins = 3, hi
     setError('');
     let stop: (() => void) | undefined;
     let timer: number | undefined;
-    // Give the authoritative scoreboard a paint before WebGL compiles the arena shaders.
+    // Paint the round introduction before WebGL compiles the arena shaders.
     const frame = requestAnimationFrame(() => {
       timer = window.setTimeout(() => {
         try { stop = startRemoteScene(container.current!, content, feed, setMatch, setStatus, cameraChoice, graphics?.take()); }
@@ -57,50 +65,45 @@ export default function OnlineMatch({feed, content, graphics, exit, wins = 3, hi
   const names = feed.fighters.map(f => f.name);
   const spectator = canSpectate(match, feed.own);
   const name = arenaName(match.arena);
-  const hint = feed.own !== null && match.phase === 'playing' && match.conditions[feed.own] === 'active'
-    ? gripHint(feed.own, match.gripTargets, match.hazard, match.arena) : '';
-  return <section className="online-match" aria-label={'Online ' + name + ' arena'}>
-    <div className="online-header"><h1>{feed.own === null ? 'Spectating ' + name : 'Playing as ' + feed.fighters[feed.own]!.name}</h1>
-      <button aria-keyshortcuts="Escape" onClick={() => setMenuOpen(true)}>Match menu</button><button onClick={exit}>Leave room</button></div>
-    {menuOpen && <MatchMenu resume={() => {
-      setMenuOpen(false);
+  // A round verdict dismisses the menu so it cannot cover the standings or capture the next round's inputs.
+  const phaseKey = match.epoch + '/' + match.phase;
+  return <section className="online-match" aria-label={'Online ' + name + ' arena'} data-phase={match.phase}>
+    <div className="online-scene" ref={container} onKeyDown={event => openMenuFromArena(event, () => setMenuPhase(phaseKey))}/>
+    {match.phase !== 'playing' && <div className="online-callout">
+      <SeriesCard match={match} map={match.arena} names={names} wins={wins} />
+    </div>}
+    {menuPhase === phaseKey && <MatchMenu resume={() => {
+      setMenuPhase(null);
       container.current?.querySelector<HTMLCanvasElement>('canvas:not([inert])')?.focus({preventScroll:true});
-    }} />}
-    <div className="online-stage">
-      <div className="online-scene" ref={container} onKeyDown={event => openMenuFromArena(event, () => setMenuOpen(true))}/>
-      <div className="online-notices">
-        {highLatency && status !== 'stalled' && <p className="online-delay" role="status">High network delay. Controls may feel delayed.</p>}
-        <p className="online-hazard" role="status" aria-label="Arena hazard">
-          {match.phase === 'playing' ? stageWarning(match.arena, match, hazardWarnings[match.hazard]) : ''}
-        </p>
-        <div className="online-conditions" aria-live="polite">
-          {match.phase === 'playing' && <FighterNotices names={names} phases={match.conditions} />}
-        </div>
-      </div>
-    </div>
-    <Scoreboard className="online-score" viewport={container}>
+    }}>
+      {spectator && <SpectatorControls names={names} visible={match.visible} target={followedFighter(match, feed.own, choice)}
+        choose={slot => setChoice(slot === null ? null : {epoch:match.epoch, slot})}/>}
+      <button className="match-menu-leave" onClick={exit} disabled={leaving}>Leave room</button>
+      {leaveError && <p role="alert">{leaveError}</p>}
+    </MatchMenu>}
+    {/* Canvas pixels carry no semantics. Keep a passive text alternative outside the keyboard tab order. */}
+    <div className="arena-description">
+      <h1>{feed.own === null ? 'Spectating ' + name : 'Playing as ' + names[feed.own]}</h1>
       <span aria-label="Arena">{name}</span>
       <span aria-label="Round number">Round {match.round}</span>
       <span aria-label="Round phase">{phaseNames[match.phase]}</span>
+      {(match.phase === 'playing' || match.phase === 'countdown') && names.map((player, i) =>
+        <span key={i}>{player} <b aria-label={player + ' score'}>{match.scores[i]}</b></span>)}
       <time aria-label="Round time remaining">{Math.floor(Math.ceil(match.timeLeft/60)/60)}:{String(Math.ceil(match.timeLeft/60)%60).padStart(2,'0')}</time>
-      {feed.fighters.map((p,i) => <div key={p.slot}>
-        <span className="online-fighter">
-          <i className={'swatch color-' + p.color} aria-label={colors[p.color]}/>
-          {p.name} <b aria-label={p.name + ' score'}>{match.scores[i]}</b>
-          {!match.visible[i] && <small aria-label={p.name + ' eliminated'}>Out</small>}
-        </span>
-        {match.phase === 'playing' && match.visible[i] &&
-          <StaminaMeter name={p.name} points={match.stamina[i]!} holding={match.gripTargets[i]!.some(Boolean)} />}
-      </div>)}
-    </Scoreboard>
-    {match.phase === 'playing' && <div className="online-grips" aria-live="polite">
-      <GripNotices names={names} grips={match.gripTargets.map(targets => onlineGripLabels(targets,names,content.fighter.bodies,match.arena))} />
-    </div>}
-    {spectator && <SpectatorControls names={names} visible={match.visible} target={followedFighter(match, feed.own, choice)}
-      choose={slot => setChoice(slot === null ? null : {epoch:match.epoch, slot})}/>}
-    <p className="online-controls">{hint || (spectator || feed.own === null ? 'Spectating until the next round · Z / X to turn the camera' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift · Q to headbutt · Z / X to turn the camera')}{!hint && ' · Tab for scoreboard'}{!spectator && match.arena.tour?.water != null && ' · In water, steer and hold Space to swim up. Grab a ledge and hold Space to climb.'}</p>
-    {match.phase !== 'playing' && <div className="online-callout"><SeriesCard match={match} map={match.arena} names={names} wins={wins} /></div>}
-    {status === 'stalled' && <p className="online-status" role="status">Waiting for the server…</p>}
-    {error && <div><p role="alert">{error}</p><button onClick={() => setGraphicsAttempt(n => n + 1)}>Retry graphics</button></div>}
+      <p role="status" aria-label="Arena hazard">{match.phase === 'playing' && stageWarning(match.arena, match, hazardWarnings[match.hazard])}</p>
+      {match.phase === 'playing' && <>
+        <FighterNotices names={names} phases={match.conditions} />
+        <GripNotices names={names} grips={match.gripTargets.map(targets => onlineGripLabels(targets,names,content.fighter.bodies,match.arena))} />
+        {names.map((player,i) => match.visible[i]
+          ? <StaminaMeter key={i} name={player} points={match.stamina[i]!} holding={match.gripTargets[i]!.some(Boolean)} />
+          : <span key={i} aria-label={player + ' eliminated'}>Out</span>)}
+      </>}
+      {highLatency && <p>High network delay. Controls may feel delayed.</p>}
+    </div>
+    {status === 'stalled' && !error && <p className="arena-connection" role="status">Waiting for the server…</p>}
+    {error && <div className="arena-connection"><p role="alert">{error}</p>
+      <button onClick={() => setGraphicsAttempt(n => n + 1)}>Retry graphics</button>
+      <button onClick={exit} disabled={leaving}>Leave room</button>
+      {leaveError && <p role="alert">{leaveError}</p>}</div>}
   </section>;
 }

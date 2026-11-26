@@ -11,7 +11,7 @@ export class PreparedArena {
     try {
       scene = new FixtureScene(staging, content.fighter, {online:true, map:content.map, model:content.model});
     } catch (failure) {
-      // Players without WebGL can still enter with the live scoreboard and retry graphics.
+      // Allow room entry so a player can recover graphics without losing their seat.
       if (failure instanceof GraphicsUnavailable) return;
       throw failure;
     }

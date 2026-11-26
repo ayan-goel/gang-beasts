@@ -4,15 +4,15 @@ import type { FighterPhase } from '../game/fighterCondition';
 import { MatchCues, type MatchAudioState } from './MatchCues';
 import { RoundCues } from './RoundCues';
 import { SoundOutput } from './SoundOutput';
-import { readVolume, saveVolume, type VolumeSettings, type VolumeChannel } from './volumeSettings';
+import { defaultVolume, readVolume, saveVolume, type VolumeSettings, type VolumeChannel } from './volumeSettings';
 import './sound.css';
 
 const AudioSettings = createContext<{
   output: SoundOutput; levels: VolumeSettings; change: (patch: Partial<VolumeSettings>) => void;
 } | null>(null);
 
-export function SkylineSound({children}: {children: ReactNode}) {
-  const [levels, setLevels] = useState(() => readVolume());
+export function SkylineSound({children, useDefaultMix = false}: {children: ReactNode; useDefaultMix?: boolean}) {
+  const [levels, setLevels] = useState(() => useDefaultMix ? defaultVolume : readVolume());
   const current = useRef(levels);
   const [output] = useState(() => new SoundOutput(levels));
   useEffect(() => {

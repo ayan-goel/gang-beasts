@@ -73,7 +73,7 @@ test('a player catches the roof after the west collapse and pulls up in both vie
     await host.keyboard.down('KeyJ');
     await host.keyboard.down('KeyK');
     await expect.poll(() => states.every(s => s.heldBelow), {timeout: 7000, intervals:[40]}).toBe(true);
-    await expect(host.getByText('Hold Space to pull up', {exact: true})).toBeVisible();
+    await expect(host.getByText('Hold Space to pull up', {exact: true})).toHaveCount(0);
     await expect(guest.getByLabel('Mint grips')).toContainText('roof edge');
     await expect(guest.getByText('Hold Space to pull up', {exact: true})).toHaveCount(0);
     const views = [host, guest];

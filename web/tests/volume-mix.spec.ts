@@ -52,25 +52,16 @@ test('a local player can adjust the mix, pause music and restore the settings af
   }
 });
 
-test('the private music, effects and mute controls only change the listening client', async ({page:host,browser}) => {
+test('room audio uses the default mix even for a returning muted player', async ({page:host,browser}) => {
+  await host.addInitScript(() => localStorage.setItem('skyline.audio.v2', JSON.stringify({muted:true,music:0})));
   await gripMatch(host,browser,async (guest,start) => {
     await Promise.all([host,guest].map(observeLoops));
     await start();
     for (const page of [host,guest]) await expect.poll(() => activeLoops(page)).toBe(1);
     await host.keyboard.press('Escape');
     const menu = host.getByRole('dialog');
-    await setVolume(menu, 'Effects', 0);
-    await expect.poll(() => activeLoops(host)).toBe(1);
-    await setVolume(menu, 'Music', 0);
-    await expect.poll(() => activeLoops(host)).toBe(0);
-    await setVolume(menu, 'Music', 85);
-    await expect.poll(() => activeLoops(host)).toBe(1);
-    const mute = menu.getByRole('button',{name:'Mute game audio'});
-    await mute.click();
-    await expect.poll(() => activeLoops(host)).toBe(0);
-    await expect.poll(() => activeLoops(guest)).toBe(1);
-    await mute.click();
-    await expect.poll(() => activeLoops(host)).toBe(1);
-    await expect(menu.getByRole('slider',{name:'Music volume'})).toHaveValue('85');
+    await expect(menu.getByRole('button',{name:'Return to match'})).toBeVisible();
+    await expect(menu.getByRole('slider')).toHaveCount(0);
+    await expect(menu.getByRole('button',{name:'Mute game audio'})).toHaveCount(0);
   });
 });

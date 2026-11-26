@@ -108,7 +108,7 @@ export class FixtureScene {
         if (!definition) throw new Error('Arena framing requires fighter geometry');
         this.groupCamera = new GroupCamera(definition.bodies, this.rig instanceof FighterSkin ? this.rig.radii : undefined);
         this.setArena(map);
-        this.unsubscribeMotion = observeCameraMotion(reduced => { this.groupCamera!.reducedMotion = reduced; });
+        this.unsubscribeMotion = observeCameraMotion(reduced => { this.groupCamera!.reducedMotion = reduced; }, options.online);
       } else this.scene.add(fixtureTerrain(terrainBoxes));
       this.colliders.frustumCulled = false;
       this.colliders.renderOrder = 1;
@@ -129,7 +129,7 @@ export class FixtureScene {
       sun.shadow.normalBias = 0.03;
       this.scene.add(sun);
       const applyQuality = () => applySkylineQuality(this.renderer, this.scene, sun,
-        skylineQuality(driver, window.devicePixelRatio, map ? graphicsPreference() : 'medium'));
+        skylineQuality(driver, window.devicePixelRatio, options.online ? 'high' : map ? graphicsPreference() : 'medium'));
       const refreshSize = () => {
         if (this.graphicsInterrupted) return;
         applyQuality();
@@ -139,7 +139,7 @@ export class FixtureScene {
         if (!lost) refreshSize();
         this.onGraphicsChange?.(lost);
       });
-      if (map) this.unsubscribeGraphics = subscribeGraphics(refreshSize);
+      if (map && !options.online) this.unsubscribeGraphics = subscribeGraphics(refreshSize);
       this.resizeObserver = new ResizeObserver(refreshSize);
       this.resizeObserver.observe(container);
       refreshSize();

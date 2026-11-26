@@ -17,7 +17,6 @@ test('the online rooftop warns both players before each hazard and clears the wa
     await guest.goto(invite.href);
     await guest.getByLabel('Player name').fill('Blue');
     await guest.getByRole('button', {name:'Join room', exact:true}).click();
-    await guest.getByRole('button',{name:'Mute game audio'}).click();
     for (const player of [guest,host]) await player.getByRole('button', {name:'Ready up'}).click();
     await host.getByRole('button', {name:'Start match'}).click();
     const players = [host,guest];
@@ -44,12 +43,10 @@ test('the online rooftop warns both players before each hazard and clears the wa
         await Promise.all(players.map(player => expect.poll(async () =>
           (await arenaMeshes(player)).filter(mesh => mesh.visible && mesh.emissive !== 0).map(mesh => mesh.name)
         ).toEqual(['panel-8'])));
-        expect(await warningSamples(guest)).toHaveLength(0);
-        expect(await breakawayPans(guest)).toEqual([]);
-        await guest.getByRole('button',{name:'Mute game audio'}).click();
+        await expect.poll(() => warningSamples(guest)).toHaveLength(1);
       }
       if (message === 'East walkway failing') {
-        await expect.poll(() => warningSamples(guest)).toHaveLength(1);
+        await expect.poll(() => warningSamples(guest)).toHaveLength(2);
         for (const player of players) await expect.poll(() => breakawayPans(player)).toHaveLength(1);
         await guest.reload();
         await expect(notices[1]!).toHaveText(message);

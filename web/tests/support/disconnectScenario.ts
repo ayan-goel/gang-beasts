@@ -44,6 +44,7 @@ export async function verifyDisconnectGrace({page: host, browser}: {page: Page; 
     await expect(host.getByRole('heading',{name:'Spectating Skyline'})).toBeVisible({timeout:15_000});
     await expect(host.getByLabel('Mint eliminated')).toHaveText('Out');
 
+    await blue.locator('canvas').press('Escape');
     await blue.getByRole('button',{name:'Leave room'}).click();
     await Promise.all([host,gold].map(async player => {
       await expect(player.getByLabel('Gold score')).toHaveText('1');
@@ -54,6 +55,7 @@ export async function verifyDisconnectGrace({page: host, browser}: {page: Page; 
     }));
     await expect(host.getByRole('heading',{name:'Playing as Mint again'})).toBeVisible();
     await expect(gold.getByRole('heading',{name:'Playing as Gold'})).toBeVisible();
+    await host.locator('canvas').press('Escape');
     await host.getByRole('button',{name:'Leave room'}).click();
     await expect(gold.getByLabel('Gold score')).toHaveText('2',{timeout:12000});
     await expect(gold.getByRole('heading',{name:'Room lobby'})).toBeVisible({timeout:10000});

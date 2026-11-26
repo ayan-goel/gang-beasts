@@ -22,9 +22,11 @@ function screen(feed: MatchFeed) {
   return renderToStaticMarkup(<OnlineMatch feed={feed} content={content} exit={() => {}}/>);
 }
 
-it('renders the acknowledged round and scores in the first screen, before WebGL starts', () => {
+it('keeps the playing surface free of interactive chrome and results cards', () => {
   const feed = fixtureFeed();
+  feed.latest = {...feed.latest!, phase:1};
   const html = screen(feed);
+  expect(html).not.toMatch(/<button|Series standings|Tab for scoreboard|class="scoreboard/);
   expect(html).toContain('aria-label="Round number">Round ' + feed.latest!.number);
   expect(html).toContain('aria-label="A score">' + feed.latest!.fighters[0]!.score);
   expect(html).toContain('aria-label="B score">' + feed.latest!.fighters[1]!.score);

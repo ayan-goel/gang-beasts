@@ -66,6 +66,7 @@ test('only the host can start and both ready browsers see the live rooftop and r
     }
     expect(repeats).toEqual({duplicate:2, previousRound:2});
     for (const player of [guest,page]) {
+      if (await player.locator('.online-match').count()) await player.locator('canvas').press('Escape');
       await player.getByRole('button',{name:'Leave room'}).click();
       await expect(player.getByLabel('Player name')).toBeVisible();
     }
@@ -117,7 +118,10 @@ test('the arena reports a five-second stalled stream and resumes after ordered s
     await expect(page.getByText('Waiting for the server…')).toHaveCount(0);
     expect(connections).toBe(1);
     await expect(page.getByLabel('Round number')).toHaveText('Round 1');
-    for (const p of [guest,page]) await p.getByRole('button',{name:'Leave room'}).click();
+    for (const p of [guest,page]) {
+      if (await p.locator('.online-match').count()) await p.locator('canvas').press('Escape');
+      await p.getByRole('button',{name:'Leave room'}).click();
+    }
   } finally {
     resume();
     try { await releaseRoom(link,[page.context(),profile]); }

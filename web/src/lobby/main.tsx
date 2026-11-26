@@ -1,10 +1,8 @@
-import '../settings/applyTextSize';
-import { SkylineSound, MuteButton } from '../audio/SkylineSound';
+import { SkylineSound } from '../audio/SkylineSound';
 import { createRoot } from 'react-dom/client';
 import { useEffect, useState } from 'react';
 import { bootstrap, errorText, isCode } from './api';
 import { RoomForm } from './RoomForm';
-import { DisplaySettings } from '../app/DisplaySettings';
 import { RosterPanel } from './RosterPanel';
 import arena from './skyline.webp';
 import './rooms.css';
@@ -36,8 +34,6 @@ function PrivateRooms() {
     return () => { active = false; };
   }, [attempt, requested]);
   return <main className="rooms">
-    <header><a className="brand" href="/" aria-label="Main menu"><span aria-hidden="true">••</span> gang bbeasts</a>
-      <DisplaySettings /><MuteButton /><a href="/play/">Local match ↗</a></header>
     <div className="room-layout">
       <div className="room-console">{!ready ? <section className="room-panel"><h1>Private rooms</h1>
         {error ? <><p role="alert">{error}</p><button className="room-primary" onClick={() => setAttempt(a => a + 1)}>Retry connection</button></>
@@ -54,4 +50,4 @@ function PrivateRooms() {
     </div>
   </main>;
 }
-createRoot(document.getElementById('app')!).render(<SkylineSound><PrivateRooms /></SkylineSound>);
+createRoot(document.getElementById('app')!).render(<SkylineSound useDefaultMix><PrivateRooms /></SkylineSound>);

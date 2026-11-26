@@ -36,7 +36,7 @@ export function SeriesCard({match, map, names, wins}: {
     <div role="status"><h2>{heading}</h2></div>
     <ol>{names.map((name,i) => ({name,slot:i,score:match.scores[i] ?? 0}))
       .sort((a,b)=>b.score-a.score || a.slot-b.slot)
-      .map(({name,slot,score})=><li key={slot}><span>{name}</span><b>{score} {score===1 ? 'win':'wins'}</b></li>)}</ol>
+      .map(({name,slot,score})=><li key={slot}><span>{name}</span><b><span aria-label={name + ' score'}>{score}</span> {score===1 ? 'win':'wins'}</b></li>)}</ol>
     <p>{complete ? 'Returning to the main menu…' : Math.max(...match.scores)>=wins ? 'Final standings up next' : 'Next arena up shortly'}</p>
   </section>;
 }

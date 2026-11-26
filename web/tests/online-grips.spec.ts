@@ -117,7 +117,7 @@ test('both views identify a moving rooftop crate and clear the grip on focus los
     await host.keyboard.down('KeyE');
     await expect.poll(() => Math.min(...crate.map(c => c.travel))).toBeGreaterThan(0.1);
     await host.keyboard.up('KeyS');
-    await host.getByRole('button',{name:'Mute game audio'}).focus();
+    await host.keyboard.press('Escape');
     await Promise.all(labels.map(l => expect(l).toHaveCount(0)));
     await host.keyboard.up('KeyJ');
     await host.keyboard.up('KeyK');

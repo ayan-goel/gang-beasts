@@ -63,11 +63,9 @@ test('two private players can use different camera motion in the same round', as
       await observeArenaMeshes(player);
     }
     await start();
-    await host.getByRole('button',{name:'Match menu'}).click();
-    await host.getByRole('dialog').getByLabel('Camera motion').selectOption('reduced');
-    await host.getByRole('button',{name:'Return to match'}).click();
+    await host.emulateMedia({reducedMotion:'reduce'});
     expect(await firstTurn(host)).toBeCloseTo(Math.PI/4, 5);
-    await expect(guest.getByLabel('Camera motion')).toHaveValue('system');
+    await expect(guest.getByLabel('Camera motion')).toHaveCount(0);
     expect(await firstTurn(guest)).toBeLessThan(Math.PI/4 - .01);
     for (const player of [host,guest]) await expect(player.getByLabel('Round phase')).toHaveText('Playing');
   });

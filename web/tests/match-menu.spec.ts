@@ -42,7 +42,7 @@ test('the private menu releases held controls while both round clocks advance', 
     const menu = host.getByRole('dialog', {name:'Match menu'});
     await expect(menu).toBeVisible();
     await expect.poll(() => [axis,held]).toEqual([0,0]);
-    await menu.getByRole('button', {name:'Mute game audio'}).click();
+    await expect(menu.getByRole('combobox')).toHaveCount(0);
     for (const player of [host,guest]) {
       const clock = player.getByLabel('Round time remaining');
       await expect(clock).not.toHaveText(await clock.innerText());
@@ -55,8 +55,8 @@ test('the private menu releases held controls while both round clocks advance', 
     await host.keyboard.down('KeyA');
     await expect.poll(() => axis).toBeLessThan(0);
     await host.keyboard.up('KeyA');
-    await host.getByRole('button', {name:'Match menu'}).click();
-    await expect(menu.getByRole('button', {name:'Mute game audio'})).toHaveAttribute('aria-pressed','true');
+    await host.keyboard.press('Escape');
+    await expect(menu.getByRole('button', {name:'Leave room'})).toBeVisible();
     await menu.getByRole('button', {name:'Return to match'}).click();
     await expect(host.locator('canvas')).toBeFocused();
   });

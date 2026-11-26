@@ -1,11 +1,11 @@
 export interface VolumeSettings { muted: boolean; master: number; effects: number; music: number }
 export type VolumeChannel = Exclude<keyof VolumeSettings, 'muted'>;
 
-const defaults: VolumeSettings = {muted:false, master:100, effects:100, music:60};
+export const defaultVolume: VolumeSettings = {muted:false, master:100, effects:100, music:60};
 const key = 'skyline.audio.v2';
 
 export function readVolume(storage?: Pick<Storage,'getItem'>): VolumeSettings {
-  const result = {...defaults};
+  const result = {...defaultVolume};
   try {
     storage ??= window.localStorage;
     result.muted = storage.getItem('skyline.audio.v1.muted') === 'true';

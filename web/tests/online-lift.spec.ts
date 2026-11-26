@@ -17,8 +17,8 @@ test('both players see the opponent carry swing momentum through an airborne rel
     await host.keyboard.down('KeyK');
     await expect.poll(() => heldWithBoth(owner.at(-1)!), {timeout: 12000}).toBe(true);
     stopApproach();
-    await expect(host.getByText('Hold E to lift. Release your gripping hands to throw.')).toBeVisible();
-    await expect(guest.getByText('Hold J or K to grab back with a free hand.')).toBeVisible();
+    await expect(host.getByText('Hold E to lift. Release your gripping hands to throw.')).toHaveCount(0);
+    await expect(guest.getByText('Hold J or K to grab back with a free hand.')).toHaveCount(0);
     const base = owner.at(-1)!;
     await host.keyboard.down('KeyE');
     await expect.poll(() => {
@@ -68,7 +68,7 @@ test('the held fighter can grab back and keep the attachment after the lifter le
     const attachedBack = (s: LiftSample) => s.counter.some(id => id >= 1 && id <= 15);
     await expect.poll(() => views.every(samples => heldWithBoth(samples.at(-1)!) && attachedBack(samples.at(-1)!)), {timeout: 8000}).toBe(true);
     await host.keyboard.down('KeyE');
-    await expect(guest.getByText('Releasing your hands leaves the other fighter’s grip attached.')).toBeVisible();
+    await expect(guest.getByText('Releasing your hands leaves the other fighter’s grip attached.')).toHaveCount(0);
     await host.keyboard.up('KeyJ');
     await host.keyboard.up('KeyK');
     await host.keyboard.up('KeyE');

@@ -30,8 +30,8 @@ export function MatchMenu({local, children, resume}: {local?: boolean; children?
     <h2 id={title}>{local ? 'Game paused' : 'Match menu'}</h2>
     {!local && <p>The round continues while this menu is open.</p>}
     <button className="match-menu-return" onClick={dismiss}>{local ? 'Resume match' : 'Return to match'}</button>
-    <div className="match-menu-settings"><DisplaySettings /><MuteButton /></div>
-    <VolumeControls />
+    {local && <><div className="match-menu-settings"><DisplaySettings /><MuteButton /></div>
+    <VolumeControls /></>}
     {children}
   </dialog>, document.body);
 }

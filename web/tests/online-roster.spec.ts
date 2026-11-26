@@ -74,6 +74,7 @@ test('eight ready browsers share the rooftop and agree on the surviving fighterâ
     }
     for (const player of pages) await expect(player.getByLabel('Fighter 8 eliminated')).toHaveText('Out');
     await expect(host.getByLabel('Round phase')).toHaveText('Playing');
+    await eighth.locator('canvas').press('Escape');
     const spectator = eighth.getByRole('group', {name:'Spectator camera'});
     await expect(spectator.getByLabel('Camera view')).toHaveText('Group view');
     const lastInput = traces[7]!.inputs;

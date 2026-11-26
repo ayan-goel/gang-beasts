@@ -48,39 +48,30 @@ test('changing graphics replaces the shadow target in place and retains the choi
   await page.reload();
   await expect(setting).toHaveValue('high');
   await expect.poll(() => graphicsQuality(page)).toEqual({ratio:2, shadow:2048});
-  const lobby = await page.context().newPage();
+  const practice = await page.context().newPage();
   try {
-    await lobby.setViewportSize({width:390, height:800});
-    await lobby.goto('/rooms/');
-    const other = lobby.getByRole('combobox', {name:'Graphics'});
+    await practice.setViewportSize({width:390, height:800});
+    await practice.goto('/play/');
+    const other = practice.getByRole('combobox', {name:'Graphics'});
     await expect(other).toHaveValue('high');
     await expect(other).toBeInViewport();
-    expect(await lobby.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await practice.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await other.selectOption('low');
     await page.bringToFront();
     await expect(setting).toHaveValue('low');
     await expect.poll(() => graphicsQuality(page)).toEqual({ratio:.75, shadow:512});
     await setting.selectOption('auto');
     await expect(other).toHaveValue('auto');
-  } finally { await lobby.close(); }
+  } finally { await practice.close(); }
 });
 
-test('a private player can lower graphics while the other seat keeps playing at its own quality', async ({page: host,browser}) => {
+test('online arenas render at high quality even with an old low preset', async ({page:host,browser}) => {
+  await host.addInitScript(() => localStorage.setItem('skyline.graphics.v1.preset','low'));
   await gripMatch(host,browser,async (guest,start) => {
-    for (const p of [host,guest]) await observeArenaMeshes(p);
+    for (const player of [host,guest]) await observeArenaMeshes(player);
     await start();
-    await host.getByRole('combobox', {name:'Graphics'}).selectOption('low');
-    await expect.poll(() => graphicsQuality(host)).toEqual({ratio:.75,shadow:512});
-    await expect(guest.getByRole('combobox', {name:'Graphics'})).toHaveValue('auto');
-    await guest.getByRole('combobox', {name:'Graphics'}).selectOption('high');
+    await expect.poll(() => graphicsQuality(host)).toEqual({ratio:2,shadow:2048});
     await expect.poll(async () => (await graphicsQuality(guest))?.shadow).toBe(2048);
-    await expect.poll(() => graphicsQuality(host)).toEqual({ratio:.75,shadow:512});
-    await guest.bringToFront();
-    await guest.locator('canvas').focus();
-    await guest.keyboard.down('ShiftLeft');
-    await guest.keyboard.down('KeyD');
-    try {
-      await Promise.all([host,guest].map(p => expect(p.getByLabel('Mint score')).toHaveText('1', {timeout:25000})));
-    } finally { await guest.keyboard.up('KeyD'); await guest.keyboard.up('ShiftLeft'); }
+    for (const player of [host,guest]) await expect(player.getByLabel('Graphics')).toHaveCount(0);
   });
 });

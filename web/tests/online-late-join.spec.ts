@@ -52,6 +52,7 @@ async function verifyJoin(host: Page, browser: Browser, legacyPeer: boolean) {
       await newcomer.getByLabel('Player name').fill('Gold');
       await newcomer.getByRole('button',{name:'Join room',exact:true}).click();
       await expect(newcomer.getByRole('heading',{name:'Spectating Skyline'})).toBeVisible({timeout:15000});
+      await newcomer.locator('canvas').press('Escape');
       const camera = newcomer.getByRole('group', {name:'Spectator camera'});
       await expect(host.getByRole('group', {name:'Spectator camera'})).toHaveCount(0);
       await expect(camera.getByLabel('Camera view')).toHaveText('Group view');
@@ -62,22 +63,19 @@ async function verifyJoin(host: Page, browser: Browser, legacyPeer: boolean) {
       await expect.poll(async () => Math.abs((await cameraAim(newcomer))?.x ?? Infinity)).toBeLessThan(.65);
       await camera.getByRole('button', {name:'Previous fighter'}).click();
       await expect(camera.getByLabel('Camera view')).toHaveText('Following Blue');
-      const initialYaw = (await cameraAim(newcomer))!.yaw;
-      await newcomer.keyboard.press('KeyX');
-      await expect.poll(async () => (await cameraAim(newcomer))?.yaw).toBeGreaterThan(initialYaw + .6);
-      await expect.poll(async () => (await cameraAim(newcomer))?.x).toBeGreaterThan(1);
       if (!legacyPeer) {
         const panel = await camera.boundingBox();
         expect(panel!.x + panel!.width).toBeLessThanOrEqual(390);
         await newcomer.getByLabel('Online Skyline arena').screenshot({path:test.info().outputPath('spectator-camera.png')});
       }
-      await newcomer.locator('canvas').focus();
-      await newcomer.keyboard.press('Tab');
-      const board = newcomer.getByRole('region', {name:'Scoreboard',exact:true});
-      await expect(board).toBeFocused();
-      await expect(board.getByLabel('Blue score')).toHaveText('0');
       await newcomer.keyboard.press('Escape');
       await expect(newcomer.locator('canvas')).toBeFocused();
+      await expect(camera).toHaveCount(0);
+      await expect(newcomer.getByRole('region', {name:'Scoreboard',exact:true})).toHaveCount(0);
+      const initialYaw = (await cameraAim(newcomer))!.yaw;
+      await newcomer.keyboard.press('KeyX');
+      await expect.poll(async () => (await cameraAim(newcomer))?.yaw).toBeGreaterThan(initialYaw + .6);
+      await expect.poll(async () => (await cameraAim(newcomer))?.x).toBeGreaterThan(1);
       await newcomer.keyboard.down('KeyD');
       const waiting = views[2]!.tick;
       await expect.poll(() => views[2]!.tick).toBeGreaterThan(waiting + 8);
@@ -90,8 +88,7 @@ async function verifyJoin(host: Page, browser: Browser, legacyPeer: boolean) {
       await guest.keyboard.down('KeyD');
       try { await expect(host.getByLabel('Mint score')).toHaveText('1',{timeout:20000}); }
       finally { await guest.keyboard.up('KeyD'); await guest.keyboard.up('ShiftLeft'); }
-      await expect(camera.getByLabel('Camera view')).toHaveText('Following Mint');
-      await expect.poll(async () => (await cameraAim(newcomer))?.x).toBeLessThan(-1);
+      await expect(newcomer.getByLabel('Series standings')).toBeVisible();
       for (const page of [host,guest,newcomer]) {
         await expect(page.getByLabel('Round number')).toHaveText('Round 2',{timeout:15000});
         await expect(page.getByLabel('Gold score')).toHaveText('0');

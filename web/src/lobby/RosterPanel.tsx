@@ -52,8 +52,7 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
   </section>;
   if (game) {
     const {View, feed, content, graphics} = game;
-    return <><View key={feed.assignmentRound?.toString() ?? 'start'} feed={feed} graphics={graphics} highLatency={highLatency} content={content} exit={exit} wins={state?.wins ?? 3}/>
-      {error && <p role="alert">{error}</p>}</>;
+    return <View key={feed.assignmentRound?.toString() ?? 'start'} feed={feed} graphics={graphics} highLatency={highLatency} content={content} exit={exit} leaving={leaving} leaveError={error} wins={state?.wins ?? 3}/>;
   }
   if (lostAccess && disconnected) return <section className="room-panel">
     <h1>{lostAccess === 'room' ? 'Room closed' : 'Seat expired'}</h1>

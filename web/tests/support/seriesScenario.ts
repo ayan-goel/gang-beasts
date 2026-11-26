@@ -39,9 +39,10 @@ export async function verifyOnlineSeries({page:host, browser}: {page:Page; brows
       await guest.keyboard.down('KeyD');
       try {
         for (const player of players) {
-          await expect(player.getByLabel('Mint score')).toHaveText(String(round),{timeout:30000});
-          await expect(player.getByLabel('Series standings')).toContainText('Mint');
-          await expect(player.getByLabel('Blue score')).toHaveText('0');
+          const standings = player.getByLabel('Series standings');
+          await expect(standings).toBeVisible({timeout:30000});
+          await expect(standings.getByLabel('Mint score')).toHaveText(String(round));
+          await expect(standings.getByLabel('Blue score')).toHaveText('0');
         }
       } finally { await guest.keyboard.up('KeyD'); await guest.keyboard.up('ShiftLeft'); }
     }

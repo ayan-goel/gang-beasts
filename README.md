@@ -8,11 +8,9 @@ Deploy the game from GitHub using [Vercel and Railway](docs/deployment.md).
 
 ## Play the arena tour
 
-Start the browser project using the setup below and open the printed address. Choose **Host a room**, **Join a room**, or **Local match** from the main menu. Local play also opens directly at `/play/`. Choose first to 3, 5 or 7. Each round opens on a shuffled arena and the last surviving fighter earns one win. Read the standings between rounds. After the champion screen, everyone returns to the main menu. Coral uses WASD and J/K, Blue uses the arrow keys and comma/period. The start and pause screens show the full bindings.
+Open the title screen and choose **Host a room** or **Join a room**. **How to play** in the upper left explains movement, grabs, throws, swimming and climbing. The host chooses first to 3, 5 or 7 wins. Each round opens on a shuffled arena. The last surviving fighter earns one win. Standings appear between rounds and everyone returns to the title screen after the champion announcement.
 
-Press Escape with the arena focused to open graphics and audio settings. Local play pauses both fighters. In a private room the round continues and your fighter releases held controls. Press Escape again to return to play.
-
-Press Tab from the arena to read the live scores and round clock. Escape returns to the arena. You can check the scores this way while playing or spectating.
+During an online fight the arena fills the window. Press Escape to return to or leave the match. The round continues while the menu is open. Developer modes remain available at `/play/` for a same-keyboard match and `/playground/` for physics practice.
 
 Hold a hand control near a crate, vent or exposed roof edge to grab it. The HUD shows which hand has the grip. Use the lift control to raise movable crates.
 
@@ -20,7 +18,7 @@ On water arenas, steer and hold jump to swim up. Grab a low deck with either han
 
 On Skyline, if a walkway falls, keep a hand held within reach of the main roof to catch the lip. Hold Space (Coral) or Enter (Blue) to pull onto a clear roof. Release jump to stop pulling. Releasing your last hand lets you fall. [Catch behavior](docs/slices/10c2-ledge-catch.md) and [pull-up controls](docs/slices/10c3-mantling.md).
 
-For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open the printed local address and choose **Local match**. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
+For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open `/play/` at the printed local address. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
 
 ## Open a private room
 
@@ -77,7 +75,7 @@ The [jump benchmark](docs/slices/15i-snapshot-clock.md#measuring-a-standing-jump
 
 ## Playground controls
 
-Choose **Physics playground** from the main menu or open `/playground/` directly. For a repeatable west walkway rescue, choose **Ledge rescue** or open `/playground/?scene=ledge`. Hold J and K to catch, then hold Space to pull up.
+Open `/playground/` directly. For a repeatable west walkway rescue, choose **Ledge rescue** or open `/playground/?scene=ledge`. Hold J and K to catch, then hold Space to pull up.
 
 Choose **Passive ragdoll** to inspect the fifteen-body rig paused at tick zero. Select a limb for readings and impulses, enable joint frames/colliders, then resume to observe its unpowered fall. Joint limits and anchor separation are available in the inspector. Scene switching starts a fresh world with default tuning. Choose **Standing ragdoll** for the supported standing preset. Toggle character control, inspect support and per-joint effort/velocity targets, or shove the selected body with a 10 N·s +X impulse. Pale parent joint axes show the bind-pose target; saturated child axes show actual orientation. Reset and physics tuning preserve the control toggle. Scene changes discard unsubmitted tuning drafts. Ragdoll recording is not implemented; recording controls apply to the cuboid scene.
 

@@ -130,7 +130,7 @@ it('sends a fresh headbutt immediately and preserves the next hand press and rel
 });
 
 it('lets a spectator turn the view without sending fighter inputs and releases its key listener', () => {
-  const canvas = Object.assign(new EventTarget(), {setAttribute() {}});
+  const canvas = Object.assign(new EventTarget(), {setAttribute() {}, focus:vi.fn()});
   vi.stubGlobal('document', {hidden:false});
   const transmit = vi.fn();
   const feed = new MatchFeed(Uint8Array.of(23,1,255,0,0,1,65,1,1,1,66), transmit);
@@ -140,6 +140,7 @@ it('lets a spectator turn the view without sending fighter inputs and releases i
   const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed, camera, matchRegion as HTMLElement);
   const key = (code: string, repeat = false) => matchRegion.dispatchEvent(Object.assign(new Event('keydown'), {code,repeat}));
   try {
+    expect(canvas.focus).toHaveBeenCalledWith({preventScroll:true});
     key('KeyX'); key('KeyX',true); key('KeyW'); key('KeyZ');
     expect(turn.mock.calls).toEqual([[1],[-1]]);
     expect(transmit).not.toHaveBeenCalled();
