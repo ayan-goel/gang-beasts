@@ -49,7 +49,7 @@ The native `LocomotionRagdoll` adds assisted walking/running, turning, braking a
 
 ## Browser playground
 
-Use Node 20.18.0 (`.nvmrc`). Install project-local wasm-pack once, then build the shared engine before starting Vite:
+Use Node 24 (`.nvmrc`). Install project-local wasm-pack once, then build the shared engine before starting Vite:
 
 ```sh
 rustup target add wasm32-unknown-unknown --toolchain 1.88.0

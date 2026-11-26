@@ -6,7 +6,7 @@
 /web/playwright-report/
 /.tools/
 /.cache/
-/.vercel/
+.vercel/
 .DS_Store
 .env
 .env.*
