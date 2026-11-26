@@ -1,3 +1,4 @@
+import { StairInspection } from './StairInspection';
 import { LedgePracticePanel } from './LedgePracticePanel';
 import { DuelPanel } from './DuelPanel';
 import { MovementControls } from './MovementControls';
@@ -30,7 +31,10 @@ export function App() {
   const viewport = useRef<HTMLDivElement>(null);
   const runtime = useRef<PlaygroundRuntime | null>(null);
   const generation = useRef(0);
-  const [scenario, setScenario] = useState<SceneChoice>(() => new URLSearchParams(location.search).get('scene') === 'ledge' ? 'ledge' : 'cube');
+  const [scenario, setScenario] = useState<SceneChoice>(() => {
+    const scene = new URLSearchParams(location.search).get('scene');
+    return scene === 'ledge' || scene === 'stairs' ? scene : 'cube';
+  });
   const [state, setState] = useState<PlaygroundSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fixture = scenario !== 'duel' && scenario !== 'ledge';
@@ -73,6 +77,7 @@ export function App() {
         {scenario === 'ledge' && <LedgePracticePanel viewport={viewport} />}
         {scenario === 'duel' && <DuelPanel viewport={viewport} />}
         {fixture && state && <>
+          {scenario === 'stairs' && <StairInspection act={act} state={state} />}
           <MovementInspector state={state} act={act} />
           <RagdollInspector state={state} act={act} />
           <Controls state={state} act={act} />

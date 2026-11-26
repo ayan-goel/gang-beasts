@@ -81,3 +81,28 @@ npm --prefix web run test:e2e -- stairs.spec.ts
 On the Apple M3 Pro development Mac, engine fingerprint `d56bc5bf8973293a8f28e7da7df06fe65f496b82b93fc2eda5e00f5757a7ee4b` passed 282 native tests, 48 web unit tests, the production build, formatting and warning-denied workspace Clippy. The local preview served that fingerprint in both the shipped WASM and the multiplayer map catalog.
 
 The synchronized Chromium suite passed 74 of 77 scenarios, including all stair cases, rematches and disconnect grace. The two-player hazard deadline and a local countdown expired during a run with host sleep. The hazard screen showed 2:04 remaining when the wall-clock wait expired, and the host power log recorded a 52-second sleep in that interval. In the eight-player case, seven sockets kept progressing past tick 1200. The eighth had closed after tick 740, before its movement input. Separate production-preview runs passed all three scenarios using the same engine and map fingerprints. All eight profiles received and displayed the elimination. Two profiles saw each hazard warning, including after a guest reload, and the local match awarded the point and started its next round. The source of the intermittent socket closure is unresolved.
+
+## Inspect a starting timing
+
+Open `/playground/?scene=stairs` or select **Low stairs** in the development playground. In **Inspect a stair approach**, enter the number of settling ticks and the number of ticks since forward movement began. **Inspect frame** rebuilds the current fixture, replays the input and pauses with the selected limb, joints and contacts available for inspection. The first 240 movement ticks hold forward. The next 180 release it. Selecting an earlier frame repeats the solve from spawn. Resuming gives control back with movement released. The two input bounds limit a single inspection to 660 physics ticks.
+
+| Settling ticks | First movement tick with head height at or below 1.1 m | Total tick |
+| --- | --- | --- |
+| 19 | 115 | 134 |
+| 25 | 81 | 106 |
+| 26 | 161 | 187 |
+| 43 | 126 | 169 |
+| 108 | 121 | 229 |
+
+Inspect settling tick 25 at movement ticks 80 and 81 to see the threshold crossing. With 60 settling ticks, movement tick 420 shows the supported stop. Chromium checked the displayed head height and pelvis Z against the native trace at those frames, in reverse order, at movement onset and on both sides of release.
+
+The native integration test runs all 121 start times, including the five above. It reports the first fall per start and fails on any newly affected start. Survivors must pass Z −3 m by walking tick 150, finish beyond that point with pelvis height above 0.85 m and speed below 0.2 m/s, and report both feet supported. The posture, displacement and joint-effort checks on the original cases remain in the native library suite.
+
+```sh
+cargo test --locked --release -p brawler-engine --test stair_fixture -- --nocapture
+npm --prefix web run test:e2e -- stair-inspection.spec.ts stairs.spec.ts
+```
+
+Reducing the ankle response rate to 0.8 times its usual value near a reachable step produced eight falls across 121 starts. Increasing lower-body damping to 1.35 times its usual value within the configured caps produced five falls at a different set of starts. Both comparisons used the same inputs and default terrain. The shipped controller retains the existing motor settings.
+
+On the M3 Pro, 316 native workspace tests, 105 web unit tests and all four Chromium stair scenarios passed. The production bundle passed type checking, and workspace formatting and warning-denied Clippy passed. The local production playground opened directly to Low stairs and displayed a head height of 1.081 m at total tick 106 for the 25-tick start. The browser and room server shared engine fingerprint `781eca65941f285cbf4e7ae2dfe7fd82b5af1b4f33b1b912f78f6f4da14087cd`.
