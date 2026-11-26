@@ -90,6 +90,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 17d — fighter condition | Local and online knockout and recovery announcements | Keyboard combat, replicated native transitions, bounded audio and named notices |
 | 17 | Original presentation and audio | Original skinned characters, effects, warnings, licensed asset manifest |
 | 18 | Settings, accessibility and product flows | Input isolation, keyboard navigation, loading/errors, quality/audio settings |
+| 19a — native room baseline | Eight active fighters and eight personalized snapshots | Five release runs with service time, recipient bytes and workload checks |
 | 19 | Performance and endurance | Declared hardware measurements, 60-minute soak, 100 resets, eight-player stress |
 | 20 | Deployment and release audit | CI, container, compatibility manifest, real two-client smoke and all §33 gates |
 

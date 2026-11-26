@@ -1496,6 +1496,8 @@ Use release builds, a fixed seed/input script, realistic active bodies and the s
 
 Criterion supports isolated microbenchmarks; full-room wall-clock traces and sustained load tests are separate required evidence. A regression is actionable when repeatable on the same baseline; an initial proposed alert is >10% p95 total-step regression, investigated alongside variance rather than treated as a universal statistical proof.
 
+The [eight-player Skyline baseline](docs/verification/eight-player-room.md) records the native room and full snapshot measurements for the shipping rig and map.
+
 ### 28.4 Capacity estimate
 
 CPU-only upper estimate:
