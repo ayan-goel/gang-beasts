@@ -1,6 +1,6 @@
 import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { pullHint } from '../game/ledgeHint';
-import { GraphicsSelect } from './GraphicsSelect';
+import { DisplaySettings } from './DisplaySettings';
 import { MatchMenu, openMenuFromArena } from './MatchMenu';
 import { Scoreboard } from './Scoreboard';
 import { meleeResult } from '../game/meleeResult';
@@ -54,7 +54,7 @@ export function SkylineGame() {
   return <main className="skyline-shell">
     <header className="skyline-header">
       <a className="roof-brand" href="/" aria-label="Main menu"><span aria-hidden="true" className="roof-mark">▰</span> Skyline Melee</a>
-      <span>Local multiplayer</span><GraphicsSelect /><MuteButton /><a href="/rooms/">Private rooms</a><a href="/playground/">Physics playground ↗</a>
+      <span>Local multiplayer</span><DisplaySettings /><MuteButton /><a href="/rooms/">Private rooms</a><a href="/playground/">Physics playground ↗</a>
     </header>
     {started && !complete && state?.paused && <MatchMenu local resume={start}>{controls}</MatchMenu>}
     <div className={showIntro ? 'skyline-layout has-menu' : 'skyline-layout'}>

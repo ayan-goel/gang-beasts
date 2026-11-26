@@ -831,6 +831,8 @@ Production framing should project all relevant bounds into the intended camera o
 
 Use `alpha = 1 − exp(−lambda × frame_dt)` and interpolate toward the desired position/zoom. Smooth orbit separately with shortest-angle interpolation. Clamp or reset smoothing after long tab suspension instead of performing one enormous extrapolation step. Camera shake is presentation-only, small and optional; it must not alter control direction unpredictably.
 
+Skyline supports a device-aware **Camera motion** setting in both match modes. Reduced motion holds the aim and zoom through small body movements, fits separating fighters immediately and applies a requested orbit on one frame. The local shared view or private player’s movement axes follow that displayed heading. [Settings, framing and verification](docs/slices/18a-camera-motion.md)
+
 ### 16.5 Collision and occlusion
 
 Use authored camera collision geometry and permitted orbit/bounds. Sphere-cast from target toward the desired position, then choose a clear nearer position or alternative map camera. If no local physics world exists online, provide Three.js-side camera query geometry or an explicitly scoped query implementation; do not require a full duplicate authoritative world merely for camera collision.
@@ -847,7 +849,7 @@ Skyline uses Z/X to turn in 45° increments from its existing rooftop view. The 
 
 Flatten and normalize camera forward/right on the horizontal plane, combine input, clamp vector length to one, and quantize world X/Z. With a near-vertical camera, reuse a stable previous forward vector rather than normalizing a nearly zero projection. Use intended camera orbit orientation rather than transient shake.
 
-The server receives world-space intent, not camera yaw or trusted speed. Rotating one client's camera cannot rotate another client's controls. Define whether a held direction follows camera orbit continuously; initial policy is yes, with smooth camera rotation and no discontinuous sign changes.
+The server receives world-space intent, not camera yaw or trusted speed. Rotating one client's camera cannot rotate another client's controls. Define whether a held direction follows camera orbit continuously; the default follows the smooth camera rotation. A player who requests reduced motion switches heading once per deliberate camera turn.
 
 ### 16.7 Spectating
 

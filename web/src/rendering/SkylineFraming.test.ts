@@ -17,10 +17,11 @@ function fighter(x: number, y: number, z: number) {
   return poses;
 }
 
-test('the complete drawn rigs fit the central 70 percent throughout turns and a viewport resize', () => {
+test.each([false,true])('complete rigs fit throughout turns and resize with reduced motion %s', reduced => {
   const obstacles = new CameraObstacles();
   obstacles.fixed([.25,2.5,2.5],[2.5,2.5,.4]);
   const group = new GroupCamera(rig.bodies,undefined,obstacles);
+  group.reducedMotion = reduced;
   const camera = new PerspectiveCamera(45,.5,.1,150);
   const players = [fighter(-10,-7,-6),fighter(10,1,8)];
   const vertices = rig.bodies.map(({shape}) => {

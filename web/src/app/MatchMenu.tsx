@@ -1,7 +1,7 @@
 import { useId, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { MuteButton, VolumeControls } from '../audio/SkylineSound';
-import { GraphicsSelect } from './GraphicsSelect';
+import { DisplaySettings } from './DisplaySettings';
 import './matchMenu.css';
 
 export function openMenuFromArena(event: KeyboardEvent, open: () => void) {
@@ -30,7 +30,7 @@ export function MatchMenu({local, children, resume}: {local?: boolean; children?
     <h2 id={title}>{local ? 'Game paused' : 'Match menu'}</h2>
     {!local && <p>The round continues while this menu is open.</p>}
     <button className="match-menu-return" onClick={dismiss}>{local ? 'Resume match' : 'Return to match'}</button>
-    <div className="match-menu-settings"><GraphicsSelect /><MuteButton /></div>
+    <div className="match-menu-settings"><DisplaySettings /><MuteButton /></div>
     <VolumeControls />
     {children}
   </dialog>, document.body);

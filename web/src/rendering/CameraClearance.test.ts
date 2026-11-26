@@ -25,13 +25,14 @@ test('the swept lens sees a grazing corner and follows a tilted or retired walkw
   expect(obstacles.cast(eye,up,8,.2).distance).toBe(8);
 });
 
-test('an obstruction at the normal pitch selects a clear group view and preserves the control heading', () => {
+test.each([false,true])('an obstruction selects a clear view and preserves control heading with reduced motion %s', reduced => {
   const wall = new Object3D();
   wall.position.set(0,1.75,1.2);
   const obstacles = new CameraObstacles();
   obstacles.add([2,1.5,.2],wall);
   const radii = Array(15).fill(.25);
   const group = new GroupCamera([],radii,obstacles);
+  group.reducedMotion = reduced;
   const camera = new PerspectiveCamera(45,.65,.1,150);
   const poses = [fighter(-1.5,0),fighter(1.5,0)];
   const focus = new Vector3(0,.8,0), direction = new Vector3();

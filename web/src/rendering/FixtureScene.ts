@@ -6,6 +6,7 @@ import { applySkylineQuality } from './applySkylineQuality';
 import { graphicsPreference, subscribeGraphics } from './graphicsPreference';
 import { FighterSkin } from './fighter/FighterSkin';
 import { ContactNormals } from './ContactNormals';
+import { observeCameraMotion } from './cameraMotion';
 import { GroupCamera } from './GroupCamera';
 import { SkylineView, type SkylineMap, type MatchView } from './SkylineView';
 import * as THREE from 'three';
@@ -44,6 +45,7 @@ export class FixtureScene {
   get graphicsInterrupted() { return this.recovery?.interrupted ?? false; }
 
   private readonly resizeObserver?: ResizeObserver;
+  private readonly unsubscribeMotion?: () => void;
   private readonly unsubscribeGraphics?: () => void;
   private readonly opponents: (RagdollView | FighterSkin)[] = [];
   private skyline?: SkylineView;
@@ -96,6 +98,7 @@ export class FixtureScene {
         this.skyline = new SkylineView(map);
         if (!definition) throw new Error('Skyline framing requires fighter geometry');
         this.groupCamera = new GroupCamera(definition.bodies, this.rig instanceof FighterSkin ? this.rig.radii : undefined, this.skyline.obstacles);
+        this.unsubscribeMotion = observeCameraMotion(reduced => { this.groupCamera!.reducedMotion = reduced; });
         this.scene.add(this.skyline.root);
         this.renderer.setClearColor(0xb8cfce);
         this.scene.fog = new THREE.FogExp2(0xb8cfce,0.013);
@@ -248,6 +251,7 @@ export class FixtureScene {
     this.recovery?.dispose();
     this.resizeObserver?.disconnect();
     this.unsubscribeGraphics?.();
+    this.unsubscribeMotion?.();
     for (const fighter of [this.rig, ...this.opponents]) {
       if (fighter instanceof FighterSkin) {
         // Geometry is shared by the cached GLB and every live instance.

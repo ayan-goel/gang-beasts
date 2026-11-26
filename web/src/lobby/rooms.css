@@ -9,7 +9,7 @@
 * { box-sizing: border-box; }
 body { background: var(--panel); }
 .rooms { min-height: 100dvh; display: flex; flex-direction: column; }
-.rooms header { background: var(--paper); color: var(--ink); display: flex; align-items: center; justify-content: space-between; padding: .9rem clamp(1rem, 3vw, 3rem); }
+.rooms header { flex-wrap:wrap; background: var(--paper); color: var(--ink); display: flex; align-items: center; justify-content: space-between; padding: .9rem clamp(1rem, 3vw, 3rem); }
 .rooms header a { color: inherit; font-size: .87rem; }
 .rooms header .brand { display: inline-flex; align-items: center; gap: .6rem; font-weight: 850; font-size: 1.22rem; text-decoration: none; letter-spacing: -.05em; }
 .brand span { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; background: var(--ink); color: var(--gold); transform: skew(-8deg); }

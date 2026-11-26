@@ -8,6 +8,7 @@
 - [Regional jump feedback](slices/15h-jump-feedback.md) measures keydown to the first visible rise of the local fighter.
 - [Private-match latency](slices/15g-match-latency.md) records round-trip measurements and when players see a delay warning.
 - [Graphics recovery](slices/19g-graphics-recovery.md) covers a lost GPU context, startup failures and cross-browser HTTPS testing.
+- [Camera motion](slices/18a-camera-motion.md) describes reduced pan, zoom and keyboard turns, including device preferences.
 - [Graphics presets](slices/19e-graphics-presets.md) covers live resolution and shadow changes in local and private matches.
 - [Compact match snapshots](slices/19b-compact-snapshots.md) records the rotation codec, compatibility tests and eight-player traffic.
 - [Eight-fighter browser rendering](verification/eight-player-rendering.md) records the shared combat capture, graphics presets and browser frame timings.

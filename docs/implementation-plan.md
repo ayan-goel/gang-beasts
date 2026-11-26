@@ -105,6 +105,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | [17g — landing audio](slices/17g-landing-audio.md) | Sound hard contacts with the fixed rooftop | Jump, stumble, silent ring-out, measured stereo falloff and two clients hearing one server event |
 | [17h — round audio](slices/17h-round-audio.md) | Hear when controls open and how the round ended | Match-clock beats, scored rounds, draws, final results and silent reconnect |
 | 17 | Original presentation and audio | Original skinned characters, effects, warnings, licensed asset manifest |
+| [18a — camera motion](slices/18a-camera-motion.md) | Reduce automatic panning, zoom and orbit animation | Device preference, live menu choice, viewport framing and per-client keyboard turns |
 | 18 | Settings, accessibility and product flows | Input isolation, keyboard navigation, loading/errors, quality/audio settings |
 | 19a — native room baseline | Eight active fighters and eight personalized snapshots | Five release runs with service time, recipient bytes and workload checks |
 | 19b — compact snapshots | Advertise compact rotations per connection | Independent fixtures, mixed clients and repeated eight-fighter measurements |

@@ -12,6 +12,7 @@ const normalPitch = Math.asin(defaultDirection.y);
 const alternativePitches = [50,30,60,20,70,12,80].map(degrees => degrees * Math.PI / 180);
 
 export class GroupCamera {
+  reducedMotion = false;
   private readonly direction = defaultDirection.clone();
   private readonly right = new Vector3().crossVectors(vertical, defaultDirection).normalize();
   private readonly up = new Vector3().crossVectors(defaultDirection, this.right);
@@ -49,7 +50,7 @@ export class GroupCamera {
     const frameTime = Math.min(.12,Math.max(0,dt));
     const target = this.preset * increment;
     const delta = Math.atan2(Math.sin(target - this.angle), Math.cos(target - this.angle));
-    this.angle = Math.abs(delta) < 0.00001 ? target
+    this.angle = this.reducedMotion || Math.abs(delta) < 0.00001 ? target
       : this.angle + delta * (1 - Math.exp(-8 * frameTime));
     const {direction, right, up} = this;
     direction.copy(defaultDirection).applyAxisAngle(vertical, this.angle);
@@ -66,7 +67,16 @@ export class GroupCamera {
       this.desired.y = Math.max(0.8, this.desired.y);
     }
     const weight = this.distance === 0 ? 1 : 1 - Math.exp(-6 * frameTime);
-    this.focus.lerp(this.desired, weight);
+    let panWeight = weight;
+    if (this.reducedMotion && this.distance > 0 && !overview && players.length > 0) {
+      // Allow body sway inside a 75 cm horizontal and 25 cm vertical margin.
+      // Tracking just the excess avoids a camera jump when a fighter crosses it.
+      const offset = this.point.subVectors(this.desired, this.focus);
+      offset.y *= 3;
+      const span = offset.length();
+      panWeight *= span > .75 ? 1 - .75 / span : 0;
+    }
+    this.focus.lerp(this.desired, panWeight);
     const tangent = Math.tan(camera.fov * Math.PI / 360);
     const verticalSlope = tangent * .70;
     const radius = Math.max(.15,camera.near * Math.hypot(1,tangent,tangent*camera.aspect));
@@ -79,7 +89,7 @@ export class GroupCamera {
       up.crossVectors(direction,right);
       this.fit.measure(this.pivot,direction,right,up,verticalSlope,camera.aspect,players,overview);
       const required = this.fit.distance;
-      let distance = Math.max(required,this.distance+(required-this.distance)*weight);
+      let distance = this.framingDistance(required, weight);
       const hit = this.obstacles?.cast(this.pivot,direction,distance,radius);
       if (hit && hit.top !== -Infinity) {
         blockedTop = hit.top;
@@ -113,5 +123,17 @@ export class GroupCamera {
     camera.position.copy(this.pivot).addScaledVector(direction, this.distance);
     camera.lookAt(this.pivot);
     return previousAngle !== this.angle;
+  }
+
+  private framingDistance(required: number, weight: number) {
+    if (this.reducedMotion) {
+      // Spare framing room absorbs limb motion. Zoom in only after the group occupies
+      // substantially less space, while newly separated fighters still fit immediately.
+      const comfortable = required * 1.12;
+      if (this.distance < required) return comfortable;
+      if (this.distance <= required * 1.25) return this.distance;
+      return this.distance + (comfortable - this.distance) * weight;
+    }
+    return Math.max(required, this.distance + (required - this.distance) * weight);
   }
 }

@@ -1,5 +1,5 @@
 .skyline-shell{--ink:#172d38;--paper:#f4f1e7;--gold:#f8c660;--edge:#8b9e9e;height:100dvh;min-height:32rem;display:flex;flex-direction:column;background:var(--ink);color:var(--paper);font-family:Inter,system-ui,sans-serif}
-.skyline-header{background:var(--paper);color:var(--ink);padding:.85rem clamp(1rem,3vw,2.75rem);gap:1.5rem;border:0}
+.skyline-header{flex-wrap:wrap;background:var(--paper);color:var(--ink);padding:.85rem clamp(1rem,3vw,2.75rem);gap:1.5rem;border:0}
 .skyline-header>a{color:inherit;text-decoration:none}.skyline-header>a:last-child{font-size:.8rem;border-bottom:1px solid currentColor;padding:.2rem 0}
 .roof-brand{font-weight:850;letter-spacing:-.045em;font-size:1.2rem;display:flex;align-items:center;gap:.55rem}
 .roof-mark{display:inline-grid;place-items:center;background:var(--ink);color:var(--gold);width:1.8rem;height:1.8rem;transform:skew(-8deg)}
