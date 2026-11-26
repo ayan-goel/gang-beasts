@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { decodeSnapshot, type Snapshot } from '../src/net/snapshot';
 import { gripMatch } from './support/gripMatch';
+import { silhouettePixels } from './support/silhouettePixels';
 
 if (process.platform === 'darwin') test.use({launchOptions: {args: ['--use-gl=angle', '--use-angle=metal']}});
 
@@ -75,6 +76,9 @@ test('a player catches the roof after the west collapse and pulls up in both vie
     await expect(host.getByText('Hold Space to pull up', {exact: true})).toBeVisible();
     await expect(guest.getByLabel('Mint grips')).toContainText('roof edge');
     await expect(guest.getByText('Hold Space to pull up', {exact: true})).toHaveCount(0);
+    const views = [host, guest];
+    const hangFrames = await Promise.all(views.map((page, i) =>
+      page.locator('canvas').screenshot({path: test.info().outputPath('west-hang-' + i + '.png')})));
     await host.keyboard.down('Space');
     await expect.poll(() => states.every(s => s.stood), {timeout: 9000}).toBe(true);
     await host.keyboard.up('Space');
@@ -91,5 +95,10 @@ test('a player catches the roof after the west collapse and pulls up in both vie
       await expect(page.getByLabel('Mint score')).toHaveText('0');
     }
     await expect(host.getByText('Hold Space to pull up', {exact: true})).toHaveCount(0);
+    for (const [i, page] of views.entries()) {
+      const hidden = await silhouettePixels(page, hangFrames[i]!, [243, 142, 102]);
+      expect(hidden.count).toBeGreaterThan(40);
+      expect(hidden.height).toBeGreaterThan(8);
+    }
   });
 });

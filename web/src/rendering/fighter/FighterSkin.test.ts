@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { Euler, Group, Matrix4, Quaternion, Vector3 } from 'three';
+import { Euler, Group, Matrix4, Quaternion, SkinnedMesh, Vector3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { RigDefinition } from '../../game/rigDefinition';
 import { FighterSkin } from './FighterSkin';
@@ -19,6 +19,10 @@ it('skins an original shared mesh independently to each fighter across full rota
   expect(first.mesh.skeleton).not.toBe(second.mesh.skeleton);
   expect(first.mesh.material).not.toBe(second.mesh.material);
   const {geometry, skeleton} = first.mesh;
+  const silhouette = first.mesh.children.find(child => child instanceof SkinnedMesh)!;
+  expect(silhouette.geometry).toBe(geometry);
+  expect(silhouette.skeleton).toBe(skeleton);
+  expect(silhouette.castShadow).toBe(false);
   expect(skeleton.bones.map(b => b.name)).toEqual(rig.bodies.map(b => b.part));
   const weights = geometry.getAttribute('skinWeight');
   expect(Array.from({length:weights.count}, (_, i) => weights.getY(i)).some(w => w > .1 && w < .9)).toBe(true);
@@ -48,6 +52,10 @@ it('skins an original shared mesh independently to each fighter across full rota
     for (let i = 0; i < weights.count; i++) {
       const vertex = first.mesh.getVertexPosition(i, new Vector3());
       const world = first.mesh.localToWorld(vertex);
+      if (i % 97 === 0) {
+        const hidden = silhouette.localToWorld(silhouette.getVertexPosition(i, new Vector3()));
+        expect(hidden.distanceTo(world)).toBeLessThan(1e-5);
+      }
       const rest = new Vector3().fromBufferAttribute(positions,i);
       const weighted = new Vector3();
       for (let j = 0; j < 4; j++) {

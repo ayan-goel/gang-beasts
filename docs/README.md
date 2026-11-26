@@ -2,6 +2,7 @@
 
 [Technical specification](../TECHNICAL_SPEC.md) is the canonical product and architecture contract. These documents record implementation choices and evidence; they do not redefine acceptance.
 
+- [Skyline occlusion](slices/12f-skyline-occlusion.md) covers the view of a fighter behind the roof or a moving prop.
 - [Ledge rescue](slices/10e-ledge-rescue.md) covers fall-arrest timing, the pull-up controls and the west walkway in a private match.
 - [Skyline throws](slices/10d-skyline-throws.md) covers lift controls, release momentum, counter-grips and an east-edge ring-out.
 - [Stamina feedback](slices/09f-stamina-feedback.md) covers the local and online meters, grip exhaustion and recovery.

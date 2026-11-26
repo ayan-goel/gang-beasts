@@ -2,6 +2,7 @@ import { Bone, Matrix4, Quaternion, SkinnedMesh, Vector3, type Object3D } from '
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import type { RigDefinition } from '../../game/rigDefinition';
 import { suitMaterial } from './palette';
+import { addOccludedSilhouette } from './occludedSilhouette';
 
 const unit = new Vector3(1,1,1);
 
@@ -10,6 +11,7 @@ export class FighterSkin {
   readonly mesh: SkinnedMesh;
   readonly radii: number[];
   private readonly material;
+  private readonly silhouette;
   private readonly bindings;
   private readonly p = new Vector3();
   private readonly q = new Quaternion();
@@ -35,6 +37,7 @@ export class FighterSkin {
     mesh.castShadow = mesh.receiveShadow = true;
     // A bind-pose sphere at the origin cannot cull a fighter moving across the roof.
     mesh.frustumCulled = false;
+    this.silhouette = addOccludedSilhouette(mesh, team);
   }
 
   update(states: Float32Array) {
@@ -54,6 +57,7 @@ export class FighterSkin {
   }
 
   dispose() {
+    this.silhouette.dispose();
     this.mesh.skeleton.dispose();
     this.material.map?.dispose();
     this.material.dispose();

@@ -10,6 +10,6 @@ An active online fighter has a center weight of 1.35. Each other tracked fighter
 
 The framing regression projects every vertex of the drawn rig geometry for two separated, rotated fighters, including one below the roof. It samples all eight orbit intervals, including intermediate angles, and resizes between portrait and landscape during each turn. It checks both the screen inset and clip depth. Separate checks exercise the owned fighter, a departed owner and all four overview corners at a 0.2 viewport aspect ratio. These checks previously failed the inset and the owner bias.
 
-Run `npm --prefix web test -- --run src/rendering/SkylineFraming.test.ts`. Camera collision, occlusion and human readability remain open.
+Run `npm --prefix web test -- --run src/rendering/SkylineFraming.test.ts`. See the [Skyline occlusion slice](12f-skyline-occlusion.md) for concealed fighters. Camera collision and human readability remain open.
 
 All 47 web unit tests and the production build passed. The local and online orbit cases and the existing grip, mantle, ring-out and rematch cases passed in Chromium. The full run passed 74 of 76 scenarios. Its two failures concerned delivery of an eight-player elimination and the deadline for a spectator’s content load.
