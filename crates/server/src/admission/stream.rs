@@ -1,4 +1,10 @@
-use super::{Admission, connection::Connection, matches::Match, socket::send};
+use super::heartbeat::{Heartbeat, Probe};
+use super::{
+    Admission,
+    connection::Connection,
+    matches::Match,
+    socket::{send, send_message},
+};
 use axum::extract::ws::{Message, WebSocket};
 use brawler_engine::FighterId;
 use std::{
@@ -84,15 +90,18 @@ pub(super) async fn play(
     let mut since = Instant::now();
     let mut received = 0;
     let mut rematch_permission = None;
+    let mut heartbeat = Heartbeat::new(Instant::now());
     loop {
         tokio::select! {
             _ = timer.tick() => (),
             message = socket.recv() => {
                 if since.elapsed() >= Duration::from_secs(1) { since = Instant::now(); received = 0; }
                 received += 1;
-                if received > 120 || current_host(state, code, owner, &game, true).is_none() { return; }
+                let user_activity = matches!(&message, Some(Ok(Message::Binary(_))));
+                if received > 120 || current_host(state, code, owner, &game, user_activity).is_none() { return; }
                 match message {
-                    Some(Ok(Message::Ping(_) | Message::Pong(_))) => (),
+                    Some(Ok(Message::Pong(bytes))) => heartbeat.pong(&bytes, Instant::now()),
+                    Some(Ok(Message::Ping(_))) => (),
                     Some(Ok(Message::Binary(bytes))) => match bytes.as_ref() {
                         [18,1,1] => (),
                         [30,1] => {
@@ -115,6 +124,16 @@ pub(super) async fn play(
                     _ => return,
                 }
                 continue;
+            }
+        }
+        match heartbeat.poll(Instant::now()) {
+            Probe::Wait => {}
+            Probe::Expired => return,
+            Probe::Ping(sequence) => {
+                let message = Message::Ping(sequence.to_le_bytes().to_vec().into());
+                if !send_message(socket, message).await {
+                    return;
+                }
             }
         }
         let Some(host) = current_host(state, code, owner, &game, false) else {

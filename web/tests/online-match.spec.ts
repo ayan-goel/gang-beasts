@@ -66,11 +66,13 @@ test('only the host can start and both ready browsers see the live rooftop and r
   }
 });
 
-test('the arena reports a stalled stream and resumes after ordered snapshots arrive', async ({page, browser}) => {
+test('the arena reports a five-second stalled stream and resumes after ordered snapshots arrive', async ({page, browser}) => {
   let hold = false;
+  let connections = 0;
   let resume = () => {};
   let queued: Buffer[] = [];
   await page.routeWebSocket(url => url.pathname === '/ws', client => {
+    connections++;
     const server = client.connectToServer();
     server.onMessage(message => {
       if (hold && Buffer.isBuffer(message) && message[0] === 2) queued.push(message);
@@ -97,11 +99,14 @@ test('the arena reports a stalled stream and resumes after ordered snapshots arr
     await expect(page.getByLabel('Round phase')).toHaveText('Playing', {timeout:15000});
     await expect(page.getByRole('heading',{name:'Playing as Coral'})).toBeVisible();
     hold = true;
+    const interruptedAt = Date.now();
     await expect(page.getByText('Waiting for the server…')).toBeVisible();
     await expect.poll(() => queued.length).toBeGreaterThan(8);
+    await expect.poll(() => Date.now() - interruptedAt, {timeout:7000}).toBeGreaterThanOrEqual(5000);
     await expect(guest.getByLabel('Round phase')).toHaveText('Playing');
     resume();
     await expect(page.getByText('Waiting for the server…')).toHaveCount(0);
+    expect(connections).toBe(1);
     await expect(page.getByLabel('Round number')).toHaveText('Round 1');
     for (const p of [guest,page]) await p.getByRole('button',{name:'Leave room'}).click();
   } finally {

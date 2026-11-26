@@ -1,6 +1,7 @@
 mod connection;
 mod content;
 mod directory;
+mod heartbeat;
 mod lobby;
 mod maintenance;
 mod matches;

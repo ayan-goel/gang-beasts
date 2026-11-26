@@ -200,12 +200,12 @@ async fn exchange(
 }
 
 pub(super) async fn send(socket: &mut WebSocket, bytes: Vec<u8>) -> bool {
+    send_message(socket, Message::Binary(bytes.into())).await
+}
+
+pub(super) async fn send_message(socket: &mut WebSocket, message: Message) -> bool {
     matches!(
-        timeout(
-            Duration::from_secs(2),
-            socket.send(Message::Binary(bytes.into()))
-        )
-        .await,
+        timeout(Duration::from_secs(2), socket.send(message)).await,
         Ok(Ok(()))
     )
 }

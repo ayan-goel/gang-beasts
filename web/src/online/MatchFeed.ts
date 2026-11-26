@@ -38,7 +38,7 @@ export class MatchFeed {
   receive(packet: Uint8Array) {
     const frame = decodeSnapshot(packet);
     if (frame.fighters.length !== this.fighters.length) throw new Error('Snapshot roster changed');
-    if (!this.timeline.push(frame, performance.now())) return;
+    if (!this.timeline.push(frame, performance.now())) return false;
     if (this.latest?.round !== frame.round) {
       this.onRoundChange?.();
       const ack = new Uint8Array(10);
@@ -48,5 +48,6 @@ export class MatchFeed {
     }
     this.latest = frame;
     this.onSnapshot?.();
+    return true;
   }
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { decodeLobbyState, type LiveRoom } from './lobbyState';
 import { RoomTransport, type LinkState } from './RoomTransport';
+import { SnapshotWatchdog } from './SnapshotWatchdog';
 import { MatchFeed } from '../online/MatchFeed';
 import { ContentHandshake, type LoadState, type MatchRenderer } from './ContentHandshake';
 
@@ -41,7 +42,21 @@ export function useLiveRoom(code: string) {
 
       let last: LiveRoom | null = null;
       let feed: MatchFeed | null = null;
-      let invalidState = false;
+      let closed = false;
+      const watchdog = new SnapshotWatchdog(() => disconnected(4008));
+
+      function disconnected(code: number) {
+        if (closed) return;
+        // A half-open link can swallow the close handshake. Begin recovery as soon as silence expires.
+        if (socket.readyState === WebSocket.OPEN && (code === 4002 || code === 4008)) {
+          socket.close(code, code === 4002 ? 'Invalid room state' : 'Match stream stalled');
+        }
+        cleanup();
+        setLoad({loading:false, error:''});
+        setConnection(null);
+        setGame(null);
+        recovery.closed(feed !== null, code);
+      }
       setGame(null);
       setCanRematch(false);
       setStartError('');
@@ -73,13 +88,20 @@ export function useLiveRoom(code: string) {
             if (!content.renderer) throw new Error('Match assigned before content loaded');
             feed = new MatchFeed(bytes, packet => {
               if (socket.readyState !== WebSocket.OPEN) return;
-              if (socket.bufferedAmount > 16384) { socket.close(4008, 'Input queue stalled'); return; }
+              if (socket.bufferedAmount > 16384) { disconnected(4008); return; }
               socket.send(new Uint8Array(packet));
             });
+            watchdog.progress();
             setGame({feed, View:content.renderer});
             return;
           }
-          if (bytes[0] === 2 && feed) { feed.receive(bytes); recovery.restored(); return; }
+          if (bytes[0] === 2 && feed) {
+            if (feed.receive(bytes) && !closed) {
+              watchdog.progress();
+              recovery.restored();
+            }
+            return;
+          }
           if (bytes[0] === 25 && bytes.length === 3 && bytes[1] === 1) {
             setStartError(bytes[2] === 2 ? 'All match servers are busy. Try again.' : 'All players must be ready to start.');
             return;
@@ -88,18 +110,13 @@ export function useLiveRoom(code: string) {
           last = decodeLobbyState(bytes, last);
           setConnection(last);
         } catch {
-          invalidState = true;
-          socket.close(4002, 'Invalid room state');
+          disconnected(4002);
         }
       };
-      socket.onclose = event => {
-        content.dispose();
-        setLoad({loading:false, error:''});
-        setConnection(null);
-        recovery.closed(feed !== null, invalidState ? 4002 : event.code);
-        setGame(null);
-      };
+      socket.onclose = event => disconnected(event.code);
       cleanup = () => {
+        closed = true;
+        watchdog.dispose();
         content.dispose();
         handshake.current = null;
         transport.current = null;
