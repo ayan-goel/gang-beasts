@@ -33,7 +33,7 @@ Decode each retained component by dividing by 32767. Reject −32768, an invalid
 
 | Gameplay offset | Value |
 | --- | --- |
-| 0–3 | Block version 1 or 2, match phase (countdown/playing/round results/match results = 0–3), winning slot (255 for none), fighter count (2–8), all u8 |
+| 0–3 | Block version 1, 2 or 3, match phase (countdown/playing/round results/match results = 0–3), winning slot (255 for none), fighter count (2–8), all u8 |
 | 4, 6 | Remaining phase ticks u16 and reserved zero u16 |
 | 8 | Round epoch u64 |
 | 16, 20 | Round number starting at 1 and completed arena tick, u32 each. Map schedules use the latter for warning, detachment and gust progression. |
@@ -41,7 +41,9 @@ Decode each retained component by dividing by 32767. Reject −32768, an invalid
 
 Fighter offsets 0–4 are slot, consciousness (active/knocked out/recovering/eliminated = 0–3), score, left and right hand phase (idle/wind-up/strike/recovery/reach/gripping = 0–5). Block version 1 requires zero at bytes 5–7. Health and stamina are f32 at 8 and 12 in [0,100]. Left and right grip target body IDs are u32 at 16 and 20. A gripping hand must name a body from this snapshot outside its own rig. Every other hand must have a zero target.
 
-Clients advertising both `compact=1` and `landings=1` receive gameplay block version 2. Fighter byte 5 is the latest fixed-surface landing impulse in whole N·s, capped at 255. Bytes 6–7 hold its little-endian arena tick. Both fields are zero before any landing in the round. Otherwise both must be positive and the event tick must be at or before the snapshot arena tick. The Skyline round ends within the u16 event tick range. The full-transform and original compact modes continue to use version 1.
+Clients advertising both `compact=1` and `landings=1` receive gameplay block version 2 unless they also negotiate footsteps. Fighter byte 5 is the latest fixed-surface landing impulse in whole N·s, capped at 255. Bytes 6–7 hold its little-endian arena tick. Both fields are zero before any landing in the round. Otherwise both must be positive and the event tick must be at or before the snapshot arena tick. The Skyline round ends within the u16 event tick range. The full-transform and original compact modes continue to use version 1.
+
+A connection advertising all three of `compact=1`, `landings=1` and `footsteps=1` receives gameplay block version 3. Landing fields retain their version-two layout. At fighter byte 0, bits 0–2 encode the slot. Bits 3–7 encode zero when no recent footstep exists, or one plus its age in completed arena ticks for ages 0–12. Codes 14–31 and reconstructed event ticks below 1 are invalid. Each snapshot stands alone and each fighter record still occupies 24 bytes.
 
 Room snapshots are due on even completed room ticks (30 Hz). A join or resync may request a full record on any tick. Reliable transient events have a separate lifecycle. A full snapshot carries the state needed to display the current world without replaying earlier hits or warnings.
 

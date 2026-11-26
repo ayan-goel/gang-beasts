@@ -86,6 +86,10 @@ impl WalkingController {
             state: LocomotionState::default(),
         }
     }
+    pub fn has_movement_input(&self) -> bool {
+        self.intent.norm_squared() > 0.
+    }
+
     pub fn set_jump(&mut self, held: bool) {
         self.jump.input(held, &self.config.jump);
     }

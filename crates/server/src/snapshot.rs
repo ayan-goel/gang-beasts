@@ -21,6 +21,10 @@ impl RoomFrame {
         self.world
             .compact_with_landings(fighter.and_then(|id| self.applied[id as usize]))
     }
+    pub fn compact_with_footsteps(&self, fighter: Option<FighterId>) -> Vec<u8> {
+        self.world
+            .compact_with_footsteps(fighter.and_then(|id| self.applied[id as usize]))
+    }
     pub fn compact_for(&self, fighter: Option<FighterId>) -> Vec<u8> {
         let applied = fighter.and_then(|id| self.applied[id as usize]);
         self.world.compact_for_recipient(applied)
@@ -103,6 +107,9 @@ fn fighter(game: &Duel, id: FighterId, score: u8) -> FighterState {
             Consciousness::Eliminated => 3,
         },
         score,
+        footstep: game
+            .last_footstep(id)
+            .and_then(|tick| u32::try_from(tick).ok()),
         landing: game
             .last_landing(id)
             .and_then(|(tick, impulse)| Some((u16::try_from(tick).ok()?, impulse))),

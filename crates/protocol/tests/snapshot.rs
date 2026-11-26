@@ -4,6 +4,7 @@ fn sample() -> Snapshot {
     let mut fighters = vec![FighterState::default(); 2];
     fighters[0] = FighterState {
         consciousness: 0,
+        footstep: None,
         landing: None,
         score: 1,
         hands: [5, 4],
@@ -106,5 +107,30 @@ fn opted_in_landings_share_one_packet_size_with_legacy_frames() {
     assert_eq!(&legacy[block + 29..block + 32], &[0, 0, 0]);
     assert_eq!(&current[block + 29..block + 32], &[55, 188, 27]);
     s.fighters[0].landing = Some((7250, 55));
+    assert!(s.encode_shared().is_err());
+}
+
+#[test]
+fn compact_footsteps_encode_only_recent_contact_and_preserve_older_consumers() {
+    let mut s = sample();
+    let block = 20 + 23 * s.bodies.len();
+    s.fighters[1].footstep = Some(7189);
+    s.fighters[0].footstep = Some(7201);
+    s.fighters[1].landing = Some((7198, 42));
+    let shared = s.encode_shared().unwrap();
+    let latest = shared.compact_with_footsteps(Some(37));
+    let older = shared.compact_with_landings(Some(37));
+    assert_eq!(latest.len(), older.len());
+    assert_eq!(latest[block], 3);
+    assert_eq!(latest[block + 24], 8);
+    assert_eq!(latest[block + 48], 13 * 8 + 1);
+    assert_eq!(older[block + 48], 1);
+    assert_eq!(&latest[block + 49..], &older[block + 49..]);
+    s.arena_tick += 1;
+    assert_eq!(
+        s.encode_shared().unwrap().compact_with_footsteps(None)[block + 48],
+        1
+    );
+    s.fighters[1].footstep = Some(7203);
     assert!(s.encode_shared().is_err());
 }

@@ -2,19 +2,22 @@ import type { Page } from '@playwright/test';
 
 interface WarningSample { wave: OscillatorType; state: AudioContextState }
 declare global {
-  interface Window { skylineAudioProbe: {contexts: number; warnings: WarningSample[]; impacts: number; landings: number; grips: number[]; rounds: number[]} }
+  interface Window { skylineAudioProbe: {contexts: number; warnings: WarningSample[]; impacts: number; footsteps: number; landings: number; grips: number[]; rounds: number[]} }
 }
 
 export async function observeWarningAudio(page: Page) {
   await page.addInitScript(() => {
-    const probe = window.skylineAudioProbe = {contexts:0, impacts:0, landings:0, grips:[] as number[], rounds:[] as number[], warnings:[] as WarningSample[]};
+    const probe = window.skylineAudioProbe = {contexts:0, impacts:0, footsteps:0, landings:0, grips:[] as number[], rounds:[] as number[], warnings:[] as WarningSample[]};
     window.AudioContext = class extends AudioContext {
       constructor(options?: AudioContextOptions) { super(options); probe.contexts++; }
       override createBufferSource() {
         const voice = super.createBufferSource();
         const start = voice.start.bind(voice);
         voice.start = (...args) => {
-          if (this.state === 'running' && voice.buffer && !voice.loop) probe.impacts++;
+          if (this.state === 'running' && voice.buffer && !voice.loop) {
+            if (voice.buffer.length === Math.ceil(.08 * voice.buffer.sampleRate)) probe.footsteps++;
+            else probe.impacts++;
+          }
           start(...args);
         };
         return voice;
@@ -48,3 +51,5 @@ export const gripPitches = (page: Page) => page.evaluate(() => window.skylineAud
 
 export const landingCount = (page: Page) => page.evaluate(() => window.skylineAudioProbe.landings);
 export const roundPitches = (page: Page) => page.evaluate(() => window.skylineAudioProbe.rounds);
+
+export const footstepCount = (page: Page) => page.evaluate(() => window.skylineAudioProbe.footsteps);

@@ -101,7 +101,7 @@ impl LocalDuel {
             .duel
             .last_landing(id)
             .map(|(tick, impulse)| json!({"tick":tick,"impulse":impulse}));
-        Ok(json!({"phase":v.phase,"health":v.health,"knockouts":v.knockouts,"sinceTick":v.since_tick.to_string(),"landing":landing}).to_string())
+        Ok(json!({"phase":v.phase,"health":v.health,"knockouts":v.knockouts,"sinceTick":v.since_tick.to_string(),"landing":landing,"footstep":self.duel.last_footstep(id)}).to_string())
     }
     pub fn condition_events_json(&self) -> Option<String> {
         let changes = self.duel.consciousness_changes();

@@ -90,6 +90,6 @@ export function useMatchSound(match: MatchView | undefined, active: boolean, pha
       return;
     }
     const cues = cursor.current.observe(match.epoch, match.hazard, phases, now, audio?.impacts, audio);
-    if (cues.warning || cues.condition || cues.impact || cues.grip || cues.landing) output?.play(cues);
+    if (cues.warning || cues.condition || cues.impact || cues.grip || cues.landing || cues.footstep) output?.play(cues);
   }, [match, active, output, phases, audio]);
 }

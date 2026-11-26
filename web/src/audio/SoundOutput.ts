@@ -1,3 +1,4 @@
+import { playFootstep } from './footstepSound';
 import { playLanding } from './landingSound';
 import { playGrip } from './gripSound';
 import { playImpact } from './impactSound';
@@ -62,6 +63,11 @@ export class SoundOutput {
   play(cues: Cues) {
     const effects = this.effects;
     if (!effects) return;
+    this.voices.footstep?.();
+    if (cues.footstep) {
+      this.voices.footstep = playFootstep(effects.context, cues.footstep, effects);
+      return;
+    }
     if (cues.warning || cues.condition || cues.impact) this.voices.impact?.();
     this.voices.landing?.();
     if (cues.landing) this.voices.landing = playLanding(effects.context, cues.landing, effects);

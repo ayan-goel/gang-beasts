@@ -4,7 +4,7 @@ use crate::VERSION;
 pub struct SharedSnapshot {
     full: Vec<u8>,
     compact: Vec<u8>,
-    landing_records: Vec<[u8; 3]>,
+    contact_records: Vec<[u8; 4]>,
 }
 
 impl SharedSnapshot {
@@ -13,14 +13,25 @@ impl SharedSnapshot {
     }
 
     pub fn compact_with_landings(&self, applied: Option<u32>) -> Vec<u8> {
+        self.compact_contacts(applied, false)
+    }
+
+    pub fn compact_with_footsteps(&self, applied: Option<u32>) -> Vec<u8> {
+        self.compact_contacts(applied, true)
+    }
+
+    fn compact_contacts(&self, applied: Option<u32>, steps: bool) -> Vec<u8> {
         let mut bytes = self.compact_for_recipient(applied);
-        let block = bytes.len() - 24 * (1 + self.landing_records.len());
-        bytes[block] = 2;
-        for (fighter, landing) in bytes[block + 24..]
+        let block = bytes.len() - 24 * (1 + self.contact_records.len());
+        bytes[block] = if steps { 3 } else { 2 };
+        for (fighter, contact) in bytes[block + 24..]
             .chunks_exact_mut(24)
-            .zip(&self.landing_records)
+            .zip(&self.contact_records)
         {
-            fighter[5..8].copy_from_slice(landing);
+            if steps {
+                fighter[0] |= contact[0];
+            }
+            fighter[5..8].copy_from_slice(&contact[1..]);
         }
         bytes
     }
@@ -53,19 +64,25 @@ impl Snapshot {
             compact.extend(super::rotation::pack(body.rotation));
         }
         compact.extend_from_slice(&full[end..]);
-        let landing_records = self
+        let contact_records = self
             .fighters
             .iter()
             .map(|fighter| {
                 let (tick, impulse) = fighter.landing.unwrap_or_default();
                 let [low, high] = tick.to_le_bytes();
-                [impulse, low, high]
+                // Eight slots leave five bits for a recent footfall. Zero means silence.
+                let step = fighter
+                    .footstep
+                    .map(|tick| self.arena_tick - tick)
+                    .filter(|&age| age <= 12)
+                    .map_or(0, |age| (age as u8 + 1) << 3);
+                [step, impulse, low, high]
             })
             .collect();
         Ok(SharedSnapshot {
             full,
             compact,
-            landing_records,
+            contact_records,
         })
     }
 

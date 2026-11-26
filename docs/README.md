@@ -32,6 +32,7 @@
 - [Skyline round restoration](verification/skyline-round-restoration.md) covers visible walkway loss, restored crate and walkway poses, and round-two play in a private room.
 - [Eight-player reset endurance](verification/reset-endurance.md) covers repeated Skyline fights, score continuity, clean spawns and timed hazards.
 - [Playable match rig](verification/match-rig.md) records solver masses, joint endpoints and live motor effort for two and eight fighters.
+- [Rooftop footsteps](slices/17j-footsteps.md) covers walking and running contacts, stereo levels and multiplayer delivery.
 - [Rooftop landing feedback](slices/17g-landing-audio.md) covers physical contact thresholds, local and private match sound, and measured stereo levels.
 - [Grip feedback](slices/17f-grip-audio.md) records catch, low-stamina and release sounds in local and private play.
 - [Strike feedback](slices/17e-strike-audio.md) covers confirmed damage, camera-relative stereo placement and the local and online combat checks.

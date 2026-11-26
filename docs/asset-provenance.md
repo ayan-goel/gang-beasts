@@ -11,6 +11,7 @@
 | Skyline lobby image | [WebP capture](../web/src/lobby/skyline.webp) of the project’s own rendered Skyline arena | The room page presents the map without loading the game renderer |
 | Walkway and wind warnings | [Original oscillator scores and envelopes](../web/src/audio/matchTone.ts) | Four runtime-synthesized global cues. [Pulse timings and peak level](slices/17c-hazard-audio.md#original-cues) |
 | Grip acquisition, strain and release | [Original filtered oscillator sweeps](../web/src/audio/gripSound.ts) | Three camera-relative cues generated at runtime. [Peak levels and duration](slices/17f-grip-audio.md) |
+| Rooftop footsteps | [Original damped heel tap and filtered sole noise](../web/src/audio/footstepSound.ts) | Camera-relative walking and running on fixed surfaces. [Measured waveform](slices/17j-footsteps.md#sound-and-verification) |
 | Rooftop landings | [Original downward triangle sweep](../web/src/audio/landingSound.ts) | Camera-relative thump scaled by solved upward impulse. [Measured levels and duration](slices/17g-landing-audio.md) |
 | Combat impact | [Original synthesized thud](../web/src/audio/impactSound.ts) | A seeded noise transient and downward pitch sweep, generated once per audio context. [Spatialization and level limits](slices/17e-strike-audio.md) |
 | Knockout and get-up announcements | [Original condition tone definitions](../web/src/audio/matchTone.ts) | One descending knockout tone and two rising get-up pulses. [Timing and peak level](slices/17d-fighter-condition.md#sound) |

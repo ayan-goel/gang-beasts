@@ -22,6 +22,7 @@ export interface DuelHit {
 }
 export interface FighterCondition {
   phase: FighterPhase;
+  footstep?: number | null;
   landing?: LandingEvent | null;
   health: number; knockouts: number; sinceTick: string;
 }

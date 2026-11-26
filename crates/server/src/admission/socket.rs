@@ -16,6 +16,7 @@ pub(super) struct Capabilities {
     resume: bool,
     pub(super) lineups: bool,
     pub(super) compact: bool,
+    pub(super) footsteps: bool,
     pub(super) landings: bool,
     pub(super) timing: bool,
 }
@@ -49,6 +50,7 @@ pub(super) async fn upgrade(
         resume: has("resume=1"),
         lineups: has("lineups=1"),
         compact: has("compact=1"),
+        footsteps: has("footsteps=1"),
         landings: has("landings=1"),
         timing: has("timing=1"),
     };

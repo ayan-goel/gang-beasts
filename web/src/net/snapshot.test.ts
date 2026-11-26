@@ -79,3 +79,19 @@ it('decodes opted-in landing records and rejects future or partial events', () =
   bytes[first+5] = 0;
   expect(() => decodeSnapshot(bytes)).toThrow();
 });
+
+it('reconstructs the precise step tick from the recent contact and slot in compact block three', () => {
+  const bytes = Buffer.from(compact);
+  const block = 20 + 31 * 23;
+  bytes[block] = 3;
+  bytes[block+48] = 13 * 8 + 1;
+  expect(decodeSnapshot(bytes).fighters[1]?.footstep).toBe(7189);
+  expect(decodeSnapshot(bytes).fighters[0]?.footstep).toBeUndefined();
+  bytes[block+48] = 14 * 8 + 1;
+  expect(() => decodeSnapshot(bytes)).toThrow();
+  bytes[block+48] = 8;
+  expect(() => decodeSnapshot(bytes)).toThrow();
+  bytes[block+48] = 3 * 8 + 1;
+  bytes.writeUInt32LE(2,block+20);
+  expect(() => decodeSnapshot(bytes)).toThrow();
+});

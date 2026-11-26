@@ -1,7 +1,7 @@
 import type { LandingEvent } from './landingSound';
-import { distanceGain, type CameraPosition } from './spatialMix';
+import { playSpatialBuffer, type CameraPosition } from './spatialMix';
 
-export interface ImpactSource extends CameraPosition { health: number; landing?: LandingEvent }
+export interface ImpactSource extends CameraPosition { health: number; footstep?: number; landing?: LandingEvent }
 export interface Impact extends CameraPosition { damage: number }
 
 const buffers = new WeakMap<BaseAudioContext, AudioBuffer>();
@@ -25,17 +25,6 @@ function contactBuffer(context: BaseAudioContext) {
 }
 
 export function playImpact(context: BaseAudioContext, impact: Impact, destination: AudioNode = context.destination) {
-  const voice = context.createBufferSource();
-  const gain = context.createGain();
-  const pan = context.createStereoPanner();
   const strength = Math.min(1, impact.damage / 35);
-  voice.buffer = contactBuffer(context);
-  voice.playbackRate.value = 1.1 - 0.2 * strength;
-  gain.gain.value = (0.07 + 0.09 * strength) * distanceGain(impact.distance);
-  pan.pan.value = impact.pan;
-  voice.connect(gain).connect(pan).connect(destination);
-  const disconnect = () => { voice.disconnect(); gain.disconnect(); pan.disconnect(); };
-  voice.onended = disconnect;
-  voice.start();
-  return () => { voice.stop(); disconnect(); };
+  return playSpatialBuffer(context, contactBuffer(context), 1.1 - 0.2 * strength, .07 + .09 * strength, impact, destination);
 }

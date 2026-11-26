@@ -183,13 +183,14 @@ export class FixtureScene {
   private playerPoses: Float32Array[] = [];
   private readonly soundPoint = new THREE.Vector3();
 
-  impactSources(fighters: readonly {health: number; landing?: LandingEvent | null}[], arenaTick: number) {
+  impactSources(fighters: readonly {health: number; footstep?: number | null; landing?: LandingEvent | null}[], arenaTick: number) {
     return this.playerPoses.map((pose, slot) => {
       const pelvis = this.soundPoint.fromArray(pose, 28);
       const distance = pelvis.distanceTo(this.camera.position);
       const pan = THREE.MathUtils.clamp(pelvis.project(this.camera).x, -1, 1);
-      const {health, landing} = fighters[slot]!;
-      return {health, distance, pan, landing: landing && arenaTick - landing.tick <= 12 ? landing : undefined};
+      const {health, landing, footstep} = fighters[slot]!;
+      return {health, distance, pan, footstep: footstep && arenaTick - footstep <= 12 ? footstep : undefined,
+        landing: landing && arenaTick - landing.tick <= 12 ? landing : undefined};
     });
   }
 

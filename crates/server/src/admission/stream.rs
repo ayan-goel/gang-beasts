@@ -125,7 +125,11 @@ pub(super) async fn play(
         }
         published = Some(frame.round);
         let bytes = if capabilities.compact && capabilities.landings {
-            frame.compact_with_landings(binding.fighter)
+            if capabilities.footsteps {
+                frame.compact_with_footsteps(binding.fighter)
+            } else {
+                frame.compact_with_landings(binding.fighter)
+            }
         } else if capabilities.compact {
             frame.compact_for(binding.fighter)
         } else {

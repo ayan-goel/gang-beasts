@@ -6,6 +6,7 @@ type Quat = [number, number, number, number];
 export interface BodyPose { position: Vec3; rotation: Quat }
 export interface FighterState {
   consciousness: number;
+  footstep?: number;
   landing?: {tick: number; impulse: number};
   score: number;
   hands: [number, number];
@@ -46,7 +47,8 @@ export function decodeSnapshot(bytes: Uint8Array): Snapshot {
   requireField(count <= 256 && u16(18) >= 24 && gameplay + u16(18) === bytes.length, 'length');
   const slots = u8(gameplay + 3), phase = u8(gameplay + 1), winner = u8(gameplay + 2);
   const round = data.getBigUint64(gameplay + 8, true), number = u32(gameplay + 16);
-  const withLandings = packed && u8(gameplay) === 2;
+  const withSteps = packed && u8(gameplay) === 3;
+  const withLandings = withSteps || packed && u8(gameplay) === 2;
   requireField((u8(gameplay) === 1 || withLandings) && slots >= 2 && slots <= 8 && u16(18) === 24 + slots * 24 && count >= slots * 15, 'roster');
   requireField(phase <= 3 && (winner === 255 || (winner < slots && phase >= 2))
     && u16(gameplay + 6) === 0 && round > 0n && number > 0, 'match');
@@ -72,13 +74,16 @@ export function decodeSnapshot(bytes: Uint8Array): Snapshot {
     const consciousness = u8(at + 1), health = f32(at + 8), stamina = f32(at + 12);
     const impulse = u8(at + 5), tick = u16(at + 6);
     const validLanding = impulse === 0 && tick === 0 || withLandings && impulse > 0 && tick > 0 && tick <= u32(gameplay + 20);
-    requireField(u8(at) === slot && consciousness <= 3 && validLanding
+    const identity = u8(at);
+    const ageCode = withSteps ? identity >> 3 : 0;
+    const footstep = ageCode ? u32(gameplay + 20) + 1 - ageCode : undefined;
+    requireField((withSteps ? identity & 7 : identity) === slot && ageCode <= 13 && (footstep === undefined || footstep > 0) && consciousness <= 3 && validLanding
       && [health, stamina].every(v => v >= 0 && v <= 100) && hands.every(p => p <= 5), 'fighter');
     for (const [side, target] of grips.entries()) {
       const ownLimb = target >= 1 + 16 * slot && target <= 15 + 16 * slot;
       requireField((hands[side] === 5) === (target !== 0) && (!target || (bodies.has(target) && !ownLimb)), 'grip');
     }
-    fighters.push({ consciousness, score: u8(at + 2), hands, health, stamina, grips, ...(tick ? {landing:{tick,impulse}} : {}) });
+    fighters.push({ consciousness, score: u8(at + 2), hands, health, stamina, grips, ...(footstep ? {footstep} : {}), ...(tick ? {landing:{tick,impulse}} : {}) });
   }
   return {
     tick: u32(4), applied: acknowledged ? u32(8) : null, round, number,
