@@ -3,6 +3,7 @@
 [Technical specification](../TECHNICAL_SPEC.md) is the canonical product and architecture contract. These documents record implementation choices and evidence; they do not redefine acceptance.
 
 - [Snapshot delivery](slices/19c-snapshot-delivery.md) covers worker notifications, slow readers and measured eight-client cadence.
+- [Private-match latency](slices/15g-match-latency.md) records round-trip measurements and when players see a delay warning.
 - [Graphics recovery](slices/19g-graphics-recovery.md) covers a lost GPU context, startup failures and cross-browser HTTPS testing.
 - [Graphics presets](slices/19e-graphics-presets.md) covers live resolution and shadow changes in local and private matches.
 - [Compact match snapshots](slices/19b-compact-snapshots.md) records the rotation codec, compatibility tests and eight-player traffic.

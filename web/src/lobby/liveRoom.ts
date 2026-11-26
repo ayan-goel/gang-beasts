@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 
 import { decodeLobbyState, type LiveRoom } from './lobbyState';
 import { RoomTransport, type LinkState } from './RoomTransport';
+import { MatchLatency } from './MatchLatency';
 import { SnapshotWatchdog } from './SnapshotWatchdog';
 import { MatchFeed } from '../online/MatchFeed';
 import { ContentHandshake, type LoadState, type LoadedArena } from './ContentHandshake';
@@ -12,6 +13,7 @@ export function useLiveRoom(code: string) {
   const [attempt, setAttempt] = useState(0);
   const [game, setGame] = useState<(LoadedArena & {feed: MatchFeed}) | null>(null);
   const [startError, setStartError] = useState('');
+  const [highLatency, setHighLatency] = useState(false);
   const [canRematch, setCanRematch] = useState(false);
   const [load, setLoad] = useState<LoadState>({loading: false, error: ''});
   const handshake = useRef<ContentHandshake | null>(null);
@@ -30,7 +32,7 @@ export function useLiveRoom(code: string) {
     setLink('connected');
     function open() {
       cleanup();
-      const url = new URL('/ws?resume=1&lineups=1&compact=1&landings=1', location.href);
+      const url = new URL('/ws?resume=1&lineups=1&compact=1&landings=1&timing=1', location.href);
       url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socket = new WebSocket(url);
       const content = new ContentHandshake(socket, setLoad);
@@ -43,6 +45,8 @@ export function useLiveRoom(code: string) {
       let last: LiveRoom | null = null;
       let feed: MatchFeed | null = null;
       let closed = false;
+      let latency: MatchLatency | null = null;
+      setHighLatency(false);
       const watchdog = new SnapshotWatchdog(() => disconnected(4008));
 
       function disconnected(code: number) {
@@ -66,6 +70,15 @@ export function useLiveRoom(code: string) {
       socket.onmessage = event => {
         try {
           const bytes = new Uint8Array(event.data);
+          if (last && !feed && !latency && bytes.length === 2 && bytes[0] === 35 && bytes[1] === 1) {
+            latency = new MatchLatency();
+            return;
+          }
+          if (feed && latency && bytes[0] === 37) {
+            const high = latency.reply(bytes, performance.now());
+            if (high !== null) setHighLatency(high);
+            return;
+          }
           if (bytes[0] === 31 && !last) { recovery.acceptTicket(bytes); return; }
           if (bytes.length === 2 && bytes[0] === 33 && bytes[1] === 1 && last && !feed) {
             recovery.restored();
@@ -102,7 +115,9 @@ export function useLiveRoom(code: string) {
             if (feed.receive(bytes) && !closed) {
               watchdog.progress();
               if (entering && content.arena) setGame({...content.arena, feed});
-              recovery.restored();
+              const probe = latency?.probe(performance.now());
+              if (probe) feed.transmit(probe);
+              if (!closed) recovery.restored();
             }
             return;
           }
@@ -144,5 +159,5 @@ export function useLiveRoom(code: string) {
   function requestRematch() {
     if (canRematch) game?.feed.transmit(Uint8Array.of(30, 1));
   }
-  return {connection, disconnected: link === 'disconnected', reconnecting: link === 'recovering', game, canRematch, requestRematch, start, startError, load, setReady, reconnect: () => setAttempt(n => n + 1)};
+  return {connection, disconnected: link === 'disconnected', reconnecting: link === 'recovering', game, highLatency, canRematch, requestRematch, start, startError, load, setReady, reconnect: () => setAttempt(n => n + 1)};
 }

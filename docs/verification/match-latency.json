@@ -1,0 +1,61 @@
+{
+  "environment": "macOS 26.6.2, Apple M3 Pro, Chromium 159.0.8154.6, ANGLE Metal, production bundle, native release worker, loopback TCP relay",
+  "started": "2026-11-26T10:49:31.042Z",
+  "samples": [
+    {
+      "configuredRttMs": 20,
+      "perDirectionVariationMs": 0,
+      "roundTripsMs": [
+        24.8,
+        23.7,
+        23,
+        23.4,
+        22.7
+      ]
+    },
+    {
+      "configuredRttMs": 60,
+      "perDirectionVariationMs": 5,
+      "roundTripsMs": [
+        66,
+        60.1,
+        70.8,
+        64,
+        68
+      ]
+    },
+    {
+      "configuredRttMs": 100,
+      "perDirectionVariationMs": 0,
+      "roundTripsMs": [
+        103.9,
+        102.2,
+        103.6,
+        104.2,
+        103.5
+      ]
+    },
+    {
+      "configuredRttMs": 200,
+      "perDirectionVariationMs": 0,
+      "roundTripsMs": [
+        202.8,
+        205.1,
+        201.9,
+        203.6,
+        205.8
+      ]
+    },
+    {
+      "configuredRttMs": 20,
+      "perDirectionVariationMs": 0,
+      "roundTripsMs": [
+        23.6,
+        22.4,
+        22.9,
+        23.7,
+        23.5
+      ]
+    }
+  ]
+}

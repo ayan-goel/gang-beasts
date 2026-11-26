@@ -18,7 +18,7 @@ import type { MatchFeed } from './MatchFeed';
 import './match.css';
 
 const phaseNames = {countdown:'Countdown', playing:'Playing', round_results:'Round results', match_results:'Match results'};
-export default function OnlineMatch({feed, content, exit, rematch}: {feed: MatchFeed; content: SkylineContent; exit: () => void; rematch: (() => void) | undefined}) {
+export default function OnlineMatch({feed, content, exit, rematch, highLatency}: {feed: MatchFeed; highLatency?: boolean; content: SkylineContent; exit: () => void; rematch: (() => void) | undefined}) {
   const container = useRef<HTMLDivElement>(null);
   const [match, setMatch] = useState(() => matchView(feed.latest!, content));
   const [status, setStatus] = useState<StreamStatus>('buffering');
@@ -58,6 +58,7 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
     <div className="online-stage">
       <div className="online-scene" ref={container}/>
       <div className="online-notices">
+        {highLatency && status !== 'stalled' && <p className="online-delay" role="status">High network delay. Controls may feel delayed.</p>}
         <p className="online-hazard" role="status" aria-label="Arena hazard">
           {match.phase === 'playing' ? hazardWarnings[match.hazard] : ''}
         </p>

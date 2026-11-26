@@ -859,6 +859,8 @@ One native server world per room decides all gameplay. No peer host authority, n
 
 Clients sample intentions and send monotonic sequence numbers, advisory client ticks, held state and action edges. The room chooses when accepted input applies. Client timestamps are not permission to rewind hits or accelerate simulation. Snapshots identify the authoritative completed tick and the last input actually applied for each receiving player.
 
+Private matches measure browser-observed round-trip time once per second on negotiated connections. A three-sample median at or above 180 ms displays a delay warning and a median at or below 140 ms clears it. [Measurement and verification](docs/slices/15g-match-latency.md)
+
 Estimate server time with application-level ping/pong and a smoothed offset/RTT. Use a monotonic browser clock. Keep buffering and clock adjustments bounded. Wire `u32` ticks/sequences use modular comparison with a half-range validity window; internal room ticks may remain `u64`.
 
 ### 17.3 Transport

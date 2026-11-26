@@ -24,6 +24,9 @@ pub(super) async fn play(
     let Some(mut binding) = Binding::open(state, code, owner, &game) else {
         return;
     };
+    if capabilities.timing && !send(socket, vec![35, 1]).await {
+        return;
+    }
     let mut frames = game.client.publications();
     // Keep ownership and heartbeat checks alive even when the worker stops publishing.
     let mut timer = interval(Duration::from_millis(250));
@@ -42,13 +45,16 @@ pub(super) async fn play(
             message = socket.recv() => {
                 if since.elapsed() >= Duration::from_secs(1) { since = Instant::now(); received = 0; }
                 received += 1;
-                let user_activity = matches!(&message, Some(Ok(Message::Binary(_))));
+                let user_activity = matches!(&message, Some(Ok(Message::Binary(bytes))) if bytes.first() != Some(&36));
                 if received > 120 || binding.host(&mut state.directory.lock().unwrap(), user_activity).is_none() { return; }
                 match message {
                     Some(Ok(Message::Pong(bytes))) => heartbeat.pong(&bytes, Instant::now()),
                     Some(Ok(Message::Ping(_))) => (),
                     Some(Ok(Message::Binary(bytes))) => match bytes.as_ref() {
                         [18,1,1] => (),
+                        [36, 1, a, b, c, d] if capabilities.timing => {
+                            if !send(socket, vec![37, 1, *a, *b, *c, *d]).await { return; }
+                        },
                         [30,1] => {
                             if state.directory.lock().unwrap().request_rematch(code, owner, &game) { return; }
                         },
