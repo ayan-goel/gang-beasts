@@ -1,6 +1,7 @@
 import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { GripNotices } from '../app/GripNotices';
 import { MatchMenu, openMenuFromArena } from '../app/MatchMenu';
+import { Scoreboard } from '../app/Scoreboard';
 import { StaminaMeter } from '../app/StaminaMeter';
 import { onlineGripLabels } from './gripLabels';
 import { gripHint } from './gripHint';
@@ -74,7 +75,7 @@ export default function OnlineMatch({feed, content, exit, rematch, highLatency}:
         </div>
       </div>
     </div>
-    <div className="online-score">
+    <Scoreboard className="online-score" viewport={container}>
       <span aria-label="Round number">Round {match.round}</span>
       <span aria-label="Round phase">{phaseNames[match.phase]}</span>
       <time aria-label="Round time remaining">{Math.floor(Math.ceil(match.timeLeft/60)/60)}:{String(Math.ceil(match.timeLeft/60)%60).padStart(2,'0')}</time>
@@ -87,13 +88,13 @@ export default function OnlineMatch({feed, content, exit, rematch, highLatency}:
         {match.phase === 'playing' && match.visible[i] &&
           <StaminaMeter name={p.name} points={match.stamina[i]!} holding={match.gripTargets[i]!.some(Boolean)} />}
       </div>)}
-    </div>
+    </Scoreboard>
     {match.phase === 'playing' && <div className="online-grips" aria-live="polite">
       <GripNotices names={names} grips={match.gripTargets.map(targets => onlineGripLabels(targets,names,content.fighter.bodies,content.map))} />
     </div>}
     {spectator && <SpectatorControls names={names} visible={match.visible} target={followedFighter(match, feed.own, choice)}
       choose={slot => setChoice(slot === null ? null : {epoch:match.epoch, slot})}/>}
-    <p className="online-controls">{hint || (spectator || feed.own === null ? 'Spectating until the next round · Z / X to turn the camera' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift · Q to headbutt · Z / X to turn the camera')}</p>
+    <p className="online-controls">{hint || (spectator || feed.own === null ? 'Spectating until the next round · Z / X to turn the camera' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift · Q to headbutt · Z / X to turn the camera')}{!hint && ' · Tab for scoreboard'}</p>
     {match.phase !== 'playing' && <div className="online-callout"><span role="status">{match.phase === 'countdown' ? Math.max(1,Math.ceil(match.remaining/60)) : winner}</span>
       {match.phase === 'match_results' && rematch && <button className="room-primary" onClick={rematch}>Play again</button>}
     </div>}

@@ -1,0 +1,13 @@
+.scoreboard { position: relative; }
+.scoreboard:focus-visible { outline: 2px solid #f8c660; outline-offset: -2px; }
+.scoreboard-hint { display: none; }
+.scoreboard:focus-visible .scoreboard-hint {
+  display: block;
+  padding: .25rem .5rem;
+  background: #172d38;
+  color: #faf7ee;
+  font: 600 .75rem/1.4 system-ui, sans-serif;
+}
+.local-scoreboard { display: flex; align-items: flex-start; gap: inherit; }
+.local-scoreboard:focus-visible { outline-offset: 2px; }
+.local-scoreboard .scoreboard-hint { position: absolute; top: calc(100% + 5px); left: 0; }

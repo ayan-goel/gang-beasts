@@ -548,6 +548,8 @@ These are our proposed bindings, not a claim about Gang Beasts' exact keyboard l
 | Tab | Scoreboard |
 | Esc | Settings/menu; does not pause an online room |
 
+Tab from the focused Skyline arena moves focus to the live scoreboard for local players, private-room players and spectators. Both match clocks continue. Escape returns to the arena, and Tab or Shift+Tab follows the page’s keyboard order. [Scoreboard controls](docs/slices/16m-scoreboard.md)
+
 In Skyline, Escape on the arena opens the same menu as the local Pause or private Match menu button. The local simulation freezes. In a private room the server clock advances and the client clears held input. Closing the menu returns keyboard focus to the available arena. [Match menu](docs/slices/16l-match-menu.md)
 
 Disable the browser context menu over the game canvas, not globally. Do not require pointer lock for basic play. On blur, focus loss, menu opening or device removal, send releases/neutral state and stop accumulating gameplay actions. The server also expires stale held input. Text fields consume typing without moving the player.

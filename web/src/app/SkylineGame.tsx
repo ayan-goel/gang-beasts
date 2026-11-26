@@ -2,6 +2,7 @@ import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { pullHint } from '../game/ledgeHint';
 import { GraphicsSelect } from './GraphicsSelect';
 import { MatchMenu, openMenuFromArena } from './MatchMenu';
+import { Scoreboard } from './Scoreboard';
 import { meleeResult } from '../game/meleeResult';
 import { GripNotices } from './GripNotices';
 import { StaminaMeter } from './StaminaMeter';
@@ -48,7 +49,7 @@ export function SkylineGame() {
   const controls = <div className="skyline-bindings">
     <h2><i className="dot coral" />Coral</h2><p>WASD move · Left Shift run · Space jump / pull up<br />J / K punch or grab · E lift · Q headbutt</p>
     <h2><i className="dot blue" />Blue</h2><p>Arrows move · Right Shift run · Enter jump / pull up<br />Comma / period punch or grab · Slash lift · M headbutt</p>
-    <p>Hold a hand button to grab a fighter, crate, vent or roof edge. Release during a lift or swing to throw. While hanging, hold jump to pull up. Z / X turns the shared camera. Escape pauses the match.</p>
+    <p>Hold a hand button to grab a fighter, crate, vent or roof edge. Release during a lift or swing to throw. While hanging, hold jump to pull up. Z / X turns the shared camera. Tab shows the scoreboard. Escape pauses the match from the arena.</p>
   </div>;
   return <main className="skyline-shell">
     <header className="skyline-header">
@@ -69,12 +70,14 @@ export function SkylineGame() {
         <div className="scene-canvas" ref={viewport}
           onKeyDown={event => { if (!menu) openMenuFromArena(event, () => runtime.current?.toggle()); }} />
         {match && <div className="match-hud">
-          <div className="match-round"><span aria-label="Round number">Round {match.round}</span><strong>{Math.floor(clock / 60)}:{String(clock % 60).padStart(2, '0')}</strong></div>
-          <div className="match-score">{names.map((name, id) => <div key={name}>
-            <span className="fighter-score"><i className={`dot ${name.toLowerCase()}`} />{name}<b aria-label={`${name} score`}>{match.scores[id]}</b></span>
-            {!menu && match.phase === 'playing' && state && match.visible[id] &&
-              <StaminaMeter name={name} points={state.stamina[id]!} holding={state.grips[id]!.length > 0} />}
-          </div>)}</div>
+          <Scoreboard className="local-scoreboard" viewport={viewport}>
+            <div className="match-round"><span aria-label="Round number">Round {match.round}</span><strong aria-label="Round time remaining">{Math.floor(clock / 60)}:{String(clock % 60).padStart(2, '0')}</strong></div>
+            <div className="match-score">{names.map((name, id) => <div key={name}>
+              <span className="fighter-score"><i className={`dot ${name.toLowerCase()}`} />{name}<b aria-label={`${name} score`}>{match.scores[id]}</b></span>
+              {!menu && match.phase === 'playing' && state && match.visible[id] &&
+                <StaminaMeter name={name} points={state.stamina[id]!} holding={state.grips[id]!.length > 0} />}
+            </div>)}</div>
+          </Scoreboard>
           {!menu && <button className="match-pause" aria-keyshortcuts="Escape" onClick={() => runtime.current?.toggle()}>Pause</button>}
         </div>}
         <span className="visually-hidden" aria-label="Round phase">{match && phases[match.phase]}</span>

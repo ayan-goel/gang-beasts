@@ -10,6 +10,8 @@ Start the browser project using the setup below and open the printed address. Ch
 
 Press Escape with the arena focused to open graphics and audio settings. Local play pauses both fighters. In a private room the round continues and your fighter releases held controls. Press Escape again to return to play.
 
+Press Tab from the arena to read the live scores and round clock. Escape returns to the arena. You can check the scores this way while playing or spectating.
+
 Hold a hand control near a crate, vent or exposed roof edge to grab it. The HUD shows which hand has the grip. Use the lift control to raise movable crates.
 
 If a walkway falls, keep a hand held within reach of the main roof to catch the lip. Hold Space (Coral) or Enter (Blue) to pull onto a clear roof. Release jump to stop pulling. Releasing your last hand lets you fall. [Catch behavior](docs/slices/10c2-ledge-catch.md) and [pull-up controls](docs/slices/10c3-mantling.md).

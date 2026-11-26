@@ -72,6 +72,12 @@ async function verifyJoin(host: Page, browser: Browser, legacyPeer: boolean) {
         await newcomer.getByLabel('Online Skyline arena').screenshot({path:test.info().outputPath('spectator-camera.png')});
       }
       await newcomer.locator('canvas').focus();
+      await newcomer.keyboard.press('Tab');
+      const board = newcomer.getByRole('region', {name:'Scoreboard',exact:true});
+      await expect(board).toBeFocused();
+      await expect(board.getByLabel('Blue score')).toHaveText('0');
+      await newcomer.keyboard.press('Escape');
+      await expect(newcomer.locator('canvas')).toBeFocused();
       await newcomer.keyboard.down('KeyD');
       const waiting = views[2]!.tick;
       await expect.poll(() => views[2]!.tick).toBeGreaterThan(waiting + 8);
