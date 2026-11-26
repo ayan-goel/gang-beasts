@@ -28,6 +28,7 @@ pub(super) struct Fighter {
     pub bodies: [RigidBodyHandle; 15],
     joints: [ImpulseJointHandle; 14],
     pub hands: Hands,
+    pub aim: [Option<super::punch_aim::Aim>; 2],
     pub last_hit: [[u64; FighterId::ALL.len()]; 3],
     pub headbutt: super::headbutt::Headbutt,
     pub walking: WalkingController,
@@ -66,6 +67,7 @@ impl Fighter {
             bodies,
             joints,
             hands: Hands::new()?,
+            aim: [None; 2],
             headbutt: super::headbutt::Headbutt::new()?,
             last_hit: Default::default(),
             walking: WalkingController::new(LocomotionConfig::bundled()?),
@@ -131,6 +133,20 @@ impl Fighter {
             &mut self.hands,
             true,
         );
+        for hand in [Hand::Left, Hand::Right] {
+            let weight = self.hands.aim_weight(hand);
+            if weight == 0. {
+                self.aim[hand as usize] = None;
+            } else if let Some(aim) = self.aim[hand as usize] {
+                aim.steer(
+                    definition,
+                    hand,
+                    weight,
+                    &mut self.walking.state.targets,
+                    &mut targets,
+                );
+            }
+        }
         if self.walking.state.recovery_strength == 0. && !pulling {
             self.headbutt.drive(
                 definition,

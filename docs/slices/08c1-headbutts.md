@@ -16,4 +16,4 @@ Native fixtures cover a close frontal hit, a distant miss, a separating wall, a 
 
 The release workspace run passed 288 native tests. The web suite passed 59 unit tests, and 11 targeted Chromium scenarios passed, including the 481-frame replay, grabs, knockouts, reconnect and an eight-player ring-out. Both headbutt scenarios also passed against the production preview. The compiled client and server agreed on engine hash `b938ed3bdb4c0bbbb83205bfa009a34507119c3db0c32e926a04ea89f45fac46`.
 
-Directional target selection for punches remains scheduled separately. The move tuning still needs human playtesting.
+The subsequent [directional punch slice](08c2-punch-targeting.md) covers targeting for the hands. The move tuning still needs human playtesting.

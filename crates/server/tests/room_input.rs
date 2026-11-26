@@ -174,3 +174,56 @@ fn detachment_discards_pending_edges_and_requires_a_fresh_binding() {
     room.step();
     assert_eq!(room.applied(BLUE), Some(11));
 }
+
+#[test]
+fn rooftop_approach_and_hand_edges_produce_a_shared_contact_hit() {
+    let mut room = playing();
+    let run = Button::Run as u16;
+    for seq in 0..95 {
+        send(
+            &mut room,
+            CORAL,
+            InputFrame {
+                axes: [100, -80],
+                held: run,
+                pressed: if seq == 0 { run } else { 0 },
+                ..frame(seq)
+            },
+        )
+        .unwrap();
+        room.step();
+    }
+    let hands = Button::LeftHand as u16 | Button::RightHand as u16;
+    send(
+        &mut room,
+        CORAL,
+        InputFrame {
+            pressed: hands,
+            released: hands | run,
+            ..frame(95)
+        },
+    )
+    .unwrap();
+    let mut landed = false;
+    for _ in 0..24 {
+        room.step();
+        for hit in room.game().hits() {
+            assert_eq!((hit.attacker, hit.defender), (CORAL, BLUE));
+            if hit.source.hand() == Some(Hand::Left) {
+                assert!(hit.damage > 0.);
+                landed = true;
+            }
+        }
+    }
+    assert!(landed);
+    assert!(room.game().vitals(BLUE).health < 100.);
+    let snapshot = room.capture().unwrap();
+    let host = snapshot.for_recipient(CORAL);
+    assert_eq!(host[16..], snapshot.for_recipient(BLUE)[16..]);
+    let bodies = u16::from_le_bytes(host[16..18].try_into().unwrap()) as usize;
+    let health = 20 + 32 * bodies + 24 + 24 + 8;
+    assert_eq!(
+        f32::from_le_bytes(host[health..health + 4].try_into().unwrap()),
+        room.game().vitals(BLUE).health
+    );
+}

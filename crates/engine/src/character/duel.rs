@@ -153,6 +153,18 @@ impl Duel {
         }
         // Every fighter publishes commands before the shared solve so gravity and contact age advance once.
         for &id in self.fighter_ids() {
+            for hand in [Hand::Left, Hand::Right] {
+                if self.fighters[id as usize].hands.pending(hand) {
+                    self.fighters[id as usize].aim[hand as usize] = super::punch_aim::select(
+                        &self.world,
+                        &self.definition,
+                        &self.fighters,
+                        &self.vitals,
+                        id,
+                        hand,
+                    );
+                }
+            }
             let vitals = self.vitals(id);
             let control = match vitals.phase {
                 crate::Consciousness::Eliminated => continue,
@@ -304,3 +316,7 @@ mod roster_tests;
 #[cfg(test)]
 #[path = "headbutt_tests.rs"]
 mod headbutt_tests;
+
+#[cfg(test)]
+#[path = "punch_aim_tests.rs"]
+mod punch_aim_tests;

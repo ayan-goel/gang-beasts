@@ -5,6 +5,8 @@ use serde::Deserialize;
 #[serde(deny_unknown_fields)]
 pub(crate) struct HandTuning {
     schema_version: u8,
+    pub aim_cone_cos: f32,
+    pub aim_max_rad: f32,
     pub windup_ticks: u8,
     pub strike_ticks: u8,
     pub recovery_ticks: u8,
@@ -26,6 +28,8 @@ impl HandTuning {
             (-2.4..=2.4).contains(&shoulder) && (0.0..=2.4).contains(&elbow)
         };
         if tuning.schema_version != 1
+            || !(0.5..=1.).contains(&tuning.aim_cone_cos)
+            || !(0.0..=0.7).contains(&tuning.aim_max_rad)
             || ![
                 tuning.windup_ticks,
                 tuning.strike_ticks,

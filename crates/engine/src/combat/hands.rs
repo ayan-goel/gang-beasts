@@ -64,6 +64,19 @@ impl Hands {
             tuning: HandTuning::bundled()?,
         })
     }
+    pub fn pending(&self, hand: Hand) -> bool {
+        self.actions[hand as usize].pending
+    }
+    pub fn aim_weight(&self, hand: Hand) -> f32 {
+        let action = &self.actions[hand as usize];
+        match action.state.phase {
+            HandPhase::WindUp | HandPhase::Strike => 1.,
+            HandPhase::Recovery => {
+                f32::from(self.tuning.length() - action.age) / f32::from(self.tuning.recovery_ticks)
+            }
+            _ => 0.,
+        }
+    }
     pub fn state(&self, hand: Hand) -> HandState {
         self.actions[hand as usize].state
     }

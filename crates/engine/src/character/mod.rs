@@ -36,6 +36,7 @@ mod pose_motion;
 mod pose_release;
 mod practice_target;
 mod prop_reach;
+mod punch_aim;
 mod recovery;
 mod recovery_config;
 mod recovery_drive;

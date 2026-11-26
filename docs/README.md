@@ -2,6 +2,7 @@
 
 [Technical specification](../TECHNICAL_SPEC.md) is the canonical product and architecture contract. These documents record implementation choices and evidence; they do not redefine acceptance.
 
+- [Directional punches](slices/08c2-punch-targeting.md) covers target selection, blocked swings and the physical hit tests.
 - [Physical headbutts](slices/08c1-headbutts.md) covers timing, stamina, collision ownership, local controls and online inputs.
 - [Implementation plan](implementation-plan.md): ordered slices and their gates.
 - [Acceptance record](verification/acceptance.md): evidence against all MVP release requirements.
