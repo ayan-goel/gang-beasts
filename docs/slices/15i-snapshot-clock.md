@@ -8,7 +8,7 @@ After 16 snapshots, the client estimates how much authoritative history it needs
 | --- | ---: | --- |
 | Buffer | 2.5–6 ticks (42–100 ms) | Cover normal arrivals while capping added latency under sustained irregular delivery |
 | Buffer adjustment | 0.08 ticks/publication | Change presentation speed gradually |
-| Clock adjustment | 0.1 ticks/publication | Keep one slow packet from changing every limb's playback time |
+| Normal clock adjustment | 0.1 ticks/publication, subject to the late-origin bound below | Keep one slow packet from changing every limb's playback time |
 | Extrapolation | 6 ticks (100 ms) | Bound motion while waiting for fresh state |
 
 Every fighter, grip, prop and scoreboard uses the same presentation timeline. The server decides each result. Round changes and long gaps discard the old clock. [Implementation](../../web/src/online/SnapshotTimeline.ts) · [Timeline tests](../../web/src/online/SnapshotTimeline.test.ts)
@@ -40,4 +40,16 @@ On an M3 Pro with two default headless Chromium clients, a stall during initial 
 
 The clock now limits how far its origin can trail the fastest arrival in the current history to one nominal 30 Hz publication (33.3 ms). Small delivery changes retain the gradual correction. The adaptive interpolation delay and extrapolation ceiling still apply, and the shared presentation tick moves monotonically. A deterministic test drains 55 queued packets in about one millisecond after a long client stall, then checks live status, fighter position, round state and continued progress. The previous implementation failed at the live-status assertion. [Timeline regression](../../web/src/online/SnapshotTimeline.test.ts)
 
-Both browsers then produced one landing cue for the same server-owned jump on the default Chromium renderer. A separate stall during the first WebGL draw can still suppress an early countdown beep when the interval between observations exceeds 500 ms.
+Both browsers then produced one landing cue for the same server-owned jump on the default Chromium renderer. The [lobby graphics preparation](16d-map-loading.md#preparing-the-first-draw) subsequently moved the costly first draw ahead of the countdown.
+
+## Regional input after recovering the clock
+
+The production build with the corrected clock and lobby GPU preparation passed the standing-action latency tests on the M3 Pro. Two Chromium clients used the same regional relay profile as the earlier runs. One set of 20 new rooms supplied the jump samples. A second set of 20 new rooms supplied one left and one right punch each, with keyboard and mouse order counterbalanced. The measurements end at submission of the first draw showing at least 3 cm of the requested motion.
+
+| Standing action | Trials | Median input to draw | p95 input to draw | p95 input to authoritative confirmation |
+| --- | ---: | ---: | ---: | ---: |
+| Jump | 20 | 114.6 ms | 132.0 ms | 94.0 ms |
+| Left punch | 20 | 129.4 ms | 145.5 ms | 101.9 ms |
+| Right punch | 20 | 130.9 ms | 147.8 ms | 105.2 ms |
+
+All three p95 values passed the 150 ms target for these actions. [Trials, RTT samples and bundle identity](../verification/ready-clock-latency.jsonl)

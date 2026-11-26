@@ -76,7 +76,7 @@
 - [Online movement interpolation](slices/15c-interpolation.md) documents smooth poses, jitter, freezes, round boundaries and test coverage.
 - [Online fighter controls](slices/15b-online-input.md) covers keyboard and mouse input, socket ownership, round acknowledgements and cross-browser scoring.
 - [Online match startup](slices/15a-online-start.md) covers host authorization, worker reservation and live views.
-- [Skyline compatibility](slices/16d-map-loading.md) covers loading, fingerprints, retry and readiness.
+- [Skyline compatibility](slices/16d-map-loading.md) covers loading, first-draw preparation, fingerprints, retry and readiness.
 - [Lobby readiness](slices/16c-lobby-ready.md) covers socket ownership, ready controls and membership updates.
 - [Browser lobby](slices/16b-browser-lobby.md) covers invite links, session restoration, private rosters and leaving a room.
 - [Private room admission](slices/16a-admission.md) covers session cookies, idempotency, room codes, capacity, expiry and origin checks.

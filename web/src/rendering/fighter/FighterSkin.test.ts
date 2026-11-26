@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import { Euler, Group, Matrix4, Quaternion, SkinnedMesh, Vector3 } from 'three';
+import { Euler, Group, Matrix4, MeshBasicMaterial, MeshStandardMaterial, Quaternion, SkinnedMesh, Vector3 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import type { RigDefinition } from '../../game/rigDefinition';
 import { FighterSkin } from './FighterSkin';
@@ -94,5 +94,23 @@ it('paints eight distinct helmet patterns when every kit uses the same suit colo
     material.dispose();
   }
   expect(patterns.size).toBe(8);
+  skin.dispose();
+});
+
+it('repaints a prepared suit and its occluded silhouette without replacing the skin or texture', async () => {
+  const skin = new FighterSkin(await load(), rig, '#f38e66', 0);
+  const original = skin.mesh.material;
+  if (!(original instanceof MeshStandardMaterial)) throw new Error('Missing suit material');
+  const texture = original.map!;
+  const expected = suitMaterial('#e69eb9', 5);
+  skin.setKit('#e69eb9', 5);
+  expect(skin.mesh.material).toBe(original);
+  expect(original.map).toBe(texture);
+  expect(texture.image.data).toEqual(expected.map.image.data);
+  const outline = skin.mesh.children.find(child => child instanceof SkinnedMesh)!;
+  expect(outline.material).toBeInstanceOf(MeshBasicMaterial);
+  expect((outline.material as MeshBasicMaterial).color.getHex()).toBe(0xe69eb9);
+  expected.map.dispose();
+  expected.dispose();
   skin.dispose();
 });

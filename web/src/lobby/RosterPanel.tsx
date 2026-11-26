@@ -47,8 +47,8 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
     {error && <p role="alert">{error}</p>}
   </section>;
   if (game) {
-    const {View, feed, content} = game;
-    return <><View key={feed.assignmentRound?.toString() ?? 'start'} feed={feed} highLatency={highLatency} content={content} exit={exit} rematch={canRematch ? requestRematch : undefined}/>
+    const {View, feed, content, graphics} = game;
+    return <><View key={feed.assignmentRound?.toString() ?? 'start'} feed={feed} graphics={graphics} highLatency={highLatency} content={content} exit={exit} rematch={canRematch ? requestRematch : undefined}/>
       {error && <p role="alert">{error}</p>}</>;
   }
   if (lostAccess && disconnected) return <section className="room-panel">

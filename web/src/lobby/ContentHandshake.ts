@@ -1,7 +1,9 @@
 import { supportsPhysics, physicsUnsupported } from '../game/physicsSupport';
 import { loadSkyline, loadedPacket, type SkylineContent } from './content';
+import type { PreparedArena } from '../online/preparedArena';
 
 export interface LoadedArena {
+  graphics?: PreparedArena;
   View: typeof import('../online/OnlineMatch').default;
   content: SkylineContent;
 }
@@ -12,19 +14,28 @@ export class ContentHandshake {
   arena?: LoadedArena;
   private timer?: number;
   private attempt = 0;
+  private pending?: AbortController;
 
   constructor(private socket: WebSocket, private publish: (state: LoadState) => void) {}
 
-  async ready() {
+  async ready(prepareGraphics = true) {
     if (this.timer !== undefined) return;
     if (!supportsPhysics()) { this.finish(physicsUnsupported); return; }
     const attempt = ++this.attempt;
+    const pending = this.pending = new AbortController();
     this.publish({loading: true, error: ''});
     this.timer = window.setTimeout(() => this.finish('Skyline took too long to load. Try again.'), 12000);
     try {
       const [content, arena] = await Promise.all([loadSkyline(), import('../online/OnlineMatch')]);
       if (attempt !== this.attempt || this.socket.readyState !== WebSocket.OPEN) return;
-      this.arena = {View: arena.default, content};
+      const graphics = prepareGraphics ? new arena.PreparedArena() : undefined;
+      this.arena?.graphics?.dispose();
+      await graphics?.prepare(content, pending.signal);
+      if (attempt !== this.attempt || this.socket.readyState !== WebSocket.OPEN) {
+        graphics?.dispose();
+        return;
+      }
+      this.arena = {View: arena.default, content, graphics};
       this.socket.send(loadedPacket(content));
     } catch {
       if (attempt === this.attempt) this.finish('Could not load Skyline. Check your connection and try again.');
@@ -44,13 +55,21 @@ export class ContentHandshake {
   }
 
   dispose() {
+    this.arena?.graphics?.dispose();
+    this.clearAttempt();
+  }
+
+  private clearAttempt() {
     this.attempt++;
+    this.pending?.abort();
+    this.pending = undefined;
     clearTimeout(this.timer);
     this.timer = undefined;
   }
 
   private finish(error: string) {
-    this.dispose();
+    if (error) this.arena?.graphics?.dispose();
+    this.clearAttempt();
     this.publish({loading: false, error});
   }
 }

@@ -89,7 +89,7 @@ export function useLiveRoom(code: string) {
             return;
           }
           if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 28 && last && !feed) {
-            void content.ready();
+            void content.ready(false);
             return;
           }
           if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 27 && feed) {
@@ -149,7 +149,10 @@ export function useLiveRoom(code: string) {
   function setReady(ready: boolean) {
     if (transport.current?.readyState === WebSocket.OPEN && connection) {
       if (ready) void handshake.current?.ready();
-      else transport.current.send(Uint8Array.of(18, 1, 0));
+      else {
+        handshake.current?.dispose();
+        transport.current.send(Uint8Array.of(18, 1, 0));
+      }
     }
   }
   function start() {

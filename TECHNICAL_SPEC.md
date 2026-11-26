@@ -1039,6 +1039,8 @@ Open site → create private room → share link/code → friends join → choos
 
 The site root opens the [Skyline Melee main menu](docs/slices/16k-game-entry.md). Hosting or joining opens the private-room form. Local match opens `/play/`, and the simulation inspector is available at `/playground/`. The menu uses static HTML and an original in-game still, so visitors can choose a destination before loading a simulation or opening a room session.
 
+Explicit Ready prepares the first Skyline GPU draw on a detached canvas before submitting the content fingerprints. Match assignment reuses that canvas with the assigned fighter kits. Canceling readiness or leaving releases an unused scene. A reconnect to an active match can proceed directly to its live state. [Graphics readiness](docs/slices/16d-map-loading.md#preparing-the-first-draw)
+
 The [private lobby](docs/slices/16b-browser-lobby.md) lives at `/rooms/`. Its share link carries the room code in `?code=`. Opening an invite while seated preserves the new destination until the player chooses to leave their current room.
 
 Show actionable states for unavailable server, full room, wrong code, incompatible version, loading timeout and reconnect failure. A browser tab becoming hidden is not permission to pause everyone else's game.

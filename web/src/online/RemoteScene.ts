@@ -28,14 +28,16 @@ export function matchView(frame: Snapshot, content: SkylineContent): RemoteMatch
     hazard: t >= s.gust_tick ? 'gust' : t >= s.east_tick ? 'gust_warning' : t >= s.west_tick ? 'east_warning' : t >= s.warn_tick ? 'west_warning' : 'quiet'};
 }
 
-export function startRemoteScene(container: HTMLElement, content: SkylineContent, feed: MatchFeed, update: (match: RemoteMatch) => void, status: (value: StreamStatus) => void, choice: {readonly current: CameraChoice | null}) {
-  const scene = new FixtureScene(container, content.fighter, {online: true, map: content.map, model: content.model, kit: feed.fighters[0]!.color, color: colors[feed.fighters[0]!.color]});
+export function startRemoteScene(container: HTMLElement, content: SkylineContent, feed: MatchFeed, update: (match: RemoteMatch) => void, status: (value: StreamStatus) => void, choice: {readonly current: CameraChoice | null}, prepared?: FixtureScene) {
+  const kit = feed.fighters[0]!.color;
+  const scene = prepared ?? new FixtureScene(container, content.fighter, {online:true, map:content.map, model:content.model, kit, color:colors[kit]});
   const bodies = feed.fighters.map(() => new Float32Array(15*14));
   const objects = new Float32Array(8*content.map.objects.length);
   let animation = 0, priorTime = performance.now(), prior: Snapshot | null = null, match: RemoteMatch | null = null;
   let previousStatus: StreamStatus | undefined;
   let unbind: (() => void) | undefined;
   try {
+    prepared?.mountSkyline(container, colors[kit]!, kit);
     for (const fighter of feed.fighters.slice(1)) scene.addOpponent(content.fighter, colors[fighter.color], fighter.color);
     unbind = bindRemoteControls(container.querySelector('canvas')!, feed, scene.groupCamera!, container.closest('section') ?? container);
     function render(now: number) {

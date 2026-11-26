@@ -55,7 +55,7 @@ export class FixtureScene {
   private readonly joints?: JointOverlay;
 
   private readonly followRig: boolean;
-  constructor(private readonly container: HTMLElement, definition?: RigDefinition, options: SceneOptions = {}) {
+  constructor(private container: HTMLElement, definition?: RigDefinition, options: SceneOptions = {}) {
     const { focusHeight = 1.7, terrainBoxes, target, map } = options;
     this.model = options.model;
     this.followRig = options.followRig ?? false;
@@ -137,6 +137,35 @@ export class FixtureScene {
       this.dispose();
       throw error;
     }
+  }
+
+  async prepareSkyline(signal: AbortSignal) {
+    // A detached lobby canvas has no layout size. A small real draw also loads the shadow and skin programs.
+    this.renderer.setSize(16, 16, false);
+    this.renderer.render(this.scene, this.camera);
+    const gl = this.renderer.getContext() as WebGL2RenderingContext;
+    const fence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    if (!fence) throw new Error('Could not prepare Skyline graphics');
+    gl.flush();
+    try {
+      while (!gl.isContextLost()) {
+        signal.throwIfAborted();
+        const status = gl.clientWaitSync(fence, 0, 0);
+        if (status === gl.ALREADY_SIGNALED || status === gl.CONDITION_SATISFIED) return;
+        if (status === gl.WAIT_FAILED) break;
+        await new Promise(resolve => setTimeout(resolve, 16));
+      }
+      throw new Error('Skyline graphics preparation was interrupted');
+    } finally { gl.deleteSync(fence); }
+  }
+
+  mountSkyline(container: HTMLElement, team: string, kit: number) {
+    if (this.rig instanceof FighterSkin) this.rig.setKit(team, kit);
+    this.resizeObserver?.unobserve(this.container);
+    this.container = container;
+    container.append(this.renderer.domElement);
+    this.resizeObserver?.observe(container);
+    this.resize();
   }
 
   addOpponent(definition: RigDefinition, color = '#559ed8', kit = 1): void {

@@ -1,3 +1,4 @@
+import type { PreparedArena } from './preparedArena';
 import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { GripNotices } from '../app/GripNotices';
 import { MatchMenu, openMenuFromArena } from '../app/MatchMenu';
@@ -19,8 +20,10 @@ import { matchView, startRemoteScene } from './RemoteScene';
 import type { MatchFeed } from './MatchFeed';
 import './match.css';
 
+export { PreparedArena } from './preparedArena';
+
 const phaseNames = {countdown:'Countdown', playing:'Playing', round_results:'Round results', match_results:'Match results'};
-export default function OnlineMatch({feed, content, exit, rematch, highLatency}: {feed: MatchFeed; highLatency?: boolean; content: SkylineContent; exit: () => void; rematch: (() => void) | undefined}) {
+export default function OnlineMatch({feed, content, graphics, exit, rematch, highLatency}: {feed: MatchFeed; graphics?: PreparedArena; highLatency?: boolean; content: SkylineContent; exit: () => void; rematch: (() => void) | undefined}) {
   const container = useRef<HTMLDivElement>(null);
   const [match, setMatch] = useState(() => matchView(feed.latest!, content));
   const [status, setStatus] = useState<StreamStatus>('buffering');
@@ -37,7 +40,7 @@ export default function OnlineMatch({feed, content, exit, rematch, highLatency}:
     // Give the authoritative scoreboard a paint before WebGL compiles the arena shaders.
     const frame = requestAnimationFrame(() => {
       timer = window.setTimeout(() => {
-        try { stop = startRemoteScene(container.current!, content, feed, setMatch, setStatus, cameraChoice); }
+        try { stop = startRemoteScene(container.current!, content, feed, setMatch, setStatus, cameraChoice, graphics?.take()); }
         catch (failure) {
           setError(failure instanceof GraphicsUnavailable ? failure.message : 'Could not display the arena.');
           // The room keeps playing even when this device cannot draw its first frame.
@@ -49,7 +52,7 @@ export default function OnlineMatch({feed, content, exit, rematch, highLatency}:
       }, 0);
     });
     return () => { cancelAnimationFrame(frame); clearTimeout(timer); stop?.(); };
-  }, [feed, content, graphicsAttempt]);
+  }, [feed, content, graphics, graphicsAttempt]);
   useMatchSound(match, status === 'live' || status === 'estimating', match.conditions, match);
   const names = feed.fighters.map(f => f.name);
   const spectator = canSpectate(match, feed.own);
