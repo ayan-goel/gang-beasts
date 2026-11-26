@@ -1,6 +1,7 @@
+import type { LandingEvent } from './landingSound';
 import { distanceGain, type CameraPosition } from './spatialMix';
 
-export interface ImpactSource extends CameraPosition { health: number }
+export interface ImpactSource extends CameraPosition { health: number; landing?: LandingEvent }
 export interface Impact extends CameraPosition { damage: number }
 
 const buffers = new WeakMap<BaseAudioContext, AudioBuffer>();

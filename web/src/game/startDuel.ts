@@ -1,3 +1,4 @@
+import type { LandingEvent } from '../audio/landingSound';
 import type { LedgePractice } from './LedgePractice';
 import type { ImpactSource } from '../audio/impactSound';
 import { arenaGripName, fighterGripName, handGripLabels } from './gripLabels';
@@ -21,6 +22,7 @@ export interface DuelHit {
 }
 export interface FighterCondition {
   phase: FighterPhase;
+  landing?: LandingEvent | null;
   health: number; knockouts: number; sinceTick: string;
 }
 export interface DuelState {
@@ -111,7 +113,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
         gripTargets: [first.targets, second.targets],
         grips: [first.labels, second.labels], fixedLedge: [first.onLedge, second.onLedge],
         stamina: [duel.stamina(0), duel.stamina(1)],
-        conditions, impacts: renderer.impactSources(conditions.map(f => f.health)),
+        conditions, impacts: renderer.impactSources(conditions, Number(duel.tick())),
       });
     };
     const render = (dt = 0) => {

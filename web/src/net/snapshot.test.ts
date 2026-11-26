@@ -60,3 +60,22 @@ it('rejects invalid compact indices, impossible rotations, reserved integers and
   }
   expect(() => decodeSnapshot(compact.subarray(0,-1))).toThrow();
 });
+
+it('decodes opted-in landing records and rejects future or partial events', () => {
+  const bytes = Buffer.from(compact);
+  const block = 20 + 31 * 23;
+  bytes[block] = 2;
+  const first = block + 24;
+  bytes[first+5] = 50;
+  bytes.writeUInt16LE(7196,first+6);
+  const state = decodeSnapshot(bytes);
+  expect(state.fighters[0]?.landing).toEqual({tick:7196,impulse:50});
+  expect(state.fighters[1]?.landing).toBeUndefined();
+  bytes.writeUInt16LE(7202,first+6);
+  expect(() => decodeSnapshot(bytes)).toThrow();
+  bytes.writeUInt16LE(0,first+6);
+  expect(() => decodeSnapshot(bytes)).toThrow();
+  bytes.writeUInt16LE(7200,first+6);
+  bytes[first+5] = 0;
+  expect(() => decodeSnapshot(bytes)).toThrow();
+});

@@ -16,6 +16,7 @@ pub(super) struct Capabilities {
     resume: bool,
     pub(super) lineups: bool,
     pub(super) compact: bool,
+    pub(super) landings: bool,
 }
 
 pub(super) async fn upgrade(
@@ -47,6 +48,7 @@ pub(super) async fn upgrade(
         resume: has("resume=1"),
         lineups: has("lineups=1"),
         compact: has("compact=1"),
+        landings: has("landings=1"),
     };
     Ok(ws
         .max_frame_size(4096)

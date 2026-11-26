@@ -30,7 +30,7 @@ export function useLiveRoom(code: string) {
     setLink('connected');
     function open() {
       cleanup();
-      const url = new URL('/ws?resume=1&lineups=1&compact=1', location.href);
+      const url = new URL('/ws?resume=1&lineups=1&compact=1&landings=1', location.href);
       url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socket = new WebSocket(url);
       const content = new ContentHandshake(socket, setLoad);

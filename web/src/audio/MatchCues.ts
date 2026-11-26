@@ -1,3 +1,4 @@
+import type { LandingCue } from './landingSound';
 import { changedGrip, type GripAudioState } from './gripCues';
 import type { GripCue, GripKind } from './gripSound';
 import type { Impact, ImpactSource } from './impactSound';
@@ -7,7 +8,7 @@ import type { FighterPhase } from '../game/fighterCondition';
 type Hazard = MatchView['hazard'];
 export type AudibleHazard = Exclude<Hazard, 'quiet'>;
 export type ConditionCue = 'knocked_out' | 'recovering';
-export interface Cues { warning?: AudibleHazard; condition?: ConditionCue; impact?: Impact; grip?: GripCue }
+export interface Cues { warning?: AudibleHazard; condition?: ConditionCue; impact?: Impact; grip?: GripCue; landing?: LandingCue }
 const stages: readonly Hazard[] = ['quiet', 'west_warning', 'east_warning', 'gust_warning', 'gust'];
 
 export class MatchCues {
@@ -51,6 +52,16 @@ export class MatchCues {
         if (grip && now - (this.lastGrip[grip.kind] ?? -Infinity) >= 150) {
           cues.grip = grip;
           this.lastGrip[grip.kind] = now;
+        }
+      }
+      if (!cues.warning && !cues.condition && !cues.impact && !cues.grip) {
+        for (const [slot, source] of sources.entries()) {
+          const event = source.landing;
+          const prior = this.sources[slot];
+          if (event && prior && phases[slot] !== 'eliminated' && event.tick !== prior.landing?.tick
+            && event.impulse > (cues.landing?.impulse ?? 0)) {
+            cues.landing = {impulse:event.impulse, pan:source.pan, distance:source.distance};
+          }
         }
       }
     } else {

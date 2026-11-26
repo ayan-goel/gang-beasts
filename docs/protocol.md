@@ -29,17 +29,19 @@ The original 32-byte transform contains body ID u32 at 0, XYZ position at 4 and 
 
 A connection advertising `compact=1` in its WebSocket query can receive bit 2. Other clients receive the original format. Every compact transform is 23 bytes. The u32 ID and three f32 position components occupy the same first 16 bytes. At byte 16, a u8 identifies the largest absolute component of the XYZW quaternion (0–3, first index on a tie). Bytes 17–22 contain the remaining three components in XYZW order as little-endian i16s. Normalize the source, make the omitted component positive by negating the quaternion when necessary, then round each retained component times 32767 to nearest, with halves away from zero.
 
-Decode each retained component by dividing by 32767. Reject −32768, an invalid index or a negative square-root argument. Reconstruct the omitted component as the positive square root of one minus the sum of the three squares. Reject a retained absolute magnitude larger than the reconstructed component plus 3/32767, which allows near ties after rounding. The codec's orientation error target is below 0.01 degrees. Both forms use the same gameplay block, ID validation, epoch and recipient acknowledgement. A compact frame can be applied immediately after reconnect or a missed publication. [Cross-runtime compact fixture](../tests/fixtures/protocol/compact-skyline-v1.bin)
+Decode each retained component by dividing by 32767. Reject −32768, an invalid index or a negative square-root argument. Reconstruct the omitted component as the positive square root of one minus the sum of the three squares. Reject a retained absolute magnitude larger than the reconstructed component plus 3/32767, which allows near ties after rounding. The codec's orientation error target is below 0.01 degrees. Both transform layouts preserve the same fighter record length, ID validation, epoch and recipient acknowledgement. A compact frame can be applied immediately after reconnect or a missed publication. [Cross-runtime compact fixture](../tests/fixtures/protocol/compact-skyline-v1.bin)
 
 | Gameplay offset | Value |
 | --- | --- |
-| 0–3 | Block version 1, match phase (countdown/playing/round results/match results = 0–3), winning slot (255 for none), fighter count (2–8), all u8 |
+| 0–3 | Block version 1 or 2, match phase (countdown/playing/round results/match results = 0–3), winning slot (255 for none), fighter count (2–8), all u8 |
 | 4, 6 | Remaining phase ticks u16 and reserved zero u16 |
 | 8 | Round epoch u64 |
 | 16, 20 | Round number starting at 1 and completed arena tick, u32 each. Map schedules use the latter for warning, detachment and gust progression. |
 | 24 onward | One 24-byte record per slot in ascending order |
 
-Fighter offsets 0–4 are slot, consciousness (active/knocked out/recovering/eliminated = 0–3), score, left and right hand phase (idle/wind-up/strike/recovery/reach/gripping = 0–5). Bytes 5–7 are zero. Health and stamina are f32 at 8 and 12 in [0,100]. Left and right grip target body IDs are u32 at 16 and 20. A gripping hand must name a body from this snapshot outside its own rig. Every other hand must have a zero target.
+Fighter offsets 0–4 are slot, consciousness (active/knocked out/recovering/eliminated = 0–3), score, left and right hand phase (idle/wind-up/strike/recovery/reach/gripping = 0–5). Block version 1 requires zero at bytes 5–7. Health and stamina are f32 at 8 and 12 in [0,100]. Left and right grip target body IDs are u32 at 16 and 20. A gripping hand must name a body from this snapshot outside its own rig. Every other hand must have a zero target.
+
+Clients advertising both `compact=1` and `landings=1` receive gameplay block version 2. Fighter byte 5 is the latest fixed-surface landing impulse in whole N·s, capped at 255. Bytes 6–7 hold its little-endian arena tick. Both fields are zero before any landing in the round. Otherwise both must be positive and the event tick must be at or before the snapshot arena tick. The Skyline round ends within the u16 event tick range. The full-transform and original compact modes continue to use version 1.
 
 Room snapshots are due on even completed room ticks (30 Hz). A join or resync may request a full record on any tick. Reliable transient events have a separate lifecycle. A full snapshot carries the state needed to display the current world without replaying earlier hits or warnings.
 

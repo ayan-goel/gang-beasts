@@ -53,7 +53,7 @@ export function startRemoteScene(container: HTMLElement, content: SkylineContent
       if (match) scene.renderSkyline(bodies, objects, match, (now-priorTime)/1000,
         feed.own === null ? undefined : bodies[feed.own], followedFighter(match, feed.own, choice.current));
       if (sample && match && sample.state !== prior) {
-        match.impacts = scene.impactSources(sample.state.fighters.map(f => f.health));
+        match.impacts = scene.impactSources(sample.state.fighters, sample.state.arenaTick);
         update(match);
         prior = sample.state;
       }

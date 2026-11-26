@@ -85,7 +85,7 @@ fn profile(warmup: usize, ticks: usize, compact: bool) -> Report {
             let shared = room.capture().unwrap();
             for id in FighterId::ALL {
                 let packet = black_box(if compact {
-                    shared.compact_for(Some(id))
+                    shared.compact_with_landings(Some(id))
                 } else {
                     shared.for_recipient(id)
                 });

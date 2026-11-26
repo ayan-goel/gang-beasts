@@ -4,11 +4,25 @@ use crate::VERSION;
 pub struct SharedSnapshot {
     full: Vec<u8>,
     compact: Vec<u8>,
+    landing_records: Vec<[u8; 3]>,
 }
 
 impl SharedSnapshot {
     pub fn for_recipient(&self, applied: Option<u32>) -> Vec<u8> {
         personalize(&self.full, applied)
+    }
+
+    pub fn compact_with_landings(&self, applied: Option<u32>) -> Vec<u8> {
+        let mut bytes = self.compact_for_recipient(applied);
+        let block = bytes.len() - 24 * (1 + self.landing_records.len());
+        bytes[block] = 2;
+        for (fighter, landing) in bytes[block + 24..]
+            .chunks_exact_mut(24)
+            .zip(&self.landing_records)
+        {
+            fighter[5..8].copy_from_slice(landing);
+        }
+        bytes
     }
 
     pub fn compact_for_recipient(&self, applied: Option<u32>) -> Vec<u8> {
@@ -39,7 +53,20 @@ impl Snapshot {
             compact.extend(super::rotation::pack(body.rotation));
         }
         compact.extend_from_slice(&full[end..]);
-        Ok(SharedSnapshot { full, compact })
+        let landing_records = self
+            .fighters
+            .iter()
+            .map(|fighter| {
+                let (tick, impulse) = fighter.landing.unwrap_or_default();
+                let [low, high] = tick.to_le_bytes();
+                [impulse, low, high]
+            })
+            .collect();
+        Ok(SharedSnapshot {
+            full,
+            compact,
+            landing_records,
+        })
     }
 
     pub fn encode(&self) -> Result<Vec<u8>, SnapshotError> {

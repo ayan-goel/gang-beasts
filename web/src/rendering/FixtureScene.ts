@@ -1,3 +1,4 @@
+import type { LandingEvent } from '../audio/landingSound';
 import { graphicsDriver, skylineQuality } from './skylineQuality';
 import { applySkylineQuality } from './applySkylineQuality';
 import { graphicsPreference, subscribeGraphics } from './graphicsPreference';
@@ -135,12 +136,13 @@ export class FixtureScene {
   private playerPoses: Float32Array[] = [];
   private readonly soundPoint = new THREE.Vector3();
 
-  impactSources(health: readonly number[]) {
+  impactSources(fighters: readonly {health: number; landing?: LandingEvent | null}[], arenaTick: number) {
     return this.playerPoses.map((pose, slot) => {
       const pelvis = this.soundPoint.fromArray(pose, 28);
       const distance = pelvis.distanceTo(this.camera.position);
       const pan = THREE.MathUtils.clamp(pelvis.project(this.camera).x, -1, 1);
-      return {health: health[slot]!, distance, pan};
+      const {health, landing} = fighters[slot]!;
+      return {health, distance, pan, landing: landing && arenaTick - landing.tick <= 12 ? landing : undefined};
     });
   }
 

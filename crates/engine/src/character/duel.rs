@@ -52,6 +52,7 @@ pub struct Duel {
     changes: Vec<(FighterId, crate::Consciousness)>,
     grips: super::duel_grips::Grips,
     hits: Vec<super::StrikeHit>,
+    landings: [Option<(u64, u8)>; 8],
     physics: PhysicsConfig,
     tick: u64,
 }
@@ -116,6 +117,7 @@ impl Duel {
             vitals: vec![crate::Vitals::new(&health_rules); count],
             health_rules,
             changes: Vec::with_capacity(count),
+            landings: [None; 8],
             hits: Vec::with_capacity(2 * count),
             grips: super::duel_grips::Grips::new(count)?,
             physics,
@@ -198,8 +200,15 @@ impl Duel {
             a.step(&mut self.world, self.tick + 1);
             self.grips.release_disabled(&mut self.world);
         }
+        let mut approach = [0.; 8];
+        for (slot, fighter) in self.fighters.iter().enumerate() {
+            approach[slot] = self.world.bodies[fighter.bodies[crate::BodyPart::Pelvis.index()]]
+                .linvel()
+                .y;
+        }
         self.world.step();
         self.tick += 1;
+        self.record_landings(&approach);
         self.hits.clear();
         self.grips.acquire(
             &mut self.world,
@@ -281,6 +290,9 @@ impl Duel {
 #[cfg(test)]
 #[path = "duel_lift_tests.rs"]
 mod lift_tests;
+
+#[path = "duel_landings.rs"]
+mod landings;
 
 #[path = "duel_health.rs"]
 mod health;

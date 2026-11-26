@@ -4,6 +4,7 @@ fn sample() -> Snapshot {
     let mut fighters = vec![FighterState::default(); 2];
     fighters[0] = FighterState {
         consciousness: 0,
+        landing: None,
         score: 1,
         hands: [5, 4],
         health: 76.5,
@@ -89,4 +90,21 @@ fn compact_frames_match_the_golden_record_and_keep_recipient_acks_independent() 
         42u32.to_le_bytes()
     );
     assert_eq!(packet[12..], spectator[12..]);
+}
+
+#[test]
+fn opted_in_landings_share_one_packet_size_with_legacy_frames() {
+    let mut s = sample();
+    s.fighters[0].landing = Some((7100, 55));
+    let shared = s.encode_shared().unwrap();
+    let legacy = shared.compact_for_recipient(None);
+    let current = shared.compact_with_landings(None);
+    let block = 20 + 23 * s.bodies.len();
+    assert_eq!(legacy.len(), current.len());
+    assert_eq!(legacy[block], 1);
+    assert_eq!(current[block], 2);
+    assert_eq!(&legacy[block + 29..block + 32], &[0, 0, 0]);
+    assert_eq!(&current[block + 29..block + 32], &[55, 188, 27]);
+    s.fighters[0].landing = Some((7250, 55));
+    assert!(s.encode_shared().is_err());
 }

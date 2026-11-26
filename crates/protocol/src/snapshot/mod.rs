@@ -21,6 +21,7 @@ pub struct BodyPose {
 pub struct FighterState {
     pub consciousness: u8,
     pub score: u8,
+    pub landing: Option<(u16, u8)>,
     pub hands: [u8; 2],
     pub health: f32,
     pub stamina: f32,
@@ -87,6 +88,9 @@ impl Snapshot {
         }
         for (slot, fighter) in self.fighters.iter().enumerate() {
             if fighter.consciousness > 3
+                || fighter.landing.is_some_and(|(tick, impulse)| {
+                    tick == 0 || u32::from(tick) > self.arena_tick || impulse == 0
+                })
                 || ![fighter.health, fighter.stamina]
                     .into_iter()
                     .all(|v| (0.0..=100.).contains(&v))

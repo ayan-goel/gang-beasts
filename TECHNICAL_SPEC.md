@@ -1182,6 +1182,8 @@ Skyline’s [hazard audio](docs/slices/17c-hazard-audio.md) uses four original s
 
 Skyline plays an original short strike thud for an observed health loss of at least one point while the defender remains active. The local physics world or the server owns that health change. The sound follows the defender’s rendered pelvis in the current view. Simultaneous contacts share one impact voice, with a 120 ms cooldown per defender. Hazard and consciousness announcements take priority. [Strike feedback](docs/slices/17e-strike-audio.md)
 
+Skyline plays a camera-relative [landing thump](docs/slices/17g-landing-audio.md) when the pelvis descends at least 1.5 m/s and the completed solve produces 12 N·s or more upward impulse against fixed walkable surfaces. One fighter can emit this cue once per 15 ticks. Private matches deliver its round-local tick and capped impulse in the opt-in compact gameplay block.
+
 Skyline gives a confirmed hand contact a short catch sound, a sustained hold a creak when stamina crosses 25, and a release a lighter upward sound. Local and private matches pan these cues toward the holder and share a single grip voice. [Grip feedback and measured levels](docs/slices/17f-grip-audio.md)
 
 Provide master, music and effects sliders, mute and persistence of settings. Full game adds adaptive music and refined occlusion. Visual warning alternatives must remain available for players who mute sound.

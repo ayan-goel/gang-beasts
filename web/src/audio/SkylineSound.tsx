@@ -1,3 +1,4 @@
+import { playLanding } from './landingSound';
 import { playGrip } from './gripSound';
 import type { GripAudioState } from './gripCues';
 import { playImpact, type ImpactSource } from './impactSound';
@@ -28,7 +29,9 @@ class SoundOutput {
   play(cues: Cues) {
     if (this.muted || this.context?.state !== 'running' || document.hidden) return;
     if (cues.warning || cues.condition || cues.impact) this.voices.impact?.();
-    this.voices.grip?.();
+    this.voices.landing?.();
+    if (cues.landing) this.voices.landing = playLanding(this.context, cues.landing);
+    else this.voices.grip?.();
     if (cues.grip) this.voices.grip = playGrip(this.context, cues.grip);
     if (cues.impact) this.voices.impact = playImpact(this.context, cues.impact);
     for (const category of ['warning','condition'] as const) {
@@ -101,6 +104,6 @@ export function useMatchSound(match: MatchView | undefined, active: boolean, pha
       return;
     }
     const cues = cursor.current.observe(match.epoch, match.hazard, phases, performance.now(), audio?.impacts, audio);
-    if (cues.warning || cues.condition || cues.impact || cues.grip) output?.play(cues);
+    if (cues.warning || cues.condition || cues.impact || cues.grip || cues.landing) output?.play(cues);
   }, [match, active, output, phases, audio]);
 }
