@@ -9,6 +9,10 @@ test('Coral can grab a rooftop crate with the keyboard and release it during a l
   await page.keyboard.down('KeyJ');
   await page.keyboard.down('KeyK');
   await expect(grips).toContainText('crate', { timeout: 12000 });
+  const stamina = page.getByRole('meter', { name: 'Coral stamina' });
+  await expect(stamina).toBeVisible();
+  await expect.poll(async () => Number(await stamina.getAttribute('value'))).toBeLessThan(99);
+  await expect(page.getByRole('meter', { name: 'Blue stamina' })).toHaveCount(0);
   await page.keyboard.up('KeyS');
   await page.keyboard.down('KeyE');
   await expect(grips).toContainText('crate');
@@ -16,6 +20,7 @@ test('Coral can grab a rooftop crate with the keyboard and release it during a l
   await page.keyboard.up('KeyK');
   await page.keyboard.up('KeyE');
   await expect(grips).toHaveCount(0);
+  await expect(stamina).toHaveCount(0, {timeout: 12000});
 });
 
 test('a player catches the roof when the west walkway falls, then releases to a ring-out', async ({ page }) => {

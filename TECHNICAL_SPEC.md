@@ -654,6 +654,8 @@ Local and online Skyline identify each attached hand and its target. Private mat
 | No-grip regeneration | 18 points/s |
 | Additional load/climb drain | Configurable, nonnegative and bounded |
 
+During play, the scoreboard shows the fighter’s stamina while a hand is attached or the stamina pool is refilling. At 25 points or less it displays “Low stamina.” Local Skyline reads the simulation directly. Private rooms use the same authoritative snapshot as the grip notices. [Stamina feedback](docs/slices/09f-stamina-feedback.md)
+
 A baseline load term can be `load_rate × max(0, measured_load/reference_load − 1)`, summed or capped by documented policy. Base drain always applies while gripping, including when grounded. Repeated grab/release does not bypass drain or reset accumulated overload.
 
 A grip breaks at zero stamina, excessive sustained load, owner knockout, invalid target or explicit release. Load units must be explicit: a solver impulse in N·s divided by its corresponding interval gives an average force in N; angular impulse needs separate handling. Aggregate substeps correctly, smooth short spikes and require a short overload window to avoid frame-dependent breakage.

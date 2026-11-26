@@ -11,7 +11,7 @@ import type { MatchFeed } from './MatchFeed';
 const colors = ['#f38e66','#64b7dd','#e8bd59','#7dd3b1','#bd9ae6','#e69eb9','#bbd17e','#a7b4c9'];
 const phases = ['countdown','playing','round_results','match_results'] as const;
 
-type RemoteMatch = MatchView & {conditions: FighterPhase[]; gripTargets: [number,number][]};
+type RemoteMatch = MatchView & {conditions: FighterPhase[]; gripTargets: [number,number][]; stamina: number[]};
 
 export function matchView(frame: Snapshot, content: SkylineContent): RemoteMatch {
   const t = frame.arenaTick;
@@ -19,6 +19,7 @@ export function matchView(frame: Snapshot, content: SkylineContent): RemoteMatch
   return {phase: phases[frame.phase]!, round: frame.number, epoch: String(frame.round), remaining: frame.remaining,
     scores: frame.fighters.map(f => f.score), winner: frame.winner,
     gripTargets: frame.fighters.map(f => f.grips),
+    stamina: frame.fighters.map(f => f.stamina),
     conditions: frame.fighters.map(f => fighterPhases[f.consciousness]!),
     visible: frame.fighters.map(f => f.consciousness !== 3),
     timeLeft: Math.max(0, (t < s.gust_tick ? s.gust_tick : s.end_tick) - t),

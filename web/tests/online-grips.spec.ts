@@ -6,6 +6,10 @@ import { approachOpponent, gripMatch } from './support/gripMatch';
 
 const rig: RigDefinition = JSON.parse(readFileSync(new URL('../../config/character.json',import.meta.url),'utf8'));
 
+// Both renderers share one host. Software rendering during guest reload can starve
+// the owner's input past the server's 250 ms stale-input deadline.
+if (process.platform === 'darwin') test.use({launchOptions: {args: ['--use-gl=angle', '--use-angle=metal']}});
+
 function observeHands(page: Page, hand: 0 | 1) {
   const record = {target:0, struckWhileHolding:false, released:false};
   page.on('websocket', socket => socket.on('framereceived', ({payload}) => {

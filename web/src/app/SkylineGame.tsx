@@ -1,4 +1,5 @@
 import { GripNotices } from './GripNotices';
+import { StaminaMeter } from './StaminaMeter';
 import { FighterNotices } from './FighterNotices';
 import { MuteButton, useMatchSound } from '../audio/SkylineSound';
 import { useEffect, useRef, useState } from 'react';
@@ -60,7 +61,11 @@ export function SkylineGame() {
         <div className="scene-canvas" ref={viewport} />
         {match && <div className="match-hud">
           <div className="match-round"><span aria-label="Round number">Round {match.round}</span><strong>{Math.floor(clock / 60)}:{String(clock % 60).padStart(2, '0')}</strong></div>
-          <div className="match-score">{names.map((name, id) => <span key={name}><i className={`dot ${name.toLowerCase()}`} />{name}<b aria-label={`${name} score`}>{match.scores[id]}</b></span>)}</div>
+          <div className="match-score">{names.map((name, id) => <div key={name}>
+            <span className="fighter-score"><i className={`dot ${name.toLowerCase()}`} />{name}<b aria-label={`${name} score`}>{match.scores[id]}</b></span>
+            {!menu && match.phase === 'playing' && state && match.visible[id] &&
+              <StaminaMeter name={name} points={state.stamina[id]!} holding={state.grips[id]!.length > 0} />}
+          </div>)}</div>
           {!menu && <button className="match-pause" onClick={() => runtime.current?.toggle()}>Pause</button>}
         </div>}
         <span className="visually-hidden" aria-label="Round phase">{match && phases[match.phase]}</span>

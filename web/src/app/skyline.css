@@ -14,7 +14,7 @@
 .match-hud{position:absolute;top:1.2rem;left:1.2rem;right:1.2rem;display:flex;align-items:flex-start;gap:.45rem;pointer-events:none}
 .match-round,.match-score,.match-pause{padding:.6rem .9rem;border-radius:.16rem;background:#172d38ef;color:var(--paper);font-weight:700;font-size:.8rem}
 .match-round{display:flex;align-items:center;gap:.75rem}.match-round span{color:var(--gold)}.match-round strong,.match-score b{font-variant-numeric:tabular-nums}
-.match-score,.match-score span{display:flex;align-items:center;gap:.6rem}.match-score span+span{margin-left:.25rem;padding-left:.75rem;border-left:1px solid #809092}
+.match-score,.fighter-score{display:flex;align-items:center;gap:.6rem}.match-score{align-items:flex-start}.match-score>div+div{margin-left:.25rem;padding-left:.75rem;border-left:1px solid #809092}.match-score .fighter-stamina{margin-top:.3rem}
 .dot{width:.72rem;height:.72rem;display:inline-block;margin-right:.35rem;background:#f08b64;transform:rotate(45deg)}.dot.blue{background:#59b7e0;border-radius:50%}.match-score .dot{margin:0}
 .match-pause{margin-left:auto;width:auto;pointer-events:auto;border:1px solid #6f8287}
 .match-callout{position:absolute;top:18%;left:50%;transform:translateX(-50%);display:grid;gap:.5rem;justify-items:center;text-align:center;pointer-events:none}

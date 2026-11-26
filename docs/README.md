@@ -2,6 +2,7 @@
 
 [Technical specification](../TECHNICAL_SPEC.md) is the canonical product and architecture contract. These documents record implementation choices and evidence; they do not redefine acceptance.
 
+- [Stamina feedback](slices/09f-stamina-feedback.md) covers the local and online meters, grip exhaustion and recovery.
 - [Online hand actions](slices/09e-online-hand-actions.md) covers grip targets, free-hand strikes and reconnect verification.
 - [Knockout and recovery feedback](slices/17d-fighter-condition.md) covers named fighter notices, both condition cues and the two-client combat fixture.
 - [Skyline hazard audio](slices/17c-hazard-audio.md) records the four original warnings, the mute control and the online reconnect behavior.
