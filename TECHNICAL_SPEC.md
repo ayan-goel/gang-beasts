@@ -938,7 +938,7 @@ Reusable estimator: `B = (15P + E) × record_bytes × snapshot_rate × changed_f
 
 ### 17.7 Interpolation
 
-Maintain snapshots keyed by round epoch and server tick. Render at estimated server time minus a **67–100 ms initial interpolation delay**. Interpolate positions linearly and orientations with shortest-path SLERP. Use consistent time for all limbs so a character does not tear apart across mixed ticks.
+Maintain snapshots keyed by round epoch and server tick. Start private matches with an **83 ms interpolation delay**. After 16 accepted snapshots, size the buffer to the observed arrival gaps within **42–100 ms**, with a shared clock for the whole scene. [Presentation clock and measurements](docs/slices/15i-snapshot-clock.md) Interpolate positions linearly and orientations with shortest-path SLERP. Use consistent time for all limbs so a character does not tear apart across mixed ticks.
 
 The [initial browser implementation](docs/slices/15c-interpolation.md) uses one delayed tick for every limb and arena object and checks bounded extrapolation, stall recovery and epoch discontinuities. Adapt buffering to measured jitter with bounded changes. On missing future state, extrapolate for a short capped interval (initial candidate 100 ms), then freeze/fade appropriately and show connection status. Do not allow indefinite extrapolation. Spawn, deletion, teleport/reset and round boundaries are discontinuities, not poses to blend through.
 
@@ -954,7 +954,7 @@ The [initial browser implementation](docs/slices/15c-interpolation.md) uses one 
 
 Interpolation-only controls may incur one-way input delay, simulation scheduling and interpolation buffering before visible response. At 60 ms RTT, 67–100 ms buffer and one tick of scheduling, visible response can exceed 100 ms even before render delay. This is a planning estimate, not a measured latency result. If friend playtests find it sluggish, responsiveness work is required before declaring the MVP complete.
 
-The private client can expedite one jump press per fresh snapshot. This retains server-authoritative takeoff and mantle decisions. The [regional jump benchmark](docs/slices/15h-jump-feedback.md) measures the rendered response from a standing start.
+The private client can expedite one jump press per fresh snapshot. This retains server-authoritative takeoff and mantle decisions. The [regional jump benchmark](docs/slices/15h-jump-feedback.md) measures the rendered response from a standing start. The [revised shared clock](docs/slices/15i-snapshot-clock.md#production-results) reached 130.5 ms and 147.4 ms p95 in two production runs of 20 fresh matches each.
 
 A grabbed opponent, stacked prop or contact chain couples local and remote dynamics. Replaying only the local pelvis is invalid. Prediction checkpoints need velocities, controller state, timers, grips, RNG and relevant solver/world state, not just transforms. Expand islands when new contacts occur; when the necessary state is unavailable, fall back safely to authority.
 

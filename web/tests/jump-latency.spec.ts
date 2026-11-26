@@ -5,6 +5,7 @@ import { gripMatch } from './support/gripMatch';
 import { observeLocalJumpDraws, type JumpDraw } from './support/jumpDraw';
 import { measureLink } from './support/measureLink';
 
+test.use({viewport:{width:1280,height:720}});
 if (process.platform === 'darwin') test.use({launchOptions:{args:['--use-gl=angle','--use-angle=metal']}});
 
 test('measure regional keydown to first drawn jump on the local fighter', async ({page,browser,baseURL}, info) => {
@@ -32,7 +33,13 @@ test('measure regional keydown to first drawn jump on the local fighter', async 
         roundTripsMs.push(...await readRtt());
       });
     }
-    expect(trials.every(j => j.sendMs !== undefined && j.riseMs !== undefined && j.sendMs < j.riseMs)).toBe(true);
+    expect(trials.every(j => j.sendMs !== undefined && j.riseMs !== undefined && j.confirmedRiseMs !== undefined &&
+      j.sendMs < j.confirmedRiseMs && j.confirmedRiseMs <= j.riseMs)).toBe(true);
+    if (process.env.BRAWLER_CHECK_REGIONAL_JUMP === '1') {
+      // Gate isolated release measurements. Shared CI hosts still verify every press, confirmation and draw.
+      const ordered = trials.map(j => j.riseMs!).sort((a,b) => a-b);
+      expect(ordered[Math.ceil(.95 * ordered.length) - 1]).toBeLessThanOrEqual(150);
+    }
   } finally {
     await info.attach('regional-jump-feedback',{body:JSON.stringify({roundTripsMs,trials}),contentType:'application/json'});
     await relay.close();

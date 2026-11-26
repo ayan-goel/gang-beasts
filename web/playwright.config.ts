@@ -3,6 +3,8 @@ import { defineConfig } from '@playwright/test';
 const tls = Boolean(process.env.BRAWLER_TLS_CERT && process.env.BRAWLER_TLS_KEY);
 const site = (tls ? 'https' : 'http') + '://127.0.0.1:5180';
 const server = 'http://127.0.0.1:5181';
+const webCommand = process.env.BRAWLER_CHECK_REGIONAL_JUMP === '1'
+  ? 'npm run build && npm run preview' : 'npm run dev';
 
 export default defineConfig({
   testDir: './tests',
@@ -18,7 +20,7 @@ export default defineConfig({
       timeout: 120_000,
     },
     {
-      command: 'npm run dev -- --port 5180 --strictPort',
+      command: webCommand + ' -- --port 5180 --strictPort',
       url: site,
       ignoreHTTPSErrors: tls,
       env: { BRAWLER_API_TARGET: server },

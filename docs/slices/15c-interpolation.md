@@ -2,6 +2,8 @@
 
 The renderer keeps up to 32 decoded full snapshots per match. A render frame selects one server tick for the entire scene. Fighter limbs and rooftop objects use linear position interpolation and shortest-path quaternion SLERP. The HUD and object visibility come from the earlier authoritative state until the next snapshot’s tick is reached. This keeps a retired walkway, knockout or point synchronized with the displayed scene.
 
+The original slice used the timing policy below. The [current presentation clock](15i-snapshot-clock.md) sizes the buffer from the observed delivery window.
+
 The initial render delay is five simulation ticks (83 ms). The estimated jitter is a running average of the difference between arrival spacing and authoritative tick spacing. The delay moves at most 0.08 ticks per accepted snapshot within four to six ticks (67–100 ms), tending toward four after sustained stable delivery. Presentation time cannot run backward when a delayed packet arrives. Ticks unwrap across u32 rollover. Duplicate, backward and stale-round records cannot move the display.
 
 ## Missing and discontinuous state

@@ -54,8 +54,9 @@ it('extrapolates briefly after loss then freezes, with bounded history, delay an
   const resume=frame(440,9);
   t.push(resume,440*dt);
   expect(pose(t,441*dt)![0]).toBeCloseTo(9);
+  expect(t.delayTicks).toBe(5);
   for(let i=442; i<=500; i+=2) t.push(frame(i,9), (i + (i%4 ? .9 : 0))*dt);
-  expect(t.delayTicks).toBeGreaterThanOrEqual(4);
+  expect(t.delayTicks).toBeGreaterThanOrEqual(3.4);
   expect(t.delayTicks).toBeLessThanOrEqual(6);
 });
 
@@ -77,7 +78,65 @@ it('keeps presentation time monotonic when a delayed record arrives and adapts i
   expect(pose(t,19*dt)![0]).toBeCloseTo(previous);
   for(let i=14;i<180;i+=2) t.push(frame(i,i/10),(i+7+(i%4 ? 1.9 : 0))*dt);
   expect(t.delayTicks).toBeCloseTo(6);
+  for(let i=180;i<320;i+=2) t.push(frame(i,i/10),(i+7+(i%4 ? 1.9 : 0))*dt);
+  expect(t.delayTicks).toBeCloseTo(4.4);
   expect(t.size).toBe(32);
-  for(let i=180;i<=400;i+=2) t.push(frame(i,i/10),(i+7)*dt);
-  expect(t.delayTicks).toBeCloseTo(4);
+  for(let i=320;i<=560;i+=2) t.push(frame(i,i/10),(i+7)*dt);
+  expect(t.delayTicks).toBeCloseTo(2.5);
+});
+
+it('presents smooth authoritative motion with a buffer sized to regular regional delivery', () => {
+  const timeline = new SnapshotTimeline();
+  const variation = [0, .3, -.3, .15];
+  let index = 0;
+  let last: number | undefined;
+  for (let now = 0; now <= 200; now += .5) {
+    while (index * 2 + 2 + variation[index % 4]! <= now) {
+      const tick = index * 2;
+      timeline.push(frame(tick,tick / 100), (tick + 2 + variation[index % 4]!) * dt);
+      index++;
+    }
+    if (now < 120) continue;
+    const sample = timeline.sample(now * dt)!;
+    expect(sample.status).toBe('live');
+    const x = pose(timeline,now * dt)![0]! * 100;
+    // At 30 Hz with 10 ms of arrival spread, all bodies can stay bracketed within 3.5 ticks of the fastest arrival.
+    expect(now - 1.7 - x).toBeLessThanOrEqual(3.5);
+    if (last !== undefined) expect(x - last).toBeCloseTo(.5,3);
+    last = x;
+  }
+});
+
+it('allows for skipped publications even if the packets that arrive are exactly on time', () => {
+  const timeline = new SnapshotTimeline();
+  for (let tick=0; tick<200; tick+=2) {
+    if (tick % 12 === 8 || tick % 12 === 10) continue;
+    timeline.push(frame(tick,tick/100),tick*dt);
+    if (tick > 120 && tick % 12 === 6) {
+      expect(timeline.sample((tick+5.9)*dt)!.status).toBe('live');
+    }
+  }
+});
+
+it('caps buffering on repeatedly delayed publications and starts a new clock after a silence', () => {
+  const timeline = new SnapshotTimeline();
+  for (let tick = 0; tick <= 240; tick += 8) timeline.push(frame(tick, 0), tick * dt);
+  expect(timeline.delayTicks).toBe(6);
+  const frozen = timeline.sample(270 * dt)!;
+  expect(frozen.status).toBe('stalled');
+  const received = 285 * dt;
+  timeline.push(frame(272, .5), received);
+  expect(timeline.size).toBe(1);
+  expect(timeline.delayTicks).toBe(5);
+  expect(pose(timeline, received)![0]).toBeCloseTo(.5);
+});
+
+it('retains enough history while the shared clock adjusts to a slower route', () => {
+  const timeline = new SnapshotTimeline();
+  for (let tick = 0; tick <= 300; tick += 2) {
+    const arrival = tick + (tick >= 160 ? 4 : 0);
+    timeline.push(frame(tick,tick / 100), arrival * dt);
+    // The slower path is now steady, but its clock origin still takes time to converge.
+    if (tick >= 250) expect(timeline.sample((arrival + 1.95) * dt)!.status).toBe('live');
+  }
 });

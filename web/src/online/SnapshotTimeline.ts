@@ -32,8 +32,7 @@ function discontinuities(previous: Snapshot, next: Snapshot, spacing: number) {
 export class SnapshotTimeline {
   private entries: Entry[] = [];
   private rendered = 0;
-  private deviation = 0;
-  private observations = 0;
+  private clockOriginMs = 0;
   delayTicks = 5;
   get size() { return this.entries.length; }
 
@@ -45,24 +44,36 @@ export class SnapshotTimeline {
     if (!last || last.frame.round !== frame.round || spacing > 12 || received - last.received > 250) {
       this.entries = [{frame, received, at, cuts: new Set()}];
       this.rendered = at;
-      this.deviation = this.observations = 0;
+      this.clockOriginMs = received - at * tickMs;
       this.delayTicks = 5;
       return true;
     }
-    const unexpected = Math.abs((received - last.received) / tickMs - spacing);
-    this.deviation += (unexpected - this.deviation) / 8;
-    this.observations++;
-    const target = Math.min(6, (this.observations < 60 ? 5 : 4) + 2 * this.deviation);
-    this.delayTicks += Math.max(-.08, Math.min(.08, target - this.delayTicks));
     this.entries.push({frame, at, received, cuts: discontinuities(last.frame, frame, spacing)});
     if (this.entries.length > 32) this.entries.shift();
+    this.updateClock();
     return true;
+  }
+
+  private updateClock() {
+    let earliestOriginMs = Infinity, latestGapEndMs = -Infinity;
+    for (const [i, entry] of this.entries.entries()) {
+      earliestOriginMs = Math.min(earliestOriginMs, entry.received - entry.at * tickMs);
+      // Until this publication arrived the preceding pose was the newest endpoint available to draw.
+      if (i) latestGapEndMs = Math.max(latestGapEndMs, entry.received - this.entries[i-1]!.at * tickMs);
+    }
+    const correction = Math.max(-.1 * tickMs, Math.min(.1 * tickMs, earliestOriginMs - this.clockOriginMs));
+    this.clockOriginMs += correction;
+    if (this.entries.length < 16) return;
+    // While a slower route moves the reference forward, the current clock still needs the extra buffered time.
+    const coverage = (latestGapEndMs - Math.min(this.clockOriginMs, earliestOriginMs)) / tickMs;
+    const target = Math.min(6, Math.max(2.5, coverage + .5));
+    this.delayTicks += Math.max(-.08, Math.min(.08, target - this.delayTicks));
   }
 
   sample(now: number): PoseSample | null {
     const last = this.entries.at(-1);
     if (!last) return null;
-    const requested = last.at + Math.max(0, now - last.received) / tickMs - this.delayTicks;
+    const requested = (now - this.clockOriginMs) / tickMs - this.delayTicks;
     const target = this.rendered = Math.max(this.rendered, Math.min(last.at + maxPrediction, requested));
     let from = this.entries[0]!, to = from;
     let predicted = false;

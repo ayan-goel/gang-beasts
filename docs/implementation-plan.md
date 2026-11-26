@@ -79,6 +79,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 15 | Two-to-eight online clients | Interpolation, resync, backpressure and latency matrix |
 | [15g — private-match latency](slices/15g-match-latency.md) | Measure match-socket RTT and indicate sustained delay | Impair one player at 20, 60, 100 and 200 ms and verify warning and recovery on the same connection |
 | [15h — jump feedback](slices/15h-jump-feedback.md) | Send the first jump edge without waiting for the next snapshot | Compare key-to-send and key-to-draw delay in independent regional-profile starts |
+| [15i — snapshot presentation clock](slices/15i-snapshot-clock.md) | Size the shared render buffer from authoritative snapshot arrivals | Measure confirmed takeoff against the drawn response and test jitter, missing updates and stalls |
 | 16a — verified private admission | Anonymous secure cookies, create/join and room metadata | Scoped retry, eight distinct seats, ninth rejected, real Chromium cookie isolation |
 | 16b — browser lobby | Create, join, copy invite, reload and leave | Separate browser sessions, host transfer, narrow viewport and switching rooms from an invite |
 | 16c — authenticated ready controls | Connect, welcome, roster changes and per-seat readiness | Toggle, cancel, disconnect, socket replacement, explicit reconnect and stale-seat fencing |

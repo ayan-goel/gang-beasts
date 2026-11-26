@@ -18,6 +18,6 @@ On macOS 26.6.2, two Chromium 159.0.8154.6 clients used ANGLE Metal on an Apple 
 | Keydown to first drawn rise | 163.3 ms | 146.2 ms | 196.6 ms | 162.8 ms |
 | Match socket round trip | 66.8 ms | 67.0 ms | 76.6 ms | 76.9 ms |
 
-The measured jump p95 remains 12.8 ms above the §29.2 target of 150 ms. The socket send now accounts for less than 1 ms at p95. Work on the remaining delay should measure server scheduling, snapshot publication and presentation before changing the interpolation policy. Human acceptance remains open.
+The measured jump p95 remains 12.8 ms above the §29.2 target of 150 ms. The socket send now accounts for less than 1 ms at p95. Work on the remaining delay should measure server scheduling, snapshot publication and presentation before changing the interpolation policy. The [follow-up presentation-clock measurements](15i-snapshot-clock.md) separate authoritative confirmation from drawing. Human acceptance remains open.
 
 In a separate two-player regression, both clients saw the host catch the roof after the west walkway collapsed and use Space to pull back onto the deck. The private reconnect and four graphics-recovery scenarios also passed with the expedited input path.

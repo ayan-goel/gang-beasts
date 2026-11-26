@@ -3,6 +3,7 @@
 [Technical specification](../TECHNICAL_SPEC.md) is the canonical product and architecture contract. These documents record implementation choices and evidence; they do not redefine acceptance.
 
 - [Snapshot delivery](slices/19c-snapshot-delivery.md) covers worker notifications, slow readers and measured eight-client cadence.
+- [Snapshot presentation clock](slices/15i-snapshot-clock.md) explains how delivery timing sets the render buffer.
 - [Regional jump feedback](slices/15h-jump-feedback.md) measures keydown to the first visible rise of the local fighter.
 - [Private-match latency](slices/15g-match-latency.md) records round-trip measurements and when players see a delay warning.
 - [Graphics recovery](slices/19g-graphics-recovery.md) covers a lost GPU context, startup failures and cross-browser HTTPS testing.

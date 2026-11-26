@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import type { SkinnedMesh } from 'three';
 
-export type JumpDraw = { keyMs: number; riseMs?: number; sendMs?: number; startY: number; riseY?: number };
+export type JumpDraw = { keyMs: number; riseMs?: number; sendMs?: number; confirmedRiseMs?: number; startY: number; riseY?: number };
 declare global {
   interface Window {
     jumpDraws: JumpDraw[];
@@ -37,10 +37,32 @@ export async function observeLocalJumpDraws(page: Page) {
       window.jumpDraws.push(active);
       window.readyForJump = false;
     },true);
+    let sequence: number | undefined;
+    let lastServerY: number | undefined, startServerY: number | undefined;
+    const tracked = new WeakSet<WebSocket>();
+    function snapshot(event: MessageEvent) {
+      if (!(event.data instanceof ArrayBuffer) || event.data.byteLength < 112) return;
+      const view = new DataView(event.data);
+      if (view.getUint8(0) !== 2) return;
+      const flags = view.getUint16(2,true);
+      // The host owns slot zero. Its pelvis is the third body in both full snapshot layouts.
+      const pelvisAt = 20 + 2 * (flags & 4 ? 23 : 32);
+      if (view.getUint32(pelvisAt,true) !== 3) return;
+      lastServerY = view.getFloat32(pelvisAt + 8,true);
+      if (active && active.confirmedRiseMs === undefined && sequence !== undefined && startServerY !== undefined &&
+          flags & 2 && ((view.getUint32(8,true) - sequence) >>> 0) < 0x80000000 && lastServerY >= startServerY + .03) {
+        active.confirmedRiseMs = performance.now() - active.keyMs;
+      }
+    }
     const send = WebSocket.prototype.send;
     WebSocket.prototype.send = function(data) {
+      if (!tracked.has(this)) { this.addEventListener('message',snapshot); tracked.add(this); }
       if (active && active.sendMs === undefined && data instanceof Uint8Array && data.length === 18 &&
-          data[0] === 1 && (data[14]! & 1)) active.sendMs = performance.now() - active.keyMs;
+          data[0] === 1 && (data[14]! & 1)) {
+        active.sendMs = performance.now() - active.keyMs;
+        startServerY = lastServerY;
+        sequence = new DataView(data.buffer,data.byteOffset).getUint32(2,true);
+      }
       send.call(this,data);
     };
   });
