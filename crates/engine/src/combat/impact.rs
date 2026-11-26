@@ -27,7 +27,13 @@ impl ImpactTuning {
         }
         Ok(config)
     }
-    pub fn evaluate(&self, closing: f32, masses: [f32; 2], region: BodyPart) -> Option<(f32, f32)> {
+    pub fn evaluate(
+        &self,
+        closing: f32,
+        masses: [f32; 2],
+        region: BodyPart,
+        scale: f32,
+    ) -> Option<(f32, f32)> {
         if closing < self.minimum_closing_speed_m_s {
             return None;
         }
@@ -45,7 +51,7 @@ impl ImpactTuning {
             | BodyPart::RightHand => 0.4,
             _ => 0.5,
         };
-        let damage = ((energy - self.threshold_j) * self.points_per_joule * multiplier)
+        let damage = ((energy - self.threshold_j) * self.points_per_joule * multiplier * scale)
             .min(self.maximum_damage);
         (damage > 0.0).then_some((energy, damage))
     }
@@ -93,24 +99,33 @@ mod tests {
         let closing = velocity.dot(&-Vector::z());
         assert_eq!(closing, 1.);
         let tuning = ImpactTuning::bundled().unwrap();
-        let (energy, damage) = tuning.evaluate(closing, [1., 3.], BodyPart::Chest).unwrap();
+        let (energy, damage) = tuning
+            .evaluate(closing, [1., 3.], BodyPart::Chest, 1.)
+            .unwrap();
         assert_eq!(energy, 0.375);
         assert!((damage - 0.875).abs() < 1e-5);
         assert_eq!(
             tuning
-                .evaluate(closing, [1., 3.], BodyPart::Head)
+                .evaluate(closing, [1., 3.], BodyPart::Head, 1.)
                 .unwrap()
                 .1,
             1.5 * damage
         );
         assert!(
             tuning
-                .evaluate(-closing, [1., 3.], BodyPart::Chest)
+                .evaluate(-closing, [1., 3.], BodyPart::Chest, 1.)
                 .is_none()
         );
-        assert!(tuning.evaluate(0.5, [1., 3.], BodyPart::Chest).is_none());
+        assert!(
+            tuning
+                .evaluate(0.5, [1., 3.], BodyPart::Chest, 1.)
+                .is_none()
+        );
         assert_eq!(
-            tuning.evaluate(100., [1., 3.], BodyPart::Head).unwrap().1,
+            tuning
+                .evaluate(100., [1., 3.], BodyPart::Head, 1.)
+                .unwrap()
+                .1,
             35.
         );
     }

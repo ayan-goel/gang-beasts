@@ -11,7 +11,7 @@ import type { RigDefinition } from './rigDefinition';
 
 type Player = 0 | 1;
 export interface DuelHit {
-  attacker: Player; defender: Player; hand: Player; region: string;
+  attacker: Player; defender: Player; hand: Player | null; action: 'punch' | 'headbutt'; region: string;
   damage: number; attackId: string; tick: string;
 }
 export interface FighterCondition {
@@ -68,6 +68,8 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     if (orbit) unbindOrbit = bindCameraOrbit(canvas, orbit, () => !paused);
     const playerInput = (id: Player) => new MovementInput({
       setInput: (x, z, run) => move(id, x, z, run),
+      setHeadbutt: held => duel.set_headbutt(id, held),
+      clearHeadbutt: () => duel.clear_headbutt(id),
       setLift: held => duel.set_lift(id, held),
       setJump: held => duel.set_jump(id, held),
       clearJumpInput: () => duel.clear_jump(id),

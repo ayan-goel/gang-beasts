@@ -14,6 +14,7 @@ use rapier3d::prelude::*;
 pub(super) enum Control<'a> {
     Active {
         pulling: bool,
+        stamina: &'a mut f32,
         lifting: [bool; 2],
         attached: [bool; 2],
         arena: Option<&'a crate::arena::Skyline>,
@@ -27,7 +28,8 @@ pub(super) struct Fighter {
     pub bodies: [RigidBodyHandle; 15],
     joints: [ImpulseJointHandle; 14],
     pub hands: Hands,
-    pub last_hit: [[u64; FighterId::ALL.len()]; 2],
+    pub last_hit: [[u64; FighterId::ALL.len()]; 3],
+    pub headbutt: super::headbutt::Headbutt,
     pub walking: WalkingController,
     motors: MotorConfig,
     balance: BalanceController,
@@ -64,6 +66,7 @@ impl Fighter {
             bodies,
             joints,
             hands: Hands::new()?,
+            headbutt: super::headbutt::Headbutt::new()?,
             last_hit: Default::default(),
             walking: WalkingController::new(LocomotionConfig::bundled()?),
             motors: MotorConfig::standing()?,
@@ -100,13 +103,14 @@ impl Fighter {
             parts: self.parts(definition, physics, tick),
             world,
         };
-        let (pulling, lifting, attached, arena) = match control {
+        let (pulling, lifting, attached, arena, stamina) = match control {
             Control::Active {
                 pulling,
                 lifting,
                 attached,
                 arena,
-            } => (pulling, lifting, attached, arena),
+                stamina,
+            } => (pulling, lifting, attached, arena, stamina),
             Control::Incapacitated { effort } => {
                 // Only internal pose motors wake during the ramp. Ground assistance
                 // and player actions resume after the timed transition completes.
@@ -127,6 +131,17 @@ impl Fighter {
             &mut self.hands,
             true,
         );
+        if self.walking.state.recovery_strength == 0. && !pulling {
+            self.headbutt.drive(
+                definition,
+                &mut self.motors,
+                &mut targets,
+                stamina,
+                &mut self.hands,
+            );
+        } else {
+            self.headbutt.cancel();
+        }
         if let Some(map) = arena {
             super::ledge_reach::aim(&mut rig, map, &self.hands, attached, &mut self.motors);
             super::prop_reach::aim(rig.read(), map, &self.hands, &mut targets);

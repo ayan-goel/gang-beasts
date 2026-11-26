@@ -39,11 +39,11 @@ test('native and WASM agree on both rigs, reciprocal grips and hit events at eac
         try { duel.set_hand(...args); } catch { rejected++; }
       }
       const frames: number[][][] = [];
-      const hits: (string | number)[][] = [];
+      const hits: (string | number | null)[][] = [];
       const stamina: number[][] = [];
       const grips: (number | null)[][][] = [];
       const saved = duel.body_states(0);
-      for (let tick = 0; tick <= 375; tick++) {
+      for (let tick = 0; tick <= 480; tick++) {
         if (tick === 61) for (const id of [0, 1]) {
           duel.set_hand(id, 0, true);
           duel.set_hand(id, 0, false);
@@ -74,6 +74,13 @@ test('native and WASM agree on both rigs, reciprocal grips and hit events at eac
           duel.clear_hands(0);
           duel.set_lift(0, false);
         }
+        if (tick === 376) duel.reset();
+        if (tick === 436) duel.set_input(0,-1,-1,false);
+        if (tick === 444) {
+          duel.set_input(0,0,0,false);
+          duel.set_headbutt(0,true);
+          duel.set_headbutt(0,false);
+        }
         if (tick) duel.step();
         stamina.push([duel.stamina(0), duel.stamina(1)]);
         grips.push([0, 1].map(id => [0, 1].map(hand => duel.grip_region(id, hand) ?? null)));
@@ -86,9 +93,9 @@ test('native and WASM agree on both rigs, reciprocal grips and hit events at eac
     } finally { duel.free(); }
   });
   const { execFileSync } = await import('node:child_process');
-  const native: { stamina: number[][]; grips: (number | null)[][][]; frames: number[][][]; hits: (string | number)[][] } = JSON.parse(execFileSync('cargo',
+  const native: { stamina: number[][]; grips: (number | null)[][][]; frames: number[][][]; hits: (string | number | null)[][] } = JSON.parse(execFileSync('cargo',
     ['run', '--release', '--quiet', '--locked', '-p', 'brawler-engine', '--example', 'duel_trace'],
-    { cwd: '..', encoding: 'utf8', maxBuffer: 4*1024*1024 }));
+    { cwd: '..', encoding: 'utf8', maxBuffer: 8*1024*1024 }));
   expect(result.rejected).toBe(3);
   expect(result.saved).toEqual(result.frames[0]![0]);
   expect(result.grips).toEqual(native.grips);
@@ -106,6 +113,7 @@ test('native and WASM agree on both rigs, reciprocal grips and hit events at eac
   expect(Math.max(...result.frames.slice(323, 344).map(frame => frame[1]![pelvisY]!)))
     .toBeGreaterThan(result.frames[322]![1]![pelvisY]! + 0.08);
   expect(result.frames[346]![1]![pelvisY]!).toBeGreaterThan(result.frames[343]![1]![pelvisY]! + 0.02);
+  expect(result.hits.filter(hit => hit[4] === null).map(hit => hit.slice(0,6))).toEqual([['86',0,1,'1',null,'head']]);
   expect(result.hits.length).toBeGreaterThanOrEqual(2);
   expect(result.hits).toHaveLength(native.hits.length);
   for (const [i, hit] of result.hits.entries()) {
@@ -113,7 +121,8 @@ test('native and WASM agree on both rigs, reciprocal grips and hit events at eac
     for (let j = 6; j < 9; j++) expect(hit[j]).toBeCloseTo(Number(native.hits[i]![j]), 5);
   }
   let maxDifference = 0;
-  expect(native.frames).toHaveLength(376);
+  expect(native.frames).toHaveLength(481);
+  expect(result.frames).toHaveLength(native.frames.length);
   for (const [tick, fighters] of native.frames.entries()) {
     for (const [id, body] of fighters.entries()) {
       const frame = result.frames[tick]![id]!;

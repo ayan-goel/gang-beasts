@@ -15,9 +15,15 @@ fn a_held_punch_scores_once_per_target_and_belongs_to_the_attacking_fighter() {
             for hit in duel.hits() {
                 assert_eq!(hit.attacker, who);
                 assert_eq!(hit.defender, who.opponent());
-                assert_eq!(hit.hand, Hand::Left);
-                assert_eq!(duel.hand_state(who, hit.hand).phase, HandPhase::Strike);
-                assert_eq!(hit.attack_id, duel.hand_state(who, hit.hand).attack_id);
+                assert_eq!(hit.source.hand(), Some(Hand::Left));
+                assert_eq!(
+                    duel.hand_state(who, hit.source.hand().unwrap()).phase,
+                    HandPhase::Strike
+                );
+                assert_eq!(
+                    hit.attack_id,
+                    duel.hand_state(who, hit.source.hand().unwrap()).attack_id
+                );
                 assert_eq!(hit.tick, duel.tick());
                 assert!(hit.damage > 0.0 && hit.damage <= 35.0);
                 assert!(hit.closing_speed > 0.5 && hit.energy_j > 0.2);

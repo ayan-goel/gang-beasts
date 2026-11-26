@@ -44,8 +44,8 @@ export function SkylineGame() {
           <h1>{complete ? winner : started ? 'Game paused' : 'Skyline Melee'}</h1>
           <p>Stay on the rooftop. The last fighter standing takes the round. First to three wins.</p></div>
         <div className="skyline-bindings">
-          <h2><i className="dot coral" />Coral</h2><p>WASD move · Left Shift run · Space jump / pull up<br />J / K punch or grab · E lift</p>
-          <h2><i className="dot blue" />Blue</h2><p>Arrows move · Right Shift run · Enter jump / pull up<br />Comma / period punch or grab · Slash lift</p>
+          <h2><i className="dot coral" />Coral</h2><p>WASD move · Left Shift run · Space jump / pull up<br />J / K punch or grab · E lift · Q headbutt</p>
+          <h2><i className="dot blue" />Blue</h2><p>Arrows move · Right Shift run · Enter jump / pull up<br />Comma / period punch or grab · Slash lift · M headbutt</p>
           <p>Hold a hand button to grab a fighter, crate, vent or roof edge. Release during a lift or swing to throw. While hanging, hold jump to pull up. Z / X turns the shared camera.</p>
         </div>
         <button className="skyline-start" disabled={!match} onClick={start}>{complete ? 'Rematch' : started ? 'Resume match' : 'Start match'} <span aria-hidden="true">→</span></button>

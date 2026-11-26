@@ -53,6 +53,9 @@ impl Grips {
         self.budgets[owner as usize].stamina
     }
 
+    pub fn stamina_mut(&mut self, owner: FighterId) -> &mut f32 {
+        &mut self.budgets[owner as usize].stamina
+    }
     pub fn mantle_tuning(&self) -> crate::combat::MantleTuning {
         self.tuning.mantle
     }

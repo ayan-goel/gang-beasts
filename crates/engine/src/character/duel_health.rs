@@ -23,6 +23,7 @@ impl Duel {
                 if next == Consciousness::KnockedOut {
                     self.clear_hands(id);
                     self.fighters[i].hands.clear();
+                    self.fighters[i].headbutt.cancel();
                     self.fighters[i].walking.reset();
                     self.lifting[i] = false;
                     self.pulls[i] = Default::default();

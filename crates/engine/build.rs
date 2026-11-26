@@ -27,6 +27,7 @@ fn main() {
         root.join("config/balance.json"),
         root.join("config/locomotion.json"),
         root.join("config/hands.json"),
+        root.join("config/headbutt.json"),
         root.join("config/grip.json"),
         root.join("assets/maps/skyline/map.json"),
         root.join("config/impact.json"),

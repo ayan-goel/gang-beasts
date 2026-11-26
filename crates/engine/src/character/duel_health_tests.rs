@@ -26,6 +26,7 @@ fn a_physical_hit_disables_motor_drive_and_actions_until_the_wake_ramp_finishes(
         .joints;
     d.set_input(victim, [1., 0.], true).unwrap();
     d.set_lift(victim, true);
+    d.set_headbutt(victim, true);
     d.set_jump(victim, true);
     d.set_hand(victim, Hand::Right, true);
     for _ in 0..180 {
@@ -68,6 +69,7 @@ fn a_physical_hit_disables_motor_drive_and_actions_until_the_wake_ramp_finishes(
         &[(victim, Consciousness::Active)]
     );
     assert!(!d.lifting[1]);
+    assert_eq!(d.fighters[1].headbutt.attack_id, 0);
     assert_eq!(d.hand_state(victim, Hand::Right).phase, HandPhase::Idle);
     d.set_hand(victim, Hand::Right, true);
     d.step();
@@ -94,7 +96,7 @@ fn losing_consciousness_releases_only_outgoing_grips_without_changing_body_state
         tick: d.tick,
         attacker: FighterId::First,
         defender: victim,
-        hand: Hand::Right,
+        source: crate::StrikeSource::Punch(Hand::Right),
         attack_id: 2,
         region: crate::BodyPart::Chest,
         closing_speed: 3.,

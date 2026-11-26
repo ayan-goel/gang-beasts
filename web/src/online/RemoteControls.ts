@@ -20,6 +20,7 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, c
     setJump: held => button('jump',held), clearJumpInput: () => button('jump',false),
     setHand: (side,held) => button(side === 0 ? 'leftHand' : 'rightHand',held),
     clearHands: () => { button('leftHand',false); button('rightHand',false); },
+    setHeadbutt: held => button('headbutt',held),
     setLift: held => button('lift',held),
   }, () => playing() && document.activeElement === canvas);
   const unbind = bindMovementInput(canvas,movement);

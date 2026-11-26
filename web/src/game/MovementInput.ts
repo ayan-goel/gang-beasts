@@ -13,7 +13,7 @@ export class MovementInput {
   private running = false;
   command: readonly [number, number, boolean] = [0,0,false];
   constructor(
-    private movement: Pick<MovementPort, 'setInput' | 'setJump' | 'clearJumpInput' | 'setHand' | 'clearHands'> & { setLift?(held: boolean): void },
+    private movement: Pick<MovementPort, 'setInput' | 'setJump' | 'clearJumpInput' | 'setHand' | 'clearHands'> & { setLift?(held: boolean): void; setHeadbutt?(held: boolean): void; clearHeadbutt?(): void },
     private allowed: () => boolean,
   ) {
     this.hands = new HandInput((side, held) => movement.setHand(side, held), () => movement.clearHands(), allowed);
@@ -27,9 +27,10 @@ export class MovementInput {
   setRun(run: boolean): void { this.running = run; this.publish(); }
   key(code: string, down: boolean, repeat = false): boolean {
     if (repeat) return this.keys.has(code);
-    if (code === 'KeyE') {
-      if (!this.movement.setLift || (down && !this.allowed())) return false;
-      if (down !== this.keys.has(code)) this.movement.setLift(down);
+    if (code === 'KeyE' || code === 'KeyQ') {
+      const action = code === 'KeyQ' ? this.movement.setHeadbutt : this.movement.setLift;
+      if (!action || (down && !this.allowed())) return false;
+      if (down !== this.keys.has(code)) action(down);
       if (down) this.keys.add(code); else this.keys.delete(code);
       return true;
     }
@@ -54,6 +55,7 @@ export class MovementInput {
   releasePointer(id: number): void { this.pointers.delete(id); this.publish(); }
   clear(): void {
     if (this.keys.has('KeyE')) this.movement.setLift?.(false);
+    this.movement.clearHeadbutt?.();
     this.keys.clear(); this.pointers.clear(); this.hands.clear();
     this.movement.clearJumpInput(); this.publish();
   }

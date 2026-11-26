@@ -18,6 +18,17 @@ impl Duel {
             .walking
             .set_input(direction, running)
     }
+    pub fn set_headbutt(&mut self, who: FighterId, held: bool) {
+        if !held
+            || (self.accepts_input(who)
+                && self.fighters[who as usize].walking.state.recovery_strength == 0.)
+        {
+            self.fighters[who as usize].headbutt.input(held);
+        }
+    }
+    pub fn clear_headbutt(&mut self, who: FighterId) {
+        self.fighters[who as usize].headbutt.clear_input();
+    }
     pub fn set_lift(&mut self, who: FighterId, held: bool) {
         self.lifting[who as usize] = held && self.accepts_input(who);
     }

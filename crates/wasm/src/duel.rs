@@ -70,6 +70,14 @@ impl LocalDuel {
             .set_input(fighter(who)?, [axis(x)?, axis(z)?], boolean(run)?)
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
+    pub fn set_headbutt(&mut self, who: JsValue, held: JsValue) -> Result<(), JsValue> {
+        self.duel.set_headbutt(fighter(who)?, boolean(held)?);
+        Ok(())
+    }
+    pub fn clear_headbutt(&mut self, who: JsValue) -> Result<(), JsValue> {
+        self.duel.clear_headbutt(fighter(who)?);
+        Ok(())
+    }
     pub fn set_lift(&mut self, who: JsValue, held: JsValue) -> Result<(), JsValue> {
         self.duel.set_lift(fighter(who)?, boolean(held)?);
         Ok(())
@@ -124,11 +132,18 @@ impl LocalDuel {
             return None;
         }
         // Local IDs and completed ticks remain exact beyond the JS integer range.
-        let records:Vec<_>=hits.iter().map(|h|json!({
-            "tick":h.tick.to_string(), "attackId":h.attack_id.to_string(),
-            "attacker":h.attacker as usize,"defender":h.defender as usize, "hand":h.hand as usize,
-            "region":h.region,"damage":h.damage,"energyJ":h.energy_j,"closingSpeed":h.closing_speed,
-        })).collect();
+        let records: Vec<_> = hits.iter().map(|h| {
+            let action = match h.source {
+                brawler_engine::StrikeSource::Headbutt => "headbutt",
+                brawler_engine::StrikeSource::Punch(_) => "punch",
+            };
+            json!({
+                "tick": h.tick.to_string(), "attackId": h.attack_id.to_string(),
+                "attacker": h.attacker as usize, "defender": h.defender as usize,
+                "action": action, "hand": h.source.hand().map(|side| side as usize),
+                "region": h.region, "damage": h.damage, "energyJ": h.energy_j, "closingSpeed": h.closing_speed,
+            })
+        }).collect();
         Some(serde_json::to_string(&records).expect("finite physical hit records"))
     }
 }

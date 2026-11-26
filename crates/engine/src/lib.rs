@@ -21,7 +21,9 @@ pub use character::{
     LocomotionRagdoll, LocomotionState, MotorConfig, PassiveRagdoll, PoseRagdoll, RagdollBodyState,
     RagdollJointState,
 };
-pub use character::{Duel, FighterId, GripState, LowStepConfig, RecoveryConfig, StrikeHit};
+pub use character::{
+    Duel, FighterId, GripState, LowStepConfig, RecoveryConfig, StrikeHit, StrikeSource,
+};
 pub use config::{ConfigError, PhysicsConfig};
 pub use fixture::{CommandError, FixtureState};
 pub use recording::{ENGINE_HASH, FixtureRecording, RecordingError};

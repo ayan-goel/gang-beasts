@@ -6,12 +6,45 @@ use crate::{
 };
 use rapier3d::prelude::*;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StrikeSource {
+    Punch(Hand),
+    Headbutt,
+}
+
+impl StrikeSource {
+    const ALL: [Self; 3] = [
+        Self::Punch(Hand::Left),
+        Self::Punch(Hand::Right),
+        Self::Headbutt,
+    ];
+
+    fn active(self, fighter: &Fighter) -> Option<(BodyPart, u64, f32)> {
+        match self {
+            Self::Punch(side) => {
+                let state = fighter.hands.state(side);
+                (state.phase == HandPhase::Strike).then_some((side.body(), state.attack_id, 1.))
+            }
+            Self::Headbutt => fighter
+                .headbutt
+                .strike()
+                .map(|(id, scale)| (BodyPart::Head, id, scale)),
+        }
+    }
+    pub fn hand(self) -> Option<Hand> {
+        match self {
+            Self::Punch(side) => Some(side),
+            Self::Headbutt => None,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct StrikeHit {
     pub tick: u64,
     pub attacker: FighterId,
     pub defender: FighterId,
-    pub hand: Hand,
+    pub source: StrikeSource,
     pub attack_id: u64,
     pub region: BodyPart,
     pub closing_speed: f32,
@@ -23,11 +56,9 @@ pub(super) struct ContactFrame(Vec<[BodyMotion; 15]>);
 
 impl ContactFrame {
     pub fn capture(world: &PhysicsWorld, fighters: &[Fighter]) -> Option<Self> {
-        let striking = fighters.iter().any(|f| {
-            [Hand::Left, Hand::Right]
-                .into_iter()
-                .any(|h| f.hands.state(h).phase == HandPhase::Strike)
-        });
+        let striking = fighters
+            .iter()
+            .any(|f| StrikeSource::ALL.iter().any(|s| s.active(f).is_some()));
         striking.then(|| {
             Self(
                 fighters
@@ -47,23 +78,22 @@ impl ContactFrame {
         hits: &mut Vec<StrikeHit>,
     ) {
         for &attacker in &FighterId::ALL[..fighters.len()] {
-            for hand in [Hand::Left, Hand::Right] {
+            for (slot, source) in StrikeSource::ALL.into_iter().enumerate() {
                 let fighter = &fighters[attacker as usize];
-                let state = fighter.hands.state(hand);
-                if state.phase != HandPhase::Strike {
+                let Some((limb, attack_id, scale)) = source.active(fighter) else {
                     continue;
-                }
-                let fist = fighter.hand_collider(world, hand);
-                let punch = self.0[attacker as usize][hand.body().index()];
+                };
+                let collider = world.bodies[fighter.bodies[limb.index()]].colliders()[0];
+                let striker = self.0[attacker as usize][limb.index()];
                 let heading = self.0[attacker as usize][BodyPart::Chest.index()].forward();
                 let mut strongest: [Option<StrikeHit>; FighterId::ALL.len()] =
                     [None; FighterId::ALL.len()];
                 for pair in world
                     .narrow_phase
-                    .contact_pairs_with(fist)
+                    .contact_pairs_with(collider)
                     .filter(|p| p.has_any_active_contact)
                 {
-                    let first = pair.collider1 == fist;
+                    let first = pair.collider1 == collider;
                     let other = if first {
                         pair.collider2
                     } else {
@@ -76,16 +106,16 @@ impl ContactFrame {
                     else {
                         continue;
                     };
-                    if fighter.last_hit[hand as usize][defender as usize] == state.attack_id {
+                    if fighter.last_hit[slot][defender as usize] == attack_id {
                         continue;
                     }
                     let index = region.index();
                     let struck = self.0[defender as usize][index];
-                    let Some(speed) = closing_speed(pair, first, heading, punch, struck) else {
+                    let Some(speed) = closing_speed(pair, first, heading, striker, struck) else {
                         continue;
                     };
                     let Some((energy_j, damage)) =
-                        tuning.evaluate(speed, [punch.mass, struck.mass], region)
+                        tuning.evaluate(speed, [striker.mass, struck.mass], region, scale)
                     else {
                         continue;
                     };
@@ -97,8 +127,8 @@ impl ContactFrame {
                             tick,
                             attacker,
                             defender,
-                            hand,
-                            attack_id: state.attack_id,
+                            source,
+                            attack_id,
                             region,
                             closing_speed: speed,
                             energy_j,
@@ -107,8 +137,7 @@ impl ContactFrame {
                     }
                 }
                 for hit in strongest.into_iter().flatten() {
-                    fighters[attacker as usize].last_hit[hand as usize][hit.defender as usize] =
-                        state.attack_id;
+                    fighters[attacker as usize].last_hit[slot][hit.defender as usize] = attack_id;
                     hits.push(hit);
                 }
             }
@@ -118,14 +147,14 @@ impl ContactFrame {
 
 fn closing_speed(
     pair: &ContactPair,
-    fist_first: bool,
+    attacker_first: bool,
     heading: Vector<Real>,
-    fist: BodyMotion,
+    attacker: BodyMotion,
     target: BodyMotion,
 ) -> Option<Real> {
     let mut fastest: Option<Real> = None;
     for manifold in &pair.manifolds {
-        let normal = if fist_first {
+        let normal = if attacker_first {
             manifold.data.normal
         } else {
             -manifold.data.normal
@@ -136,12 +165,12 @@ fn closing_speed(
         for point in manifold.points.iter().filter(|p| p.data.impulse > 0.0) {
             // Each limb collider shares its body's local frame. Reconstruct both
             // point velocities before solve so the collision has not removed closing speed.
-            let (a, b) = if fist_first {
+            let (a, b) = if attacker_first {
                 (point.local_p1, point.local_p2)
             } else {
                 (point.local_p2, point.local_p1)
             };
-            let speed = (fist.point_velocity(a) - target.point_velocity(b)).dot(&normal);
+            let speed = (attacker.point_velocity(a) - target.point_velocity(b)).dot(&normal);
             fastest = Some(fastest.map_or(speed, |old| old.max(speed)));
         }
     }

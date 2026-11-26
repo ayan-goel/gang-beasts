@@ -163,6 +163,7 @@ impl Duel {
                         pulling,
                         lifting: attached.map(|held| held && self.lifting[id as usize] && !pulling),
                         attached,
+                        stamina: self.grips.stamina_mut(id),
                         arena: self.arena.as_ref(),
                     }
                 }
@@ -299,3 +300,7 @@ mod mantle_constraints;
 #[cfg(test)]
 #[path = "skyline_roster_tests.rs"]
 mod roster_tests;
+
+#[cfg(test)]
+#[path = "headbutt_tests.rs"]
+mod headbutt_tests;

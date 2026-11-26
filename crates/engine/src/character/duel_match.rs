@@ -79,6 +79,7 @@ impl Duel {
         self.vitals[i].phase = Consciousness::Eliminated;
         self.vitals[i].since_tick = self.tick;
         self.fighters[i].hands.clear();
+        self.fighters[i].headbutt.cancel();
         self.fighters[i].walking.reset();
         self.lifting[i] = false;
         for handle in self.fighters[i].bodies {

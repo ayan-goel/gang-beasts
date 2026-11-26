@@ -94,16 +94,20 @@ impl Hands {
         self.actions = Default::default();
     }
 
+    pub fn allocate_attack(&mut self) -> u64 {
+        let id = self.next_id;
+        self.next_id = id.checked_add(1).expect("attack ID space exhausted");
+        id
+    }
+
     pub fn advance(&mut self, hand: Hand) -> Option<[f32; 2]> {
+        let started = std::mem::take(&mut self.actions[hand as usize].pending)
+            .then(|| self.allocate_attack());
         let action = &mut self.actions[hand as usize];
         let tuning = &self.tuning;
-        if std::mem::take(&mut action.pending) {
+        if let Some(id) = started {
             action.age = 1;
-            action.state.attack_id = self.next_id;
-            self.next_id = self
-                .next_id
-                .checked_add(1)
-                .expect("attack ID space exhausted");
+            action.state.attack_id = id;
         } else if action.age != 0 && action.age < tuning.length() {
             action.age += 1;
         } else {

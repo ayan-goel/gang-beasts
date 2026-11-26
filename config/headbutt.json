@@ -1,0 +1,6 @@
+{
+  "windup_ticks": 6, "strike_ticks": 14, "recovery_ticks": 18,
+  "windup_pitch": [0.32, 0.20], "strike_pitch": [-0.50, -0.48],
+  "stiffness": [170, 260], "damping": [4, 7], "torque_cap_nm": [34, 80],
+  "stamina_cost": 6, "damage_scale": 1.0
+}

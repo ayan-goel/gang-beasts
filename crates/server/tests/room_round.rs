@@ -96,3 +96,18 @@ fn duplicate_heartbeats_cannot_keep_a_physical_grip_alive() {
     room.step();
     assert!(!holds_crate(&room));
 }
+
+#[test]
+fn a_headbutt_tap_reaches_only_its_owners_native_controller() {
+    let mut room = playing();
+    let bit = Button::Headbutt as u16;
+    let tap = InputFrame {
+        pressed: bit,
+        released: bit,
+        ..Default::default()
+    };
+    room.submit(CORAL, 1, &tap.encode().unwrap()).unwrap();
+    room.step();
+    assert!(room.game().stamina(CORAL) < 95.);
+    assert_eq!(room.game().stamina(FighterId::Second), 100.);
+}

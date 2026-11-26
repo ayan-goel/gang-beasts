@@ -67,3 +67,14 @@ test('lift is held independently and focus cleanup releases it', () => {
   input.clear();
   expect(port.setLift.mock.calls).toEqual([[true], [false]]);
 });
+
+test('delivers one headbutt press per key edge and cancels an unsampled tap on blur', () => {
+  const port = {setInput:vi.fn(),setJump:vi.fn(),clearJumpInput:vi.fn(),setHand:vi.fn(),clearHands:vi.fn(),setHeadbutt:vi.fn(),clearHeadbutt:vi.fn()};
+  const input = new MovementInput(port, () => true);
+  expect(input.key('KeyQ',true)).toBe(true);
+  input.key('KeyQ',true,true);
+  input.key('KeyQ',false);
+  input.clear();
+  expect(port.setHeadbutt.mock.calls).toEqual([[true],[false]]);
+  expect(port.clearHeadbutt).toHaveBeenCalledOnce();
+});
