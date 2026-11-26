@@ -31,8 +31,9 @@ test('stair terrain and every body frame survive reset and configuration replace
     const rig = LocalRagdoll.stairs(config);
     const replay = () => {
       const frames = [Array.from<number>(rig.body_states())];
-      for (let tick = 1; tick <= 210; tick++) {
+      for (let tick = 1; tick <= 480; tick++) {
         if (tick === 61) rig.set_movement(0, -1, false);
+        if (tick === 301) rig.set_movement(0, 0, false);
         rig.step();
         frames.push(Array.from<number>(rig.body_states()));
       }
@@ -56,9 +57,15 @@ test('stair terrain and every body frame survive reset and configuration replace
   tops.forEach((height, i) => expect(height).toBeCloseTo(i * 0.1, 6));
 
   const native: number[][] = JSON.parse(execFileSync('cargo', [
-    'run', '--quiet', '--locked', '--release', '-p', 'brawler-engine', '--example', 'stair_trace',
+    'run', '--quiet', '--locked', '--release', '-p', 'brawler-engine', '--example', 'stair_trace', '--', '--landing',
   ], { cwd: '..', encoding: 'utf8', maxBuffer: 4 * 1024 * 1024 }));
-  expect(native).toHaveLength(211);
+  expect(native).toHaveLength(481);
+  const pelvis = 2 * 14;
+  expect(observed.frames[210]![pelvis + 2]).toBeLessThan(-3);
+  const stopped = observed.frames[480]!;
+  expect(stopped[pelvis + 1]).toBeGreaterThan(0.85);
+  expect(Math.hypot(...stopped.slice(pelvis + 7, pelvis + 10))).toBeLessThan(0.2);
+  expect(Math.min(...observed.frames.map(frame => frame[1]!))).toBeGreaterThan(1.1);
   expect(observed.frames).toHaveLength(native.length);
   let largestDifference = 0;
   for (const [tick, frame] of native.entries()) {

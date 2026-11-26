@@ -3,11 +3,30 @@ use brawler_engine::{LocomotionConfig, LocomotionRagdoll, PhysicsConfig};
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rig =
         LocomotionRagdoll::stairs(PhysicsConfig::default(), LocomotionConfig::bundled()?)?;
-    let mut frames = Vec::with_capacity(211);
-    for tick in 0..=210 {
+    let mut args = std::env::args().skip(1);
+    let (settle, end_tick) = match args.next().as_deref() {
+        None => (60, 210),
+        Some("--landing") => {
+            let settle = args
+                .next()
+                .map(|s| s.parse::<u16>())
+                .transpose()?
+                .unwrap_or(60);
+            (usize::from(settle), usize::from(settle) + 420)
+        }
+        Some(_) => return Err("expected --landing [settling ticks] or no argument".into()),
+    };
+    if args.next().is_some() {
+        return Err("too many arguments".into());
+    }
+    let mut frames = Vec::with_capacity(end_tick + 1);
+    for tick in 0..=end_tick {
         if tick != 0 {
-            if tick == 61 {
+            if tick == settle + 1 {
                 rig.set_input([0.0, -1.0], false)?;
+            }
+            if tick == settle + 241 {
+                rig.set_input([0.0; 2], false)?;
             }
             rig.step();
         }

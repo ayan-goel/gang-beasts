@@ -259,3 +259,6 @@ fn releasing_movement_on_a_slope_returns_to_supported_idle() {
         assert_eq!(rig.state().motor_strength, 0.0);
     }
 }
+
+#[path = "stair_tests.rs"]
+mod stairs;

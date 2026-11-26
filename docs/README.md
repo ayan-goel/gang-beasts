@@ -19,6 +19,7 @@
 - [Reversal braking](slices/06c2b1-reversals.md): tick-sampled direction changes, bounded braking, neutral key gaps and native/WASM evidence.
 - [Stopping phases](slices/06c2b2-stopping.md): explicit moment-limited stopping, support-frame corrections, verification and historical traversal failures.
 - [Rotating-support traversal](slices/06c2b3-rotating-traversal.md): bounded carry compensation, longer idle checks and separate moment diagnostics.
+- [Low-step pose control](decisions/0016-low-step-pose.md) explains tread detection, hip and toe placement, and release.
 - [Terrain locomotion and stumble recovery](decisions/0015-terrain-locomotion.md) records the verified native traversal and impact checkpoint.
 - [Backward/cross-slope investigation](slices/06c2b4-transverse-slopes.md): failing matrices, measured balance/torso behavior and rejected candidates.
 - [Support-face normal correction](verification/support-face-normals.md): isolated rounded-foot query defect, current-pose face selection and edge safeguards.
@@ -65,7 +66,7 @@
 - [Independent hand strikes](slices/08a-hand-strikes.md) records the phase timing, control bindings and physical contact evidence.
 - [Physical get-up](slices/07b-recovery.md) covers fallen poses, contact and effort limits, obstructions, restraints and the return to standing.
 - [Jump, flight and landing](slices/07a-jumping.md) covers the takeoff impulse, timing windows, airborne budget and local controls.
-- [Low stair traversal](slices/06c2b4b-stairs.md) records the current failing fixture and where the feet lose support.
+- [Low stair traversal](slices/06c2b4b-stairs.md) records verified ascent, supported stopping and the remaining starting-timing failures.
 - [Open terrain scenarios](verification/terrain-gaps.md): remaining slope, stair and stop-phase reproductions.
 - [Foundation evidence](verification/foundation.md): native/WASM tests, build identity and browser smoke.
 - [Decisions](decisions/): numbered records of context, alternatives, and consequences.

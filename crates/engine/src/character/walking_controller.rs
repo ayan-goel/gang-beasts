@@ -53,6 +53,7 @@ pub(super) struct WalkingController {
     swing_completion: super::swing_completion::SwingCompletion,
     pose_motion: super::pose_motion::PoseMotion,
     support_motion: SupportMotion,
+    step_approach: super::step_approach::StepApproach,
     reversal: super::reversal::ReversalBrake,
     jump: super::jump::Jump,
     recovery: super::recovery::Recovery,
@@ -73,6 +74,7 @@ impl WalkingController {
             swing_completion: Default::default(),
             pose_motion: Default::default(),
             support_motion: SupportMotion::default(),
+            step_approach: Default::default(),
             reversal: Default::default(),
             jump: Default::default(),
             recovery: Default::default(),
@@ -93,6 +95,7 @@ impl WalkingController {
     pub fn reset(&mut self) {
         self.recovery = Default::default();
         self.jump = Default::default();
+        self.step_approach = Default::default();
         self.intent = Vector::zeros();
         self.swing_completion.finish();
         self.pose_motion = Default::default();
@@ -151,6 +154,7 @@ impl WalkingController {
             ..LocomotionState::default()
         };
         if !enabled {
+            self.step_approach = Default::default();
             self.swing_completion.finish();
             self.pose_motion = Default::default();
             return [Rotation::identity(); 14];
@@ -206,6 +210,17 @@ impl WalkingController {
                 super::jump::apply_velocity_change(rig, delta);
                 self.state.acceleration = (delta / TICK_SECONDS).into();
             }
+        }
+        if launch || !upright {
+            self.step_approach = Default::default();
+        } else {
+            self.step_approach.sample(
+                rig.read(),
+                self.intent,
+                supports,
+                &self.support,
+                &self.config.low_step,
+            );
         }
         if launch || count == 0 || !upright {
             self.swing_completion.finish();
@@ -446,6 +461,12 @@ impl WalkingController {
             supports,
             &self.config,
             self.blend,
+            &mut self.state.targets,
+        );
+        self.step_approach.pose(
+            rig.read(),
+            intent,
+            &self.config.low_step,
             &mut self.state.targets,
         );
         if !idle && self.intent.norm_squared() == 0.0 && self.state.motor_strength > 0.0 {

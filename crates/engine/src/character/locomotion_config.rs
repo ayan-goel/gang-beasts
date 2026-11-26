@@ -8,6 +8,8 @@ pub struct LocomotionConfig {
     pub jump: super::JumpConfig,
     #[serde(default)]
     pub recovery: super::RecoveryConfig,
+    #[serde(default)]
+    pub low_step: super::LowStepConfig,
     pub schema_version: u32,
     pub walk_speed_m_s: f32,
     pub run_speed_m_s: f32,
@@ -51,6 +53,7 @@ impl LocomotionConfig {
     }
     pub fn validate(&self) -> Result<(), CharacterError> {
         self.jump.validate()?;
+        self.low_step.validate()?;
         self.recovery.validate()?;
         if self.schema_version != 3
             || self.run_speed_m_s < self.walk_speed_m_s

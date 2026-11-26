@@ -16,7 +16,7 @@ The 06c2b probes confirmed a cross-slope running failure on +15° about world Z,
 
 ## Low steps
 
-The [current stair regression](../slices/06c2b4b-stairs.md) reproduces failure at total tick 143 on the verified cross-slope controller. The following numbers describe the earlier investigation.
+The [stair regression and wider timing sweep](../slices/06c2b4b-stairs.md#verified-ascent-and-landing) document the current controller. The following numbers describe the earlier investigation, including the tick-143 fall on the cross-slope controller.
 
 Spawn at the origin, settle 60 ticks, then walk toward −Z for 150 ticks. Three risers begin at Z = −1.0, −1.8 and −2.6 m, with heights 0.1, 0.2 and 0.3 m. Half-width is 3 m. Use adjacent tread boxes and extend the final landing to Z = −12; a short landing ending at −6 could eliminate a successful walker before the last assertion.
 

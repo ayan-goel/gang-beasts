@@ -1,6 +1,6 @@
 # Low stair traversal
 
-Status — failing native regression on verified controller commit `f3ceacc`. The staircase has three adjacent 0.10 m risers with 0.80 m spacing, a 3 m half-width, and a final landing extending to Z = −12 m. The ordinary flat fixture starts with 0.08 m of spawn clearance, settles for 60 ticks, then walks toward −Z for 150 ticks. The fixture checks finite body state, the existing joint and assistance limits, head height above 1.1 m, per-tick pelvis travel below 0.15 m, and final pelvis Z below −3 m and Y above 0.85 m.
+Current results appear under [Verified ascent and landing](#verified-ascent-and-landing). The original native regression failed on controller commit `f3ceacc`. The staircase has three adjacent 0.10 m risers with 0.80 m spacing, a 3 m half-width, and a final landing extending to Z = −12 m. The ordinary flat fixture starts with 0.08 m of spawn clearance, settles for 60 ticks, then walks toward −Z for 150 ticks. The fixture checks finite body state, the existing joint and assistance limits, head height above 1.1 m, per-tick pelvis travel below 0.15 m, and final pelvis Z below −3 m and Y above 0.85 m.
 
 ## Reproduction
 
@@ -42,3 +42,42 @@ Run the exact native trace with `cargo run --quiet --locked --release -p brawler
 A leading-face query with three tread-top samples identified a reachable landing and rejected narrow treads, walls and sensors in isolated fixed-geometry tests. A persistent world-space swing target overextended the leg early in the approach and the rig fell at tick 131. Adding a smooth horizontal swing and a vertical clearance arc delayed the fall to tick 151. Routing drive to the opposite supporting foot also failed at tick 151. The leading foot landed on the first tread while the trailing foot stayed below it and the pelvis advanced.
 
 Sampling the floor directly below each foot still failed at tick 149. A speed limit derived from braking distance to the leading sole delayed failure to tick 180. Synchronizing a prescribed stance sweep with the planned swing failed at tick 133. These experiments ran against the same posture, travel and effort bounds. Their controller changes were discarded.
+
+## Landing and sustained walking
+
+An isolated controller experiment paired a tread-targeted swing with a bounded horizontal force pair. While planning the swing, speed was capped by the available braking distance from the center of mass to the leading sole. The pair retained its existing moment cap. During transfer alone, the net command used the greatest requested-direction acceleration compatible with the fixed foot command and the absolute impulse budget. Ordinary stopping retained its prior allocation.
+
+On the 60-tick settled approach the experimental controller reached pelvis Z −3.254 m and Y 1.028 m at tick 210. The contact readings show one foot supporting the rig on the upper 0.30 m tread at tick 195. At tick 200 the minimum head/chest/pelvis upright projection crossed the stumble threshold. Both feet reported upper-tread support at tick 213, but the forward rotation continued. Head height fell below 1.1 m at tick 220. The original ascent assertion had passed ten ticks earlier.
+
+The worktree now also checks 240 walking ticks followed by 180 ticks at rest. Posture and joint/force limits apply during both intervals. At the end, the pelvis must remain over the landing with speed below 0.2 m/s and both feet must report contact on the 0.30 m surface within 0.015 m. Run both assertions with `cargo test --locked --release -p brawler-engine --lib slope_tests::stairs`.
+
+| Initial settling | Candidate result under the same forward input |
+| --- | --- |
+| 59 ticks | First head-height failure after 82 walking ticks. |
+| 60 ticks | Met the original ascent assertion. First head-height failure after 160 walking ticks. |
+| 61 ticks | Remained upright but stopped short. After walking and release the pelvis was at Z −1.471 m. |
+| 75 ticks | First head-height failure after 64 walking ticks. |
+
+The candidate passed 123 native library tests and 41 integration tests before the extended landing check was added. Its sensitivity to start time and its failed landing exclude it from the playground. For local comparison, the ignored development cache contains the apply-checked candidate diff and traces under `.cache/stair-transfer-candidate/`. At that checkpoint the playable controller still reproduced the tick-143 failure. Further work needs to coordinate support transfer before the stance foot hits the next riser and arrest forward upper-body rotation through actual landing contact.
+
+## Verified ascent and landing
+
+The shared fighter controller now senses a reachable fixed tread and applies a bounded hip and ankle pose to both legs. The [design decision](../decisions/0016-low-step-pose.md) gives the geometry and tuning. With 60 settling ticks, the fighter walked forward for 240 ticks, stopped for 180 and finished with pelvis Z −7.867 m, Y 1.112 m and speed 0.007 m/s. Both feet had physical support on the 0.30 m landing. The old controller fell at total tick 143.
+
+The committed native tests enforce the established posture, finite-state, displacement, anchor and effort bounds throughout the approach and the stop. They exercise 59, 60, 61, 69, 75 and 84 settling ticks in the default orientation, plus the other three cardinal headings after 60 ticks. Geometry tests reject walls, short and narrow treads and sensors. Chromium compares all 210 anatomical state fields with native on every one of the 481 frames of the default traversal. Reset and configuration replacement each reproduce the complete browser trace.
+
+A wider native sweep used 1 through 120 settling ticks plus 180. In 116 of the 121 cases the head stayed above 1.1 m, the pelvis passed Z −3 m by walking tick 150 and the fighter remained beyond that point at rest with speed below 0.2 m/s. Settling for 19, 25, 26, 43 or 108 ticks produced a fall. With 25 settling ticks, the right foot stayed at the second face as the pelvis moved 0.289 m past it by total tick 97. These cases remain open. Additional swing flexion, retaining the gait blend across support loss and velocity-based braking did not eliminate those failures in isolated comparisons.
+
+Use the default native command below for the accepted approach. Append a settling tick count after `--landing` to reproduce another start, such as `--landing 25`. The command emits completed body states from spawn through the stop.
+
+```sh
+cargo test --locked --release -p brawler-engine --lib slope_tests::stairs
+cargo run --quiet --locked --release -p brawler-engine --example stair_trace -- --landing
+npm --prefix web run test:e2e -- stairs.spec.ts
+```
+
+## Build verification
+
+On the Apple M3 Pro development Mac, engine fingerprint `d56bc5bf8973293a8f28e7da7df06fe65f496b82b93fc2eda5e00f5757a7ee4b` passed 282 native tests, 48 web unit tests, the production build, formatting and warning-denied workspace Clippy. The local preview served that fingerprint in both the shipped WASM and the multiplayer map catalog.
+
+The synchronized Chromium suite passed 74 of 77 scenarios, including all stair cases, rematches and disconnect grace. The two-player hazard deadline and a local countdown expired during a run with host sleep. The hazard screen showed 2:04 remaining when the wall-clock wait expired, and the host power log recorded a 52-second sleep in that interval. In the eight-player case, seven sockets kept progressing past tick 1200. The eighth had closed after tick 740, before its movement input. Separate production-preview runs passed all three scenarios using the same engine and map fingerprints. All eight profiles received and displayed the elimination. Two profiles saw each hazard warning, including after a guest reload, and the local match awarded the point and started its next round. The source of the intermittent socket closure is unresolved.
