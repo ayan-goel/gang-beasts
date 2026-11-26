@@ -1,3 +1,4 @@
+import type { ImpactSource } from '../audio/impactSound';
 import { arenaGripName, fighterGripName, handGripLabels } from './gripLabels';
 import { fixedLedge } from './ledgeHint';
 import type { FighterPhase } from './fighterCondition';
@@ -23,6 +24,7 @@ export interface FighterCondition {
 }
 export interface DuelState {
   match?: MatchView;
+  impacts: ImpactSource[];
   conditions: [FighterCondition, FighterCondition];
   tick: string;
   paused: boolean;
@@ -96,11 +98,12 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     };
     const snapshot = () => {
       const first = readGrips(0), second = readGrips(1);
+      const conditions: [FighterCondition, FighterCondition] = [JSON.parse(duel.condition_json(0)), JSON.parse(duel.condition_json(1))];
       publish({
         match, tick: duel.tick().toString(), hits: [...hits], latest, paused,
         grips: [first.labels, second.labels], fixedLedge: [first.onLedge, second.onLedge],
         stamina: [duel.stamina(0), duel.stamina(1)],
-        conditions: [JSON.parse(duel.condition_json(0)), JSON.parse(duel.condition_json(1))],
+        conditions, impacts: renderer.impactSources(conditions.map(f => f.health)),
       });
     };
     const render = (dt = 0) => {
@@ -125,6 +128,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
       }
     };
     const animate = (now: number) => {
+      const previousHit = latest;
       if (!paused && (!skyline || !document.hidden)) {
         const waitingTicks = match?.phase === 'countdown' || match?.phase === 'round_results' ? match.remaining : 0;
         const steps = clock.advance((now - previous) / 1000, waitingTicks);
@@ -137,7 +141,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
       }
       render((now - previous) / 1000);
       previous = now;
-      if (now - displayed >= 100) { snapshot(); displayed = now; }
+      if (now - displayed >= 100 || latest !== previousHit) { snapshot(); displayed = now; }
       frame = requestAnimationFrame(animate);
     };
     render();

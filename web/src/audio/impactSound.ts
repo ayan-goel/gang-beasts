@@ -1,0 +1,39 @@
+export interface ImpactPosition { pan: number; distance: number }
+export interface ImpactSource extends ImpactPosition { health: number }
+export interface Impact extends ImpactPosition { damage: number }
+
+const buffers = new WeakMap<BaseAudioContext, AudioBuffer>();
+
+function contactBuffer(context: BaseAudioContext) {
+  const existing = buffers.get(context);
+  if (existing) return existing;
+  const buffer = context.createBuffer(1, Math.ceil(context.sampleRate * 0.12), context.sampleRate);
+  const samples = buffer.getChannelData(0);
+  let seed = 17, phase = 0;
+  for (let i = 0; i < samples.length; i++) {
+    const t = i / context.sampleRate;
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    phase += 2 * Math.PI * (65 + 100 * Math.exp(-50*t)) / context.sampleRate;
+    const thump = 0.74 * Math.sin(phase) * Math.exp(-40*t);
+    const tap = 0.26 * (2 * seed / 4294967296 - 1) * Math.exp(-160*t);
+    samples[i] = (thump + tap) * Math.min(1, t/0.002, (samples.length-1-i)/(0.008*context.sampleRate));
+  }
+  buffers.set(context, buffer);
+  return buffer;
+}
+
+export function playImpact(context: BaseAudioContext, impact: Impact) {
+  const voice = context.createBufferSource();
+  const gain = context.createGain();
+  const pan = context.createStereoPanner();
+  const strength = Math.min(1, impact.damage / 35);
+  voice.buffer = contactBuffer(context);
+  voice.playbackRate.value = 1.1 - 0.2 * strength;
+  gain.gain.value = (0.07 + 0.09 * strength) * Math.min(1, 8 / Math.max(1,impact.distance));
+  pan.pan.value = impact.pan;
+  voice.connect(gain).connect(pan).connect(context.destination);
+  const disconnect = () => { voice.disconnect(); gain.disconnect(); pan.disconnect(); };
+  voice.onended = disconnect;
+  voice.start();
+  return () => { voice.stop(); disconnect(); };
+}

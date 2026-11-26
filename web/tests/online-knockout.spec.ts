@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { buttons, encodeInput, quantizeDirection } from '../src/net/inputFrame';
 import { decodeSnapshot, type Snapshot } from '../src/net/snapshot';
 import { releaseRoom } from './support/releaseRoom';
-import { observeWarningAudio, warningSamples } from './support/warningAudio';
+import { impactCount, observeWarningAudio, warningSamples } from './support/warningAudio';
 
 async function engage(page: Page, slot: 0 | 1) {
   const phases: number[] = [];
@@ -83,6 +83,7 @@ test('both players see and hear a server-owned knockout and recovery caused by r
       await expect(p.getByText('Blue knocked out',{exact:true})).toBeVisible();
       await expect.poll(() => p.getByText('Blue getting up',{exact:true}).isVisible(), {intervals:[50],timeout:6000}).toBe(true);
       await expect(p.getByText('Blue getting up',{exact:true})).toHaveCount(0);
+      expect(await impactCount(p)).toBeGreaterThan(0);
       await expect.poll(() => warningSamples(p)).toEqual([{wave:'triangle',state:'running'}, {wave:'sine',state:'running'}]);
     }));
     await expect.poll(() => traces.every(trace => trace.resumedAction)).toBe(true);

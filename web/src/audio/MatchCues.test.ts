@@ -44,3 +44,29 @@ it('uses the first state after joining, interruption or a missed publication int
   expect(cues.observe('2','west_warning',[],4200).warning).toBeUndefined();
   expect(cues.observe('2','east_warning',[],4300).warning).toBe('east_warning');
 });
+
+it('sounds the strongest fresh damaging contact and debounces each struck fighter independently', () => {
+  const cursor = new MatchCues();
+  const active = ['active','active'] as const;
+  const observe = (first: number, second: number, now: number, epoch = '1') =>
+    cursor.observe(epoch,'quiet',active,now,[{health:first,pan:-0.5,distance:8},{health:second,pan:0.7,distance:14}]);
+  expect(observe(100,100,0)).toEqual({});
+  expect(observe(95,85,20).impact).toEqual({damage:15,pan:0.7,distance:14});
+  expect(observe(95,85,25)).toEqual({});
+  expect(observe(92,60,60)).toEqual({});
+  expect(observe(80,60,160).impact).toEqual({damage:12,pan:-0.5,distance:8});
+  expect(observe(79.99,70,220)).toEqual({});
+  expect(observe(40,20,1000)).toEqual({});
+  expect(observe(15,10,1030,'2')).toEqual({});
+  cursor.reset();
+  expect(observe(5,5,1040,'2')).toEqual({});
+});
+
+it('reserves the first beat of a warning or knockout for its higher priority cue', () => {
+  const cursor = new MatchCues();
+  const targets = (health:number) => [{health,pan:0,distance:10}];
+  cursor.observe('1','quiet',['active'],0,targets(100));
+  expect(cursor.observe('1','west_warning',['active'],80,targets(85))).toEqual({warning:'west_warning'});
+  expect(cursor.observe('1','west_warning',['knocked_out'],260,targets(0))).toEqual({condition:'knocked_out'});
+  expect(cursor.observe('1','west_warning',['eliminated'],300,targets(0))).toEqual({});
+});

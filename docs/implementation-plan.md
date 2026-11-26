@@ -88,6 +88,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 17b — skinned fighters | Drive the original Roof Crew GLB from local or online body poses | Independent skeletons, per-vertex deformation, model loading and retry |
 | 17c — hazard audio | Four original warning cues in local and online Skyline | Real audio unlock, bounded PCM, mute persistence and reconnect deduplication |
 | 17d — fighter condition | Local and online knockout and recovery announcements | Keyboard combat, replicated native transitions, bounded audio and named notices |
+| 17e — strike audio | Give damaging contact an audible location and weight | Keyboard and online combat, silent misses, stereo PCM, stale-state and voice limits |
 | 17 | Original presentation and audio | Original skinned characters, effects, warnings, licensed asset manifest |
 | 18 | Settings, accessibility and product flows | Input isolation, keyboard navigation, loading/errors, quality/audio settings |
 | 19a — native room baseline | Eight active fighters and eight personalized snapshots | Five release runs with service time, recipient bytes and workload checks |

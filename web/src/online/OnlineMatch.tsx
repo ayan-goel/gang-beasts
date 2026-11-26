@@ -31,7 +31,7 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
     });
     return () => { cancelAnimationFrame(frame); clearTimeout(timer); stop?.(); };
   }, [feed, content]);
-  useMatchSound(match, status === 'live' || status === 'estimating', match.conditions);
+  useMatchSound(match, status === 'live' || status === 'estimating', match.conditions, match.impacts);
   const names = feed.fighters.map(f => f.name);
   const winner = match.winner == null ? 'Draw' : feed.fighters[match.winner]!.name + ' wins';
   const hint = feed.own !== null && match.phase === 'playing' && match.conditions[feed.own] === 'active'

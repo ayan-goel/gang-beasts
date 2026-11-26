@@ -1172,6 +1172,8 @@ Use Web Audio spatial position and attenuation with a clearly chosen listener po
 
 Skyline’s [hazard audio](docs/slices/17c-hazard-audio.md) uses four original synthesized cues, centered and independent of camera distance. Each live stage transition can play once per round. The initial snapshot, reconnect and return from a pause establish the current stage silently. Local and online play share a persistent mute preference and retain their visual warnings.
 
+Skyline plays an original short strike thud for an observed health loss of at least one point while the defender remains active. The local physics world or the server owns that health change. The sound follows the defender’s rendered pelvis in the current view. Simultaneous contacts share one impact voice, with a 120 ms cooldown per defender. Hazard and consciousness announcements take priority. [Strike feedback](docs/slices/17e-strike-audio.md)
+
 Provide master, music and effects sliders, mute and persistence of settings. Full game adds adaptive music and refined occlusion. Visual warning alternatives must remain available for players who mute sound.
 
 ## 22. Game modes

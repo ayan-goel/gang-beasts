@@ -33,7 +33,7 @@ export function SkylineGame() {
   const complete = match?.phase === 'match_results';
   const menu = !started || state?.paused || complete;
   const conditions = state?.conditions.map(c => c.phase) ?? [];
-  useMatchSound(match, started && !menu, conditions);
+  useMatchSound(match, started && !menu, conditions, state?.impacts);
   const winner = match?.winner == null ? 'Draw' : `${names[match.winner]} wins the ${complete ? 'match' : 'round'}`;
   const start = () => {
     if (complete) runtime.current?.reset();

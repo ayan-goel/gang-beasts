@@ -129,7 +129,20 @@ export class FixtureScene {
     this.renderer.domElement.setAttribute('aria-label', (count === 2 ? 'Two' : count) + ' fighters on the ' + arena);
   }
 
+  private playerPoses: Float32Array[] = [];
+  private readonly soundPoint = new THREE.Vector3();
+
+  impactSources(health: readonly number[]) {
+    return this.playerPoses.map((pose, slot) => {
+      const pelvis = this.soundPoint.fromArray(pose, 28);
+      const distance = pelvis.distanceTo(this.camera.position);
+      const pan = THREE.MathUtils.clamp(pelvis.project(this.camera).x, -1, 1);
+      return {health: health[slot]!, distance, pan};
+    });
+  }
+
   renderSkyline(players: Float32Array[], props: Float32Array, match: MatchView, dt: number, owner?: Float32Array): boolean {
+    this.playerPoses = players;
     this.skyline!.update(props, match.hazard);
     this.rig!.root.visible = match.visible[0]!;
     this.opponents.forEach((rig, i) => {
