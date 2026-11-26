@@ -17,6 +17,23 @@ impl Duel {
         self.melee.as_ref()
     }
 
+    /// Consume the last results tick with a new lineup. Each entry identifies the
+    /// previous fighter whose score belongs to this player, or a fresh entrant.
+    pub fn start_next_round(
+        &mut self,
+        previous: &[Option<FighterId>],
+    ) -> Result<(), CharacterError> {
+        let next = self
+            .melee
+            .as_ref()
+            .ok_or(CharacterError::Invalid("expected a Skyline match"))?
+            .next_lineup(previous)?;
+        let mut game = Self::create(self.physics.clone(), true, previous.len())?;
+        game.melee = Some(next);
+        *self = game;
+        Ok(())
+    }
+
     pub(super) fn accepts_input(&self, id: FighterId) -> bool {
         self.vitals(id).phase == Consciousness::Active
             && self
@@ -31,11 +48,12 @@ impl Duel {
         if m.phase == MeleePhase::Playing {
             return true;
         }
-        if m.between_ticks() {
-            let m = self.melee.take();
-            *self = Self::create(self.physics.clone(), true, self.fighters.len())
+        if m.next_round_due() {
+            let previous: Vec<_> = self.fighter_ids().iter().copied().map(Some).collect();
+            self.start_next_round(&previous)
                 .expect("validated Skyline round");
-            self.melee = m;
+        } else {
+            m.between_ticks();
         }
         false
     }

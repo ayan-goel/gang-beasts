@@ -1,3 +1,4 @@
+use crate::{CharacterError, FighterId};
 use serde::Serialize;
 
 const COUNTDOWN: u16 = 180;
@@ -13,6 +14,7 @@ pub enum MeleePhase {
     MatchResults,
 }
 
+#[derive(Clone)]
 pub struct MeleeState {
     pub phase: MeleePhase,
     pub round_id: u64,
@@ -37,34 +39,61 @@ impl MeleeState {
     pub fn scores(&self) -> &[u8] {
         &self.scores
     }
-    pub(crate) fn between_ticks(&mut self) -> bool {
+    fn match_won(&self) -> bool {
+        self.winner
+            .is_some_and(|id| self.scores[id as usize] >= WINS)
+    }
+    pub fn next_round_due(&self) -> bool {
+        self.phase == MeleePhase::RoundResults && self.remaining_ticks == 1 && !self.match_won()
+    }
+    pub(crate) fn next_lineup(
+        &self,
+        previous: &[Option<FighterId>],
+    ) -> Result<Self, CharacterError> {
+        if !self.next_round_due() || !(2..=8).contains(&previous.len()) {
+            return Err(CharacterError::Invalid(
+                "roster requires a due round and 2 through 8 players",
+            ));
+        }
+        let mut used = 0u8;
+        let mut scores = vec![0; previous.len()];
+        for (slot, id) in previous.iter().enumerate() {
+            if let Some(id) = id {
+                let index = *id as usize;
+                if index >= self.scores.len() || used & (1 << index) != 0 {
+                    return Err(CharacterError::Invalid(
+                        "returning fighter must exist exactly once",
+                    ));
+                }
+                scores[slot] = self.scores[index];
+                used |= 1 << index;
+            }
+        }
+        let mut next = self.clone();
+        next.between_ticks();
+        next.scores = scores;
+        Ok(next)
+    }
+    pub(crate) fn between_ticks(&mut self) {
         if !matches!(self.phase, MeleePhase::Countdown | MeleePhase::RoundResults) {
-            return false;
+            return;
         }
         self.remaining_ticks -= 1;
         if self.remaining_ticks > 0 {
-            return false;
+            return;
         }
         match self.phase {
             MeleePhase::Countdown => self.phase = MeleePhase::Playing,
-            MeleePhase::RoundResults
-                if self
-                    .winner
-                    .is_some_and(|id| self.scores[id as usize] >= WINS) =>
-            {
-                self.phase = MeleePhase::MatchResults
-            }
+            MeleePhase::RoundResults if self.match_won() => self.phase = MeleePhase::MatchResults,
             MeleePhase::RoundResults => {
                 self.round_id += 1;
                 self.round_number += 1;
                 self.remaining_ticks = COUNTDOWN;
                 self.winner = None;
                 self.phase = MeleePhase::Countdown;
-                return true;
             }
             _ => unreachable!(),
         }
-        false
     }
     pub(crate) fn settle(&mut self, alive: u8, expired: bool) {
         if self.phase != MeleePhase::Playing {

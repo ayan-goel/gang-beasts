@@ -97,6 +97,33 @@ impl Room {
     pub fn finished_for_lack_of_players(&self) -> bool {
         self.finished
     }
+
+    pub fn start_next_round(
+        &mut self,
+        previous: &[Option<FighterId>],
+    ) -> Result<(), CharacterError> {
+        if self.finished
+            || previous
+                .iter()
+                .flatten()
+                .any(|id| self.forfeits & (1 << *id as usize) != 0)
+        {
+            return Err(CharacterError::Invalid(
+                "a closed room or forfeited player cannot resume",
+            ));
+        }
+        self.game.start_next_round(previous)?;
+        // Connection state follows a returning player across compact fighter indices.
+        // A newcomer must establish their own binding before submitting any input.
+        self.attached = previous
+            .iter()
+            .map(|id| id.is_some_and(|id| self.attached[id as usize]))
+            .collect();
+        self.inboxes = (0..previous.len()).map(|_| Inbox::default()).collect();
+        self.forfeits = 0;
+        self.tick += 1;
+        Ok(())
+    }
     pub fn step(&mut self) {
         self.step_with_forfeits(0);
     }

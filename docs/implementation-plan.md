@@ -81,6 +81,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 16f — online rematch | Replay a completed match in the same room | Host-only return, fresh serial, scores and ready roster |
 | 16g — automatic match reconnect | Reclaim an interrupted fighter from the same tab | Failed retry, full snapshot, neutral controls and newer-tab ownership |
 | 16h — silent match outages | Detect missing snapshots and unanswered WebSocket probes | Separate upstream and downstream TCP interruptions with two live fighters |
+| 16i — native round lineups | Carry scores and connection status across round-boundary roster changes | Two-to-eight growth, compaction, input epoch fencing and final-match protection |
 | 16 | Private sessions and lobby | Link/code, ready/start, auth, reconnect, host transfer, late joining |
 | 17a — hazard warnings | Show the current walkway and wind warnings during online play | Shared text, server timing, reconnect and round cleanup |
 | 17b — skinned fighters | Drive the original Roof Crew GLB from local or online body poses | Independent skeletons, per-vertex deformation, model loading and retry |
