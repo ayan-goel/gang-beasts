@@ -1,4 +1,5 @@
-import { useHazardSound } from '../audio/SkylineSound';
+import { FighterNotices } from '../app/FighterNotices';
+import { useMatchSound } from '../audio/SkylineSound';
 import { useEffect, useRef, useState } from 'react';
 import { colors } from '../lobby/api';
 import { hazardWarnings } from '../game/skylineHazards';
@@ -26,15 +27,20 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
     });
     return () => { cancelAnimationFrame(frame); clearTimeout(timer); stop?.(); };
   }, [feed, content]);
-  useHazardSound(match, status === 'live' || status === 'estimating');
+  useMatchSound(match, status === 'live' || status === 'estimating', match.conditions);
   const winner = match.winner == null ? 'Draw' : feed.fighters[match.winner]!.name + ' wins';
   return <section className="online-match" aria-label="Online Skyline arena">
     <div className="online-header"><h1>{feed.own === null ? 'Spectating Skyline' : 'Playing as ' + feed.fighters[feed.own]!.name}</h1><button onClick={exit}>Leave room</button></div>
     <div className="online-stage">
       <div className="online-scene" ref={container}/>
-      <p className="online-hazard" role="status" aria-label="Arena hazard">
-        {match.phase === 'playing' ? hazardWarnings[match.hazard] : ''}
-      </p>
+      <div className="online-notices">
+        <p className="online-hazard" role="status" aria-label="Arena hazard">
+          {match.phase === 'playing' ? hazardWarnings[match.hazard] : ''}
+        </p>
+        <div className="online-conditions" aria-live="polite">
+          {match.phase === 'playing' && <FighterNotices names={feed.fighters.map(f => f.name)} phases={match.conditions} />}
+        </div>
+      </div>
     </div>
     <div className="online-score">
       <span aria-label="Round number">Round {match.round}</span>

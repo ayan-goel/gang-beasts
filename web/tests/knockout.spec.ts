@@ -39,6 +39,18 @@ test('real strikes, unconscious fall and physical get-up agree with native acros
   }, trace.map(({direction,taps}) => ({direction,taps})));
   const timeline = frames.flatMap((f, i) => f.changes.map(([id,phase]) => [i+1,id,phase]));
   expect(timeline).toEqual([[396,1,'knocked_out'],[576,1,'recovering'],[606,1,'active']]);
+  for (const [index, frame] of frames.entries()) {
+    if (!frame.changes.length) continue;
+    // Check the transition tick and the first solve under the new motor policy.
+    for (const sample of [index,index+1]) {
+      const a = frames[sample-1]!.bodies[1]!, b = frames[sample]!.bodies[1]!;
+      for (let i = 0; i < a.length; i += 14) {
+        expect(Math.hypot(b[i]!-a[i]!, b[i+1]!-a[i+1]!, b[i+2]!-a[i+2]!)).toBeLessThan(0.07);
+        const dot = a.slice(i+3,i+7).reduce((sum,q,j) => sum + q*b[i+3+j]!, 0);
+        expect(2*Math.acos(Math.min(1,Math.abs(dot)))).toBeLessThan(Math.PI/8);
+      }
+    }
+  }
   let maximumBodyError = 0;
   let maximumHealthError = 0;
   expect(frames).toHaveLength(781);

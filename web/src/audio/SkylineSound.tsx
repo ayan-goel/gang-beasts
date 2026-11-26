@@ -1,13 +1,14 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { MatchView } from '../rendering/SkylineView';
-import { HazardWarnings, type AudibleHazard } from './HazardWarnings';
-import { playWarningTone } from './warningTone';
+import type { FighterPhase } from '../game/fighterCondition';
+import { MatchCues, type Cues } from './MatchCues';
+import { playMatchTone } from './matchTone';
 import './sound.css';
 
 const preference = 'skyline.audio.v1.muted';
 class SoundOutput {
   private context?: AudioContext;
-  private stopVoice?: () => void;
+  private voices: Partial<Record<keyof Cues, () => void>> = {};
   muted = false;
 
   unlock() {
@@ -21,12 +22,17 @@ class SoundOutput {
     } catch { /* Visual warnings remain available when the audio device is unavailable. */ }
   }
   resume() { if (this.context) this.unlock(); }
-  play(hazard: AudibleHazard) {
+  play(cues: Cues) {
     if (this.muted || this.context?.state !== 'running' || document.hidden) return;
-    this.silence();
-    this.stopVoice = playWarningTone(this.context, hazard);
+    for (const category of ['warning','condition'] as const) {
+      const cue = cues[category];
+      if (cue) {
+        this.voices[category]?.();
+        this.voices[category] = playMatchTone(this.context, cue);
+      }
+    }
   }
-  silence() { this.stopVoice?.(); this.stopVoice = undefined; }
+  silence() { for (const stop of Object.values(this.voices)) stop(); this.voices = {}; }
   close() {
     this.silence();
     if (this.context) {
@@ -73,9 +79,9 @@ export function MuteButton() {
     onClick={settings.toggle}>{settings.muted ? 'Sound off' : 'Sound on'}</button>;
 }
 
-export function useHazardSound(match: MatchView | undefined, active: boolean) {
+export function useMatchSound(match: MatchView | undefined, active: boolean, phases: readonly FighterPhase[]) {
   const output = useContext(AudioSettings)?.output;
-  const cursor = useRef(new HazardWarnings());
+  const cursor = useRef(new MatchCues());
   useEffect(() => {
     const reset = () => { cursor.current.reset(); output?.silence(); };
     document.addEventListener('visibilitychange', reset);
@@ -87,7 +93,7 @@ export function useHazardSound(match: MatchView | undefined, active: boolean) {
       output?.silence();
       return;
     }
-    const cue = cursor.current.observe(match.epoch, match.hazard, performance.now());
-    if (cue) output?.play(cue);
-  }, [match, active, output]);
+    const cues = cursor.current.observe(match.epoch, match.hazard, phases, performance.now());
+    if (cues.warning || cues.condition) output?.play(cues);
+  }, [match, active, output, phases]);
 }

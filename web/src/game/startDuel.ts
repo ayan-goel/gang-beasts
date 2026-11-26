@@ -1,3 +1,4 @@
+import type { FighterPhase } from './fighterCondition';
 import type { Object3D } from 'three';
 import type { MatchView, SkylineMap } from '../rendering/SkylineView';
 import { LocalDuel } from '../generated/wasm/brawler_wasm';
@@ -15,7 +16,7 @@ export interface DuelHit {
   damage: number; attackId: string; tick: string;
 }
 export interface FighterCondition {
-  phase: 'active' | 'knocked_out' | 'recovering' | 'eliminated';
+  phase: FighterPhase;
   health: number; knockouts: number; sinceTick: string;
 }
 export interface DuelState {

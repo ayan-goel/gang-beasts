@@ -621,6 +621,8 @@ The native duel samples all limb velocities before the solve on active strike ti
 
 For knockout number `n ≥ 1`, use `min(3 + (n−1), 12)` seconds initially. Reset the counter each round. Any later decay or anti-camping immunity is an explicit balance change, not a hidden assumption. Damage while down must not reset the timer every tick; keep total incapacitation bounded. Button mashing does not accelerate recovery in the MVP. Avoid large health bars by default; use body language, face state and clear knockout/recovery audio.
 
+Local and online Skyline name each knocked-out or recovering fighter. The [fighter condition cues](docs/slices/17d-fighter-condition.md) announce fresh knockout and recovery transitions from the displayed simulation state, with a separate voice for hazard warnings. A joining or reconnecting player sees the current condition immediately and hears subsequent changes.
+
 Local sparring applies the combined qualifying punch damage from a completed tick to each active fighter. Both down and wake durations have fixed deadlines. Punches against a downed or waking body still collide but award no further points. The 30-tick wake ramp limits internal motor torque before movement and new combat input resume. The body then completes any necessary supported get-up. [Timing, grip ownership and replay evidence](docs/slices/10b-consciousness.md).
 
 ### 13.6 Grabbing
@@ -1674,7 +1676,7 @@ Retain all 18 original completion checks, with explicit evidence expectations:
 - [ ] **Locomotion:** Walking, running, jumping and recovery are controllable in human playtests.
 - [ ] **Independent hands:** Either hand can punch/grab while the other performs a different permitted action.
 - [ ] **Lifts/throws:** Opponents can be physically lifted/thrown with momentum and counterplay.
-- [ ] **Knockout/recovery:** Consciousness changes do not eliminate automatically or snap poses.
+- [x] **Knockout/recovery:** Consciousness changes do not eliminate automatically or snap poses. [Per-limb continuity, score preservation and post-recovery control](docs/slices/17d-fighter-condition.md#verification)
 - [ ] **Ledge recovery:** Standard Skyline rescue cases pass and feel intentional.
 - [ ] **Arena mechanics:** Falling, crates and breakable perimeter work and reset correctly.
 - [ ] **Camera:** Surviving/recoverable players remain readable across supported aspect ratios and map situations.

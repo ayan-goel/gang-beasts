@@ -13,7 +13,7 @@ Each cue uses one Web Audio oscillator with an amplitude envelope. Frequencies s
 | High winds approaching | Sine | 215 to 620 Hz | 2 | 280 ms |
 | Sudden death crosswind | Sine | 430 to 145 Hz | 1 | 480 ms |
 
-The [synthesis source](../../web/src/audio/warningTone.ts) is the original asset. One voice can play at a time. A new cue replaces the prior voice, and the graph disconnects when its envelope finishes.
+The [synthesis source](../../web/src/audio/matchTone.ts) is the original asset. One hazard voice can play at a time alongside the independent [fighter condition voice](17d-fighter-condition.md). A new hazard cue replaces the prior warning, and the graph disconnects when its envelope finishes.
 
 ## Timing and ownership
 

@@ -1,6 +1,9 @@
 import { observeWarningAudio, warningSamples } from './support/warningAudio';
 import { expect, test } from '@playwright/test';
 
+// The local warning follows 5,400 physics ticks on the render clock. Use the Mac GPU for this real-time scene.
+if (process.platform === 'darwin') test.use({launchOptions:{args:['--use-gl=angle','--use-angle=metal']}});
+
 test('muting Skyline persists on reload and into private rooms', async ({page}) => {
   await page.goto('/play/');
   const mute = page.getByRole('button', {name:'Mute game audio'});
@@ -32,14 +35,14 @@ test('a local match unlocks audio on start and plays one walkway cue from physic
   expect(await warningSamples(page)).toHaveLength(1);
 });
 
-test('the four original warnings render distinct, bounded pulse patterns in the browser audio graph', async ({page}) => {
+test('match warnings and condition cues render bounded pulse patterns in the browser audio graph', async ({page}) => {
   await page.goto('/play/');
   const shapes = await page.evaluate(async () => {
-    const {playWarningTone} = await import(/* @vite-ignore */ String('/src/audio/warningTone.ts'));
+    const {playMatchTone} = await import(/* @vite-ignore */ String('/src/audio/matchTone.ts'));
     const patterns = [];
-    for (const stage of ['west_warning','east_warning','gust_warning','gust']) {
+    for (const stage of ['west_warning','east_warning','gust_warning','gust','knocked_out','recovering']) {
       const context = new OfflineAudioContext(1, 48000, 48000);
-      playWarningTone(context, stage);
+      playMatchTone(context, stage);
       const samples = (await context.startRendering()).getChannelData(0);
       let pulses = 0, previous = false, peak = 0;
       for (let i = 0; i < samples.length; i += 480) {
@@ -49,14 +52,15 @@ test('the four original warnings render distinct, bounded pulse patterns in the 
         if (audible && !previous) pulses++;
         previous = audible;
       }
-      patterns.push({pulses, peak, silentEnd:samples.slice(-4800).every(x => x === 0)});
+      patterns.push({stage, pulses, peak, silentEnd:samples.slice(-4800).every(x => x === 0)});
     }
     return patterns;
   });
-  expect(shapes.map(s => s.pulses)).toEqual([2,3,2,1]);
+  expect(shapes.map(s => s.pulses)).toEqual([2,3,2,1,1,2]);
   for (const s of shapes) {
-    expect(s.peak).toBeGreaterThan(0.07);
-    expect(s.peak).toBeLessThanOrEqual(0.13);
+    expect(s.peak).toBeGreaterThan(0.05);
+    const cap = s.stage === 'knocked_out' || s.stage === 'recovering' ? 0.08 : 0.12;
+    expect(s.peak).toBeLessThanOrEqual(cap + 0.001);
     expect(s.silentEnd).toBe(true);
   }
 });

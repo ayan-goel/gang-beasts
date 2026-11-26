@@ -1,3 +1,4 @@
+import { fighterPhases, type FighterPhase } from '../game/fighterCondition';
 import { writePose } from './samplePose';
 import type { StreamStatus } from './SnapshotTimeline';
 import { bindRemoteControls } from './RemoteControls';
@@ -10,21 +11,24 @@ import type { MatchFeed } from './MatchFeed';
 const colors = ['#f38e66','#64b7dd','#e8bd59','#7dd3b1','#bd9ae6','#e69eb9','#bbd17e','#a7b4c9'];
 const phases = ['countdown','playing','round_results','match_results'] as const;
 
-export function matchView(frame: Snapshot, content: SkylineContent): MatchView {
+type RemoteMatch = MatchView & {conditions: FighterPhase[]};
+
+export function matchView(frame: Snapshot, content: SkylineContent): RemoteMatch {
   const t = frame.arenaTick;
   const s = content.map.schedule;
   return {phase: phases[frame.phase]!, round: frame.number, epoch: String(frame.round), remaining: frame.remaining,
     scores: frame.fighters.map(f => f.score), winner: frame.winner,
+    conditions: frame.fighters.map(f => fighterPhases[f.consciousness]!),
     visible: frame.fighters.map(f => f.consciousness !== 3),
     timeLeft: Math.max(0, (t < s.gust_tick ? s.gust_tick : s.end_tick) - t),
     hazard: t >= s.gust_tick ? 'gust' : t >= s.east_tick ? 'gust_warning' : t >= s.west_tick ? 'east_warning' : t >= s.warn_tick ? 'west_warning' : 'quiet'};
 }
 
-export function startRemoteScene(container: HTMLElement, content: SkylineContent, feed: MatchFeed, update: (match: MatchView) => void, status: (value: StreamStatus) => void) {
+export function startRemoteScene(container: HTMLElement, content: SkylineContent, feed: MatchFeed, update: (match: RemoteMatch) => void, status: (value: StreamStatus) => void) {
   const scene = new FixtureScene(container, content.fighter, {map: content.map, model: content.model, kit: feed.fighters[0]!.color, color: colors[feed.fighters[0]!.color]});
   const bodies = feed.fighters.map(() => new Float32Array(15*14));
   const objects = new Float32Array(8*content.map.objects.length);
-  let animation = 0, priorTime = performance.now(), prior: Snapshot | null = null, match: MatchView | null = null;
+  let animation = 0, priorTime = performance.now(), prior: Snapshot | null = null, match: RemoteMatch | null = null;
   let previousStatus: StreamStatus | undefined;
   let unbind: (() => void) | undefined;
   try {

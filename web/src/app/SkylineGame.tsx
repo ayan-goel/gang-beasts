@@ -1,4 +1,5 @@
-import { MuteButton, useHazardSound } from '../audio/SkylineSound';
+import { FighterNotices } from './FighterNotices';
+import { MuteButton, useMatchSound } from '../audio/SkylineSound';
 import { useEffect, useRef, useState } from 'react';
 import { loadFighterModel } from '../rendering/fighter/loadFighterModel';
 import { startDuel, type DuelState } from '../game/startDuel';
@@ -28,7 +29,8 @@ export function SkylineGame() {
   const match = state?.match;
   const complete = match?.phase === 'match_results';
   const menu = !started || state?.paused || complete;
-  useHazardSound(match, started && !menu);
+  const conditions = state?.conditions.map(c => c.phase) ?? [];
+  useMatchSound(match, started && !menu, conditions);
   const winner = match?.winner == null ? 'Draw' : `${names[match.winner]} wins the ${complete ? 'match' : 'round'}`;
   const start = () => {
     if (complete) runtime.current?.reset();
@@ -65,7 +67,7 @@ export function SkylineGame() {
           {match.phase === 'countdown' && <strong>{Math.max(1, Math.ceil(match.remaining / 60))}</strong>}
           {match.phase === 'round_results' && <strong>{winner}</strong>}
           {match.phase === 'playing' && hazardWarnings[match.hazard] && <span>{hazardWarnings[match.hazard]}</span>}
-          {match.phase === 'playing' && state?.conditions.map((c, i) => c.phase === 'knocked_out' ? <span key={i}>{names[i]} knocked out</span> : null)}
+          {match.phase === 'playing' && <FighterNotices names={names} phases={conditions} />}
         </div>}
         {started && !menu && match?.phase === 'playing' && <div className="match-grips">
           {state?.grips.map((hands, id) => hands.length > 0 && <div key={id} aria-label={`${names[id]} grips`}>
