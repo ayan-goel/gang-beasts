@@ -1577,7 +1577,7 @@ Use scenario-based tolerances and invariants, with exact replay comparisons only
 | Ledge recovery | Standard fixture succeeds; blocked mantles do not clip |
 | One-/two-hand hang | Load/stamina behavior matches configured thresholds |
 | Moving/rotating support | Relative movement and departure momentum are correct |
-| Eight-player grip loop | Finite state, bounded error/velocity; no unbounded energy growth |
+| Eight-player grip loop | Finite state, bounded error/velocity; no unbounded energy growth. [Native left- and right-hand cycles under load and after release](docs/verification/eight-fighter-grip-loop.md) |
 | High-speed collision | Selective CCD prevents unacceptable fixture tunneling |
 | Simultaneous elimination | Stable draw/winner independent of player iteration order |
 | Round reset | Counts, seeds, inputs, hazards, constraints and epochs reset |

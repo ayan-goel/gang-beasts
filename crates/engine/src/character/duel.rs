@@ -339,3 +339,7 @@ mod punch_aim_tests;
 #[cfg(test)]
 #[path = "match_rig_tests.rs"]
 mod match_rig_tests;
+
+#[cfg(test)]
+#[path = "grip_loop_tests.rs"]
+mod grip_loop_tests;
