@@ -40,7 +40,7 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
     let publish = |r: &Room, lineup: &Option<Arc<[crate::lineup::Participant]>>| {
         let mut frame = r.capture().map_err(|_| DispatchError::Initialization)?;
         frame.lineup.clone_from(lineup);
-        job.shared.latest.lock().unwrap().replace(Arc::new(frame));
+        job.shared.latest.send_replace(Some(Arc::new(frame)));
         Ok(())
     };
     publish(&room, &lineup)?;

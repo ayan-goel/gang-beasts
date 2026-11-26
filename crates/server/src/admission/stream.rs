@@ -24,7 +24,9 @@ pub(super) async fn play(
     let Some(mut binding) = Binding::open(state, code, owner, &game) else {
         return;
     };
-    let mut timer = interval(Duration::from_nanos(1_000_000_000 / 30));
+    let mut frames = game.client.publications();
+    // Keep ownership and heartbeat checks alive even when the worker stops publishing.
+    let mut timer = interval(Duration::from_millis(250));
     timer.set_missed_tick_behavior(MissedTickBehavior::Skip);
     let mut tick = None;
     let mut published = None;
@@ -35,6 +37,7 @@ pub(super) async fn play(
     let mut heartbeat = Heartbeat::new(Instant::now());
     loop {
         tokio::select! {
+            changed = frames.changed() => { if changed.is_err() { return; } }
             _ = timer.tick() => (),
             message = socket.recv() => {
                 if since.elapsed() >= Duration::from_secs(1) { since = Instant::now(); received = 0; }
@@ -84,7 +87,7 @@ pub(super) async fn play(
         if game.client.returning_to_lobby() {
             return;
         }
-        let Some(frame) = game.client.latest() else {
+        let Some(frame) = frames.borrow_and_update().clone() else {
             continue;
         };
         match binding.assignment(state, &frame) {

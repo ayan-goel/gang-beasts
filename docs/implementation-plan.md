@@ -92,6 +92,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 18 | Settings, accessibility and product flows | Input isolation, keyboard navigation, loading/errors, quality/audio settings |
 | 19a — native room baseline | Eight active fighters and eight personalized snapshots | Five release runs with service time, recipient bytes and workload checks |
 | 19b — compact snapshots | Advertise compact rotations per connection | Independent fixtures, mixed clients and repeated eight-fighter measurements |
+| 19c — snapshot delivery | Wake match connections when their room publishes | Slow-reader coalescing, immediate initial state and repeated eight-client delivery windows |
 | 19 | Performance and endurance | Declared hardware measurements, 60-minute soak, 100 resets, eight-player stress |
 | 20 | Deployment and release audit | CI, container, compatibility manifest, real two-client smoke and all §33 gates |
 

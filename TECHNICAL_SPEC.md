@@ -861,6 +861,8 @@ Estimate server time with application-level ping/pong and a smoothed offset/RTT.
 
 MVP: binary secure WebSockets. Use one ordered connection per session with application message kinds for control, inputs, snapshots and events. TCP loss can delay newer state through head-of-line blocking; application dropping cannot remove bytes already handed to TCP.
 
+Each native room publishes one shared latest snapshot and wakes its subscribed match sockets. A subscriber can skip superseded frames under backpressure. A new subscriber can immediately read the current state. Heartbeat and ownership checks also advance when publications pause.
+
 Keep a `Transport` interface for open/send/receive/close and measured queue status. Evaluate WebTransport or WebRTC data channels later only with real latency/loss tests and deployment/browser compatibility checks. Unreliable snapshots need explicit lifecycle/baseline recovery. Raw UDP is not the browser baseline. The browser WebSocket API has no automatic receive backpressure; bound application work and monitor queued sends. [MDN WebSocket](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket)
 
 ### 17.4 Input wire contract — exactly 18 bytes

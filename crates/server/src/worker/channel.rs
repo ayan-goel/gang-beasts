@@ -3,7 +3,7 @@ use brawler_engine::FighterId;
 use brawler_protocol::{INPUT_BYTES, InputFrame};
 use std::{
     sync::{
-        Arc, Mutex,
+        Arc,
         atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc::{Receiver, SyncSender, TrySendError, sync_channel},
     },
@@ -31,7 +31,7 @@ pub(super) enum Command {
 }
 
 pub(super) struct Shared {
-    pub latest: Mutex<Option<Arc<RoomFrame>>>,
+    pub latest: tokio::sync::watch::Sender<Option<Arc<RoomFrame>>>,
     pub closed: AtomicBool,
     pub rejected: AtomicU64,
     pub return_to_lobby: AtomicBool,
@@ -48,7 +48,7 @@ impl RoomClient {
     pub(super) fn channel(count: usize) -> (Self, Vec<Receiver<Command>>) {
         let (senders, incoming) = (0..count).map(|_| sync_channel(8)).unzip();
         let shared = Arc::new(Shared {
-            latest: Mutex::default(),
+            latest: tokio::sync::watch::Sender::new(None),
             closed: AtomicBool::new(false),
             owners: Default::default(),
             return_to_lobby: AtomicBool::new(false),
@@ -59,7 +59,14 @@ impl RoomClient {
     }
 
     pub fn latest(&self) -> Option<Arc<RoomFrame>> {
-        self.shared.latest.lock().unwrap().clone()
+        self.shared.latest.borrow().clone()
+    }
+
+    pub(crate) fn publications(&self) -> tokio::sync::watch::Receiver<Option<Arc<RoomFrame>>> {
+        let mut frames = self.shared.latest.subscribe();
+        // A late join or reconnect needs the retained frame even if the worker has just published.
+        frames.mark_changed();
+        frames
     }
 
     pub fn rejected_inputs(&self) -> u64 {
@@ -133,5 +140,46 @@ impl RoomClient {
 impl Drop for RoomClient {
     fn drop(&mut self) {
         self.shared.closed.store(true, Ordering::Release);
+    }
+}
+
+#[cfg(test)]
+mod publication_tests {
+    use super::*;
+    use crate::Room;
+
+    #[tokio::test]
+    async fn new_connections_get_current_state_and_slow_connections_skip_old_frames() {
+        let (client, _) = RoomClient::channel(2);
+        let mut room = Room::skyline().unwrap();
+        let publish = |room: &Room| {
+            client
+                .shared
+                .latest
+                .send_replace(Some(Arc::new(room.capture().unwrap())));
+        };
+        publish(&room);
+        let mut prompt = client.publications();
+        let mut slow = client.publications();
+        assert!(prompt.has_changed().unwrap());
+        assert_eq!(prompt.borrow_and_update().as_ref().unwrap().tick(), 0);
+        assert!(!prompt.has_changed().unwrap());
+        for expected in [2, 4] {
+            room.step();
+            room.step();
+            publish(&room);
+            assert!(prompt.has_changed().unwrap());
+            prompt.changed().await.unwrap();
+            assert_eq!(
+                prompt.borrow_and_update().as_ref().unwrap().tick(),
+                expected
+            );
+        }
+        assert_eq!(slow.borrow_and_update().as_ref().unwrap().tick(), 4);
+        assert!(!slow.has_changed().unwrap());
+        assert!(Arc::ptr_eq(
+            slow.borrow().as_ref().unwrap(),
+            prompt.borrow().as_ref().unwrap()
+        ));
     }
 }
