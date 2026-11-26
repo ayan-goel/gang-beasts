@@ -1182,6 +1182,8 @@ Provide master, music and effects sliders, mute and persistence of settings. Ful
 
 2–8 players, individual survival, last survivor wins, default first to three round wins. Draws award no point. Process all eliminations before scoring; award each round once using a unique round ID. Use automatic next rounds, configurable map rotation and rematch without refresh.
 
+The local and private-room result banners name the winner of the round or match. A drawn round explains that no point was awarded. [Scoring verification](docs/verification/round-scoring.md)
+
 In local Skyline, the three-second countdown and five-second round results use visible, unpaused time. Their fixed ticks may catch up to the current phase boundary. Active fighter physics retains its four-step catch-up budget. [Local phase timing](docs/slices/12c-local-phase-clock.md)
 
 At 180 seconds, begin the map's sudden-death sequence. Initial maximum extension is 30 seconds; unresolved rounds become draws. If fewer than two eligible players remain between rounds, return to a waiting lobby instead of farming automatic wins. Exact countdown/result display durations are UI configuration candidates (initially 3 s/5 s).
@@ -1696,7 +1698,7 @@ Retain all 18 original completion checks, with explicit evidence expectations:
 - [ ] **Camera:** Surviving/recoverable players remain readable across supported aspect ratios and map situations.
 - [ ] **Authority:** Client packet manipulation cannot dictate transforms, hits or scores.
 - [ ] **Smooth multiplayer:** Interpolation is stable and action latency meets the playability gate at the regional test profile.
-- [ ] **Round/match scoring:** All clients agree; simultaneous elimination and duplicate events score correctly.
+- [x] **Round/match scoring:** All clients agree; simultaneous elimination and duplicate events score correctly. [Same-tick falls, duplicate results, eight-client agreement and first-to-three matches](docs/verification/round-scoring.md)
 - [ ] **Disconnects:** Stale input, grace expiry, host transfer and reconnect work without orphan grips.
 - [x] **Rematch:** Repeated rounds/rematches do not require refresh or leak stale physics/network state. [Two consecutive online rematches](docs/slices/16f-online-rematch.md#verification)
 - [ ] **Performance:** Eight-player server/client budgets are measured on declared hardware; optimized traffic target is separately measured.

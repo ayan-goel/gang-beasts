@@ -50,7 +50,12 @@ export async function verifyOnlineRematch({page:host, browser}: {page:Page; brow
         try { await expect(host.getByLabel('Mint score')).toHaveText(String(round),{timeout:25000}); }
         finally { await guest.keyboard.up('KeyD'); await guest.keyboard.up('ShiftLeft'); }
       }
-      for (const p of pages) await expect(p.getByLabel('Round phase')).toHaveText('Match results',{timeout:12000});
+      for (const p of pages) {
+        await expect(p.getByLabel('Round phase')).toHaveText('Match results',{timeout:12000});
+        await expect(p.getByRole('status').filter({hasText:'Mint wins the match'})).toBeVisible();
+        await expect(p.getByLabel('Mint score')).toHaveText('3');
+        await expect(p.getByLabel('Blue score')).toHaveText('0');
+      }
       const previousEpoch = epoch, lastTick = tick;
       await expect(guest.getByRole('button',{name:'Play again'})).toHaveCount(0);
       guestRematch();

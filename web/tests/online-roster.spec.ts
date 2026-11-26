@@ -8,7 +8,8 @@ import { observeSkinDraws } from './support/skinDraws';
 // Eight clients share this machine. Use its native GPU for the full-roster scenario on macOS.
 if (process.platform === 'darwin') test.use({launchOptions:{args:['--use-gl=angle', '--use-angle=metal']}});
 
-test('eight ready browsers share the rooftop and the eighth player can run off it', async ({browser}) => {
+test('eight ready browsers share the rooftop and agree on the surviving fighter’s point', async ({browser}) => {
+  test.setTimeout(240_000);
   const contexts: BrowserContext[] = [];
   const pages: Page[] = [];
   const traffic: ReturnType<typeof observeSnapshotTraffic>[] = [];
@@ -73,6 +74,29 @@ test('eight ready browsers share the rooftop and the eighth player can run off i
     }
     for (const player of pages) await expect(player.getByLabel('Fighter 8 eliminated')).toHaveText('Out');
     await expect(host.getByLabel('Round phase')).toHaveText('Playing');
+    const exits = ['KeyD', 'KeyA', 'KeyD', 'KeyW', 'KeyD', 'KeyW'];
+    for (const [offset, key] of exits.entries()) {
+      const player = pages[offset + 1]!;
+      await player.bringToFront();
+      await player.locator('.online-scene canvas').focus();
+      await player.keyboard.down('ShiftLeft');
+      await player.keyboard.down(key);
+      try {
+        await expect(host.getByLabel('Fighter ' + (offset + 2) + ' eliminated')).toHaveText('Out', {timeout:25_000});
+      } finally {
+        await player.keyboard.up(key);
+        await player.keyboard.up('ShiftLeft');
+      }
+    }
+    await Promise.all(pages.map(async player => {
+      const scores = player.getByLabel(/^Fighter \d score$/);
+      const expected = ['1', '0', '0', '0', '0', '0', '0', '0'];
+      await expect(player.getByRole('status').filter({hasText:'Fighter 1 wins the round'})).toBeVisible();
+      await expect(scores).toHaveText(expected);
+      await expect(player.getByLabel('Round number')).toHaveText('Round 2', {timeout:12_000});
+      await expect(scores).toHaveText(expected);
+      await expect(player.getByLabel(/^Fighter \d eliminated$/)).toHaveCount(0);
+    }));
   } catch (error) {
     const clients = await Promise.all(pages.map(async (p,slot) => ({
       fighter:slot+1, ...traces[slot],

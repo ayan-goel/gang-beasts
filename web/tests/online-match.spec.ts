@@ -4,9 +4,11 @@ import { verifyOnlineRematch } from './support/rematchScenario';
 import { verifyDisconnectGrace } from './support/disconnectScenario';
 import { releaseRoom } from './support/releaseRoom';
 import { observeMatch } from './support/onlineTrace';
+import { repeatResults } from './support/repeatResults';
 
 test('only the host can start and both ready browsers see the live rooftop and round', async ({page, browser}) => {
   const hostTrace = observeMatch(page);
+  const repeats = await repeatResults(page);
   await page.goto('/rooms/');
   await page.getByLabel('Player name').fill('Mint');
   await page.getByRole('button', {name:'Create room',exact:true}).click();
@@ -44,6 +46,7 @@ test('only the host can start and both ready browsers see the live rooftop and r
       try {
         await expect(page.getByLabel(winner + ' score')).toHaveText('1', {timeout:20000});
         await expect(guest.getByLabel(winner + ' score')).toHaveText('1');
+        for (const client of [page,guest]) await expect(client.getByRole('status').filter({hasText:winner + ' wins the round'})).toBeVisible();
       } catch (error) {
         const path = test.info().outputPath('physics-and-inputs.json');
         await writeFile(path, JSON.stringify({hostTrace, guestTrace}));
@@ -55,7 +58,13 @@ test('only the host can start and both ready browsers see the live rooftop and r
       }
       await expect(player.getByLabel('Round number')).toHaveText('Round ' + round, {timeout:12000});
       await expect(player.getByLabel('Round phase')).toHaveText('Playing', {timeout:12000});
+      for (const client of [page,guest]) {
+        await expect(client.getByLabel('Round number')).toHaveText('Round ' + round);
+        await expect(client.getByLabel('Mint score')).toHaveText('1');
+        await expect(client.getByLabel('Gold score')).toHaveText(round === 2 ? '0' : '1');
+      }
     }
+    expect(repeats).toEqual({duplicate:2, previousRound:2});
     for (const player of [guest,page]) {
       await player.getByRole('button',{name:'Leave room'}).click();
       await expect(player.getByLabel('Player name')).toBeVisible();

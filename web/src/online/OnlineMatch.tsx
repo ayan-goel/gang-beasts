@@ -7,6 +7,7 @@ import { useMatchSound } from '../audio/SkylineSound';
 import { useEffect, useRef, useState } from 'react';
 import { colors } from '../lobby/api';
 import { hazardWarnings } from '../game/skylineHazards';
+import { meleeResult } from '../game/meleeResult';
 import type { SkylineContent } from '../lobby/content';
 import type { StreamStatus } from './SnapshotTimeline';
 import { matchView, startRemoteScene } from './RemoteScene';
@@ -33,7 +34,7 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
   }, [feed, content]);
   useMatchSound(match, status === 'live' || status === 'estimating', match.conditions, match.impacts);
   const names = feed.fighters.map(f => f.name);
-  const winner = match.winner == null ? 'Draw' : feed.fighters[match.winner]!.name + ' wins';
+  const winner = meleeResult(match, names);
   const hint = feed.own !== null && match.phase === 'playing' && match.conditions[feed.own] === 'active'
     ? gripHint(feed.own, match.gripTargets, match.hazard) : '';
   return <section className="online-match" aria-label="Online Skyline arena">

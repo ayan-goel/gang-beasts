@@ -1,4 +1,5 @@
 import { pullHint } from '../game/ledgeHint';
+import { meleeResult } from '../game/meleeResult';
 import { GripNotices } from './GripNotices';
 import { StaminaMeter } from './StaminaMeter';
 import { FighterNotices } from './FighterNotices';
@@ -34,7 +35,7 @@ export function SkylineGame() {
   const menu = !started || state?.paused || complete;
   const conditions = state?.conditions.map(c => c.phase) ?? [];
   useMatchSound(match, started && !menu, conditions, state?.impacts);
-  const winner = match?.winner == null ? 'Draw' : `${names[match.winner]} wins the ${complete ? 'match' : 'round'}`;
+  const winner = match && meleeResult(match, names);
   const start = () => {
     if (complete) runtime.current?.reset();
     setStarted(true); runtime.current?.toggle();
