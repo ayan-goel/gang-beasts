@@ -29,7 +29,7 @@ export function startRemoteScene(container: HTMLElement, content: SkylineContent
   let unbind: (() => void) | undefined;
   try {
     for (const fighter of feed.fighters.slice(1)) scene.addOpponent(content.fighter, colors[fighter.color]);
-    unbind = bindRemoteControls(container.querySelector('canvas')!, feed);
+    unbind = bindRemoteControls(container.querySelector('canvas')!, feed, scene.groupCamera!);
     function render(now: number) {
       const sample = feed.timeline.sample(now);
       if (sample) {

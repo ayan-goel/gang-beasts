@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, it, vi } from 'vitest';
 import { bindRemoteControls } from './RemoteControls';
+import { GroupCamera } from '../rendering/GroupCamera';
 import { MatchFeed } from './MatchFeed';
 
 it('samples focused controls from network publications even when window timers never fire', () => {
@@ -20,7 +21,7 @@ it('samples focused controls from network publications even when window timers n
     feed.receive(world);
   };
   const down = (code: string) => canvas.dispatchEvent(Object.assign(new Event('keydown'), {code}));
-  const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed);
+  const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed, new GroupCamera());
   try {
     publish(1n, 1);
     down('KeyW');
@@ -41,4 +42,22 @@ it('samples focused controls from network publications even when window timers n
     vi.unstubAllGlobals();
     vi.useRealTimers();
   }
+});
+
+it('lets a spectator turn the view without sending fighter inputs and releases its key listener', () => {
+  const canvas = Object.assign(new EventTarget(), {setAttribute() {}});
+  vi.stubGlobal('document', {hidden:false});
+  const transmit = vi.fn();
+  const feed = new MatchFeed(Uint8Array.of(23,1,255,0,0,1,65,1,1,1,66), transmit);
+  const camera = new GroupCamera();
+  const turn = vi.spyOn(camera,'turn');
+  const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed, camera);
+  const key = (code: string, repeat = false) => canvas.dispatchEvent(Object.assign(new Event('keydown'), {code,repeat}));
+  try {
+    key('KeyX'); key('KeyX',true); key('KeyW'); key('KeyZ');
+    expect(turn.mock.calls).toEqual([[1],[-1]]);
+    expect(transmit).not.toHaveBeenCalled();
+  } finally { stop(); vi.unstubAllGlobals(); }
+  key('KeyX');
+  expect(turn).toHaveBeenCalledTimes(2);
 });

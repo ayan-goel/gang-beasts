@@ -823,6 +823,8 @@ Use subtle silhouettes/markers or fading of designated foreground meshes when ge
 
 ### 16.6 Camera-relative input
 
+Skyline uses Z/X to turn in 45° increments from its existing rooftop view. The two local fighters share an orbit, while each online player and spectator controls an independent view. Held direction follows the displayed heading through each turn. [Implementation and verification](docs/slices/12d-camera-orbit.md)
+
 Flatten and normalize camera forward/right on the horizontal plane, combine input, clamp vector length to one, and quantize world X/Z. With a near-vertical camera, reuse a stable previous forward vector rather than normalizing a nearly zero projection. Use intended camera orbit orientation rather than transient shake.
 
 The server receives world-space intent, not camera yaw or trusted speed. Rotating one client's camera cannot rotate another client's controls. Define whether a held direction follows camera orbit continuously; initial policy is yes, with smooth camera rotation and no discontinuous sign changes.

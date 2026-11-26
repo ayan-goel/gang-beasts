@@ -3,6 +3,7 @@ import { LocalDuel } from '../generated/wasm/brawler_wasm';
 import configuration from '../generated/physics.json?raw';
 import { FixtureScene } from '../rendering/FixtureScene';
 import { bindMovementInput } from './bindMovementInput';
+import { bindCameraOrbit } from './bindCameraOrbit';
 import { FixedClock } from './FixedClock';
 import { MovementInput } from './MovementInput';
 import type { RigDefinition } from './rigDefinition';
@@ -32,6 +33,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
   const clock = new FixedClock();
   let frame = 0;
   let scene: FixtureScene | undefined;
+  let unbindOrbit: (() => void) | undefined;
   let unbind: (() => void) | undefined;
   let paused = true;
   let hits: [number, number] = [0, 0];
@@ -45,6 +47,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     disposed = true;
     cancelAnimationFrame(frame);
     document.removeEventListener('visibilitychange', resetClock);
+    unbindOrbit?.();
     try { unbind?.(); } finally { try { scene?.dispose(); } finally { duel.free(); } }
   };
   try {
@@ -55,8 +58,14 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     const renderer = scene;
     const canvas = container.querySelector('canvas')!;
     let match: MatchView | undefined = skyline ? JSON.parse(duel.match_json()!) : undefined;
+    const orbit = renderer.groupCamera;
+    const move = (id: Player, x: number, z: number, run: boolean) => {
+      if (orbit) [x,z] = orbit.movement(x,z);
+      duel.set_input(id,x,z,run);
+    };
+    if (orbit) unbindOrbit = bindCameraOrbit(canvas, orbit, () => !paused);
     const playerInput = (id: Player) => new MovementInput({
-      setInput: (x, z, run) => duel.set_input(id, x, z, run),
+      setInput: (x, z, run) => move(id, x, z, run),
       setLift: held => duel.set_lift(id, held),
       setJump: held => duel.set_jump(id, held),
       clearJumpInput: () => duel.clear_jump(id),
@@ -85,7 +94,13 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     });
     const render = (dt = 0) => {
       const first = duel.body_states(0), second = duel.body_states(1);
-      if (match) renderer.renderSkyline([first, second], duel.arena_poses(), match, dt);
+      if (match) {
+        const turned = renderer.renderSkyline([first, second], duel.arena_poses(), match, dt);
+        if (turned) for (const id of [0,1] as const) {
+          const [x,z,run] = inputs[id]!.command;
+          if (x || z) move(id,x,z,run);
+        }
+      }
       else renderer.renderDuel(first, second);
     };
     const step = () => {

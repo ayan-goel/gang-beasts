@@ -24,3 +24,34 @@ test('framing keeps separated and falling fighters visible across portrait and l
     }
   }
 });
+
+test('held movement follows the displayed orbit through eight smooth turns independently of other views', () => {
+  const group = new GroupCamera(), other = new GroupCamera();
+  const camera = new PerspectiveCamera(45, 1, 0.1, 150);
+  const start = other.movement(0,-1);
+  group.update(camera, [], true, 0);
+  const direction = new Vector3();
+  for (let turn = 1; turn <= 8; turn++) {
+    let previous = group.movement(0,-1);
+    group.turn(1);
+    expect(group.movement(0,-1)).toEqual(previous);
+    for (let frame = 0; frame < 120; frame++) {
+      group.update(camera, [], true, 1/60);
+      camera.getWorldDirection(direction);
+      direction.y = 0;
+      direction.normalize();
+      const next = group.movement(0,-1);
+      expect(next[0]).toBeCloseTo(direction.x, 6);
+      expect(next[1]).toBeCloseTo(direction.z, 6);
+      expect(Math.hypot(next[0]-previous[0], next[1]-previous[1])).toBeLessThan(.15);
+      previous = next;
+    }
+    const angle = turn * Math.PI / 4;
+    expect(previous[0]).toBeCloseTo(start[0]*Math.cos(angle)+start[1]*Math.sin(angle), 4);
+    expect(previous[1]).toBeCloseTo(start[1]*Math.cos(angle)-start[0]*Math.sin(angle), 4);
+  }
+  group.turn(-1);
+  for (let i=0; i<120; i++) group.update(camera, [], true, 1/60);
+  expect(group.movement(0,-1)[0]).toBeGreaterThan(start[0]);
+  expect(other.movement(0,-1)).toEqual(start);
+});

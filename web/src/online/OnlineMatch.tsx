@@ -41,7 +41,7 @@ export default function OnlineMatch({feed, exit, rematch}: {feed: MatchFeed; exi
         {!match.visible[i] && <small aria-label={p.name + ' eliminated'}>Out</small>}
       </span>)}
     </div>}
-    <p className="online-controls">{feed.own === null ? 'Spectating' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift'}</p>
+    <p className="online-controls">{feed.own === null ? 'Spectating · Z / X to turn the camera' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift · Z / X to turn the camera'}</p>
     {match && match.phase !== 'playing' && <div className="online-callout"><span role="status">{match.phase === 'countdown' ? Math.max(1,Math.ceil(match.remaining/60)) : winner}</span>
       {match.phase === 'match_results' && rematch && <button className="room-primary" onClick={rematch}>Play again</button>}
     </div>}

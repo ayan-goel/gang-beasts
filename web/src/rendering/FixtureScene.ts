@@ -31,7 +31,7 @@ export class FixtureScene {
   private readonly resizeObserver?: ResizeObserver;
   private readonly opponents: RagdollView[] = [];
   private skyline?: SkylineView;
-  private groupCamera?: GroupCamera;
+  readonly groupCamera?: GroupCamera;
   private readonly practice?: PracticeTargetView;
   private readonly rig?: RagdollView;
   private readonly joints?: JointOverlay;
@@ -110,7 +110,7 @@ export class FixtureScene {
     this.renderer.domElement.setAttribute('aria-label', (count === 2 ? 'Two' : count) + ' fighters on the ' + arena);
   }
 
-  renderSkyline(players: Float32Array[], props: Float32Array, match: MatchView, dt: number): void {
+  renderSkyline(players: Float32Array[], props: Float32Array, match: MatchView, dt: number): boolean {
     this.skyline!.update(props, match.hazard);
     this.rig!.root.visible = match.visible[0]!;
     this.opponents.forEach((rig, i) => {
@@ -118,8 +118,9 @@ export class FixtureScene {
       if (rig.root.visible) rig.update(players[i + 1]!, -1);
     });
     const present = players.filter((_, slot) => match.visible[slot]);
-    this.groupCamera!.update(this.camera, present, match.phase === 'countdown' || match.phase === 'match_results', dt);
+    const turned = this.groupCamera!.update(this.camera, present, match.phase === 'countdown' || match.phase === 'match_results', dt);
     this.render(players[0]!, undefined, undefined, -1);
+    return turned;
   }
 
   renderDuel(first: Float32Array, second: Float32Array): void {

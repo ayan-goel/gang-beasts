@@ -1,11 +1,13 @@
 import { MovementInput } from '../game/MovementInput';
 import { bindMovementInput } from '../game/bindMovementInput';
 import { InputSampler } from '../net/InputSampler';
-import { cameraRelativeMovement } from '../rendering/GroupCamera';
+import { bindCameraOrbit } from '../game/bindCameraOrbit';
+import type { GroupCamera } from '../rendering/GroupCamera';
 import type { MatchFeed } from './MatchFeed';
 
-export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed) {
-  if (feed.own === null) return () => {};
+export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, camera: GroupCamera) {
+  const unbindOrbit = bindCameraOrbit(canvas, camera, () => !document.hidden);
+  if (feed.own === null) return unbindOrbit;
   let sampler = new InputSampler();
   let active = false;
   let lastSent = -Infinity;
@@ -14,7 +16,7 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed) {
     try { sampler.setButton(name, down); } catch { sampler.neutralize(); }
   };
   const movement = new MovementInput({
-    setInput(x,z,run) { sampler.setMovement(...cameraRelativeMovement(x,z)); button('run',run); },
+    setInput(x,z,run) { sampler.setMovement(...camera.movement(x,z)); button('run',run); },
     setJump: held => button('jump',held), clearJumpInput: () => button('jump',false),
     setHand: (side,held) => button(side === 0 ? 'leftHand' : 'rightHand',held),
     clearHands: () => { button('leftHand',false); button('rightHand',false); },
@@ -22,6 +24,8 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed) {
   }, () => playing() && document.activeElement === canvas);
   const unbind = bindMovementInput(canvas,movement);
   const transmit = () => {
+    const [x,z] = movement.command;
+    sampler.setMovement(...camera.movement(x,z));
     lastSent = performance.now();
     if (feed.latest) for (const packet of sampler.sample(feed.latest.tick)) feed.transmit(packet);
   };
@@ -55,6 +59,7 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed) {
     canvas.removeEventListener('blur',neutralize);
     window.removeEventListener('blur',neutralize);
     neutralize();
+    unbindOrbit();
     unbind();
   };
 }
