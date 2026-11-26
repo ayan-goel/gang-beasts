@@ -1196,7 +1196,7 @@ Skyline gives a confirmed hand contact a short catch sound, a sustained hold a c
 
 Skyline sounds each observed countdown change and the opening of play. A scored round, draw and match victory have distinct centered cues tied to the phase shown on screen. The first observed state after joining or resuming is silent. [Round audio](docs/slices/17h-round-audio.md)
 
-Provide master, music and effects sliders, mute and persistence of settings. Full game adds adaptive music and refined occlusion. Visual warning alternatives must remain available for players who mute sound.
+The [match mixer](docs/slices/17i-arena-mix.md) provides persistent master, music and effects sliders in local and private matches. Mute preserves the individual levels. Active rounds play an original eight-bar arena score. Full game adds adaptive music and refined occlusion. Visual warning alternatives must remain available for players who mute sound.
 
 ## 22. Game modes
 

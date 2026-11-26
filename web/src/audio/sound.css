@@ -1,3 +1,8 @@
 button.skyline-mute { width: auto; border: 1px solid #74888b; border-radius: .2rem; background: transparent; color: #172d38; font: 650 .78rem system-ui,sans-serif; padding: .4rem .65rem; white-space: nowrap; cursor: pointer; }
 button.skyline-mute:focus-visible { outline: 2px solid #286a82; outline-offset: 2px; }
 @media (max-width: 720px) { .skyline-shell .skyline-header { flex-wrap: wrap; gap: .4rem .8rem; } }
+.match-levels { min-width: 0; margin: 1rem 0; padding: .5rem .75rem; border: 1px solid #74888b; }
+.match-levels legend { font-weight: 700; padding: 0 .25rem; }
+.match-levels label { display: grid; grid-template-columns: 3.5rem minmax(2rem, 1fr) 3rem; align-items: center; gap: .5rem; padding: .25rem 0; }
+.match-levels input { width: 100%; accent-color: #286a82; }
+.match-levels span { text-align: right; font-variant-numeric: tabular-nums; }

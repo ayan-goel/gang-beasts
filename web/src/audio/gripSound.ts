@@ -9,7 +9,7 @@ const sounds = {
   release: {from:180,to:360,length:0.07,peak:0.045},
 };
 
-export function playGrip(context: BaseAudioContext, cue: GripCue) {
+export function playGrip(context: BaseAudioContext, cue: GripCue, destination: AudioNode = context.destination) {
   const sound = sounds[cue.kind];
   const voice = context.createOscillator();
   const filter = context.createBiquadFilter();
@@ -27,7 +27,7 @@ export function playGrip(context: BaseAudioContext, cue: GripCue) {
   gain.gain.exponentialRampToValueAtTime(0.0001,end);
   gain.gain.linearRampToValueAtTime(0,end + 0.005);
   pan.pan.value = cue.pan;
-  voice.connect(filter).connect(gain).connect(pan).connect(context.destination);
+  voice.connect(filter).connect(gain).connect(pan).connect(destination);
   const disconnect = () => { voice.disconnect(); filter.disconnect(); gain.disconnect(); pan.disconnect(); };
   voice.onended = disconnect;
   voice.start(start);

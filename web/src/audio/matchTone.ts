@@ -19,7 +19,7 @@ const tones: Record<AudibleHazard | ConditionCue | RoundCue, Tone> = {
   gust: {wave:'sine', from:430, to:145, pulses:1, length:0.48},
 };
 
-export function playMatchTone(context: BaseAudioContext, cue: AudibleHazard | ConditionCue | RoundCue) {
+export function playMatchTone(context: BaseAudioContext, cue: AudibleHazard | ConditionCue | RoundCue, destination: AudioNode = context.destination) {
   const tone = tones[cue];
   const peak = cue in roundTones ? 0.07 : cue === 'knocked_out' || cue === 'recovering' ? 0.08 : 0.12;
   const voice = context.createOscillator();
@@ -36,7 +36,7 @@ export function playMatchTone(context: BaseAudioContext, cue: AudibleHazard | Co
     volume.gain.exponentialRampToValueAtTime(0.001, at + tone.length);
     volume.gain.linearRampToValueAtTime(0, at + tone.length + 0.006);
   }
-  voice.connect(volume).connect(context.destination);
+  voice.connect(volume).connect(destination);
   const disconnect = () => { voice.disconnect(); volume.disconnect(); };
   voice.onended = disconnect;
   voice.start(start);

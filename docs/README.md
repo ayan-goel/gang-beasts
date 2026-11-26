@@ -19,6 +19,7 @@
 - [Match menu](slices/16l-match-menu.md) covers local pause, private input release, graphics and mute controls, and returning to play.
 - [Scoreboard controls](slices/16m-scoreboard.md) covers reading live scores with the keyboard while playing or spectating.
 - [Round audio](slices/17h-round-audio.md) covers countdown, opening play, scoring, draws, match wins and reconnect behavior.
+- [Arena music and volume](slices/17i-arena-mix.md) records the original score, audio routing, saved preferences and measured levels.
 - [Spectator camera](slices/12h-spectator-camera.md) covers following survivors, switching back to the group and returning to play.
 - [Ledge rescue practice](slices/10f-ledge-practice.md) covers the playable west walkway retry and the twenty-timing recovery test.
 - [Ledge rescue](slices/10e-ledge-rescue.md) covers fall-arrest timing, the pull-up controls and the west walkway in a private match.

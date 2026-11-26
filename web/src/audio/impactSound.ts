@@ -24,7 +24,7 @@ function contactBuffer(context: BaseAudioContext) {
   return buffer;
 }
 
-export function playImpact(context: BaseAudioContext, impact: Impact) {
+export function playImpact(context: BaseAudioContext, impact: Impact, destination: AudioNode = context.destination) {
   const voice = context.createBufferSource();
   const gain = context.createGain();
   const pan = context.createStereoPanner();
@@ -33,7 +33,7 @@ export function playImpact(context: BaseAudioContext, impact: Impact) {
   voice.playbackRate.value = 1.1 - 0.2 * strength;
   gain.gain.value = (0.07 + 0.09 * strength) * distanceGain(impact.distance);
   pan.pan.value = impact.pan;
-  voice.connect(gain).connect(pan).connect(context.destination);
+  voice.connect(gain).connect(pan).connect(destination);
   const disconnect = () => { voice.disconnect(); gain.disconnect(); pan.disconnect(); };
   voice.onended = disconnect;
   voice.start();

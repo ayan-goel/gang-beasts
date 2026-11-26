@@ -14,7 +14,7 @@ export async function observeWarningAudio(page: Page) {
         const voice = super.createBufferSource();
         const start = voice.start.bind(voice);
         voice.start = (...args) => {
-          if (this.state === 'running' && voice.buffer) probe.impacts++;
+          if (this.state === 'running' && voice.buffer && !voice.loop) probe.impacts++;
           start(...args);
         };
         return voice;

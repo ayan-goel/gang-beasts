@@ -1,76 +1,25 @@
-import { playLanding } from './landingSound';
-import { playGrip } from './gripSound';
-import type { GripAudioState } from './gripCues';
-import { playImpact, type ImpactSource } from './impactSound';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { MatchView } from '../rendering/SkylineView';
 import type { FighterPhase } from '../game/fighterCondition';
-import { MatchCues, type Cues } from './MatchCues';
-import { RoundCues, type RoundCue } from './RoundCues';
-import { playMatchTone } from './matchTone';
+import { MatchCues } from './MatchCues';
+import { RoundCues } from './RoundCues';
+import { SoundOutput } from './SoundOutput';
+import { readVolume, saveVolume, type VolumeSettings, type VolumeChannel } from './volumeSettings';
+import type { GripAudioState } from './gripCues';
+import type { ImpactSource } from './impactSound';
 import './sound.css';
 
-const preference = 'skyline.audio.v1.muted';
-class SoundOutput {
-  private context?: AudioContext;
-  private voices: Partial<Record<keyof Cues | 'round', () => void>> = {};
-  muted = false;
+const AudioSettings = createContext<{
+  output: SoundOutput; levels: VolumeSettings; change: (patch: Partial<VolumeSettings>) => void;
+} | null>(null);
 
-  unlock() {
-    if (this.muted || document.hidden) return;
-    try {
-      if (!this.context) {
-        this.context = new AudioContext();
-        this.context.onstatechange = () => { if (this.context?.state !== 'running') this.silence(); };
-      }
-      if (this.context.state !== 'running') void this.context.resume().catch(() => {});
-    } catch { /* Visual warnings remain available when the audio device is unavailable. */ }
-  }
-  resume() { if (this.context) this.unlock(); }
-  playRound(cue: RoundCue) {
-    this.silence();
-    if (!this.muted && this.context?.state === 'running' && !document.hidden) {
-      this.voices.round = playMatchTone(this.context, cue);
-    }
-  }
-  play(cues: Cues) {
-    if (this.muted || this.context?.state !== 'running' || document.hidden) return;
-    if (cues.warning || cues.condition || cues.impact) this.voices.impact?.();
-    this.voices.landing?.();
-    if (cues.landing) this.voices.landing = playLanding(this.context, cues.landing);
-    else this.voices.grip?.();
-    if (cues.grip) this.voices.grip = playGrip(this.context, cues.grip);
-    if (cues.impact) this.voices.impact = playImpact(this.context, cues.impact);
-    for (const category of ['warning','condition'] as const) {
-      const cue = cues[category];
-      if (cue) {
-        this.voices[category]?.();
-        this.voices[category] = playMatchTone(this.context, cue);
-      }
-    }
-  }
-  silence() { for (const stop of Object.values(this.voices)) stop(); this.voices = {}; }
-  close() {
-    this.silence();
-    if (this.context) {
-      this.context.onstatechange = null;
-      void this.context.close().catch(() => {});
-      this.context = undefined;
-    }
-  }
-}
-
-const AudioSettings = createContext<{output: SoundOutput; muted: boolean; toggle: () => void} | null>(null);
 export function SkylineSound({children}: {children: ReactNode}) {
-  const [output] = useState(() => new SoundOutput());
-  const [muted, setMuted] = useState(() => {
-    try { return localStorage.getItem(preference) === 'true'; } catch { return false; }
-  });
+  const [levels, setLevels] = useState(() => readVolume());
+  const current = useRef(levels);
+  const [output] = useState(() => new SoundOutput(levels));
   useEffect(() => {
-    output.muted = muted;
-    if (muted) output.silence();
     const interact = (event: Event) => { if (event.isTrusted) output.unlock(); };
-    const visibility = () => { if (document.hidden) output.silence(); else output.resume(); };
+    const visibility = () => output.visibility();
     window.addEventListener('click', interact, true);
     window.addEventListener('keydown', interact, true);
     document.addEventListener('visibilitychange', visibility);
@@ -78,26 +27,47 @@ export function SkylineSound({children}: {children: ReactNode}) {
       window.removeEventListener('click', interact, true);
       window.removeEventListener('keydown', interact, true);
       document.removeEventListener('visibilitychange', visibility);
+      output.close();
     };
-  }, [output, muted]);
-  useEffect(() => () => output.close(), [output]);
-  const toggle = () => {
-    output.muted = !muted;
-    if (output.muted) output.silence(); else output.unlock();
-    setMuted(output.muted);
-    try { localStorage.setItem(preference, String(output.muted)); } catch { /* Keep the tab preference in memory. */ }
+  }, [output]);
+  const change = (patch: Partial<VolumeSettings>) => {
+    const next = {...current.current, ...patch};
+    current.current = next;
+    output.setLevels(next);
+    if (patch.muted === false) output.unlock();
+    setLevels(next);
+    saveVolume(next);
   };
-  return <AudioSettings.Provider value={{output, muted, toggle}}>{children}</AudioSettings.Provider>;
+  return <AudioSettings.Provider value={{output, levels, change}}>{children}</AudioSettings.Provider>;
 }
 
 export function MuteButton() {
   const settings = useContext(AudioSettings);
-  return settings && <button className="skyline-mute" aria-label="Mute game audio" aria-pressed={settings.muted}
-    onClick={settings.toggle}>{settings.muted ? 'Sound off' : 'Sound on'}</button>;
+  if (!settings) return null;
+  const {muted} = settings.levels;
+  return <button className="skyline-mute" aria-label="Mute game audio" aria-pressed={muted}
+    onClick={() => settings.change({muted:!muted})}>{muted ? 'Sound off' : 'Sound on'}</button>;
+}
+
+const channelNames: Record<VolumeChannel, string> = {master:'Master', music:'Music', effects:'Effects'};
+export function VolumeControls() {
+  const settings = useContext(AudioSettings);
+  return settings && <fieldset className="match-levels"><legend>Volume</legend>
+    {(['master','music','effects'] as const).map(channel => <label key={channel}>
+      {channelNames[channel]}<input aria-label={channelNames[channel] + ' volume'} type="range" min={0} max={100}
+        value={settings.levels[channel]} aria-valuetext={settings.levels[channel] + '%'}
+        onChange={event => settings.change({[channel]:event.currentTarget.valueAsNumber})} />
+      <span>{settings.levels[channel]}%</span></label>)}
+  </fieldset>;
 }
 
 export function useMatchSound(match: MatchView | undefined, active: boolean, phases: readonly FighterPhase[], audio?: GripAudioState & {impacts?: readonly ImpactSource[]}) {
   const output = useContext(AudioSettings)?.output;
+  const playing = active && match?.phase === 'playing';
+  useEffect(() => {
+    output?.setMusic(playing);
+    return () => output?.setMusic(false);
+  }, [output, playing]);
   const cursor = useRef(new MatchCues());
   const rounds = useRef(new RoundCues());
   useEffect(() => {

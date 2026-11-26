@@ -3,7 +3,7 @@ import { distanceGain, type CameraPosition } from './spatialMix';
 export interface LandingEvent { tick: number; impulse: number }
 export interface LandingCue extends CameraPosition { impulse: number }
 
-export function playLanding(context: BaseAudioContext, cue: LandingCue) {
+export function playLanding(context: BaseAudioContext, cue: LandingCue, destination: AudioNode = context.destination) {
   const voice = context.createOscillator();
   const gain = context.createGain();
   const pan = context.createStereoPanner();
@@ -19,7 +19,7 @@ export function playLanding(context: BaseAudioContext, cue: LandingCue) {
   gain.gain.exponentialRampToValueAtTime(0.0001 * attenuation, end);
   gain.gain.linearRampToValueAtTime(0, end + 0.004);
   pan.pan.value = cue.pan;
-  voice.connect(gain).connect(pan).connect(context.destination);
+  voice.connect(gain).connect(pan).connect(destination);
   const disconnect = () => { voice.disconnect(); gain.disconnect(); pan.disconnect(); };
   voice.onended = disconnect;
   voice.start(start);

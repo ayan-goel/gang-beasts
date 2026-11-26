@@ -1,6 +1,6 @@
 import { useId, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { MuteButton } from '../audio/SkylineSound';
+import { MuteButton, VolumeControls } from '../audio/SkylineSound';
 import { GraphicsSelect } from './GraphicsSelect';
 import './matchMenu.css';
 
@@ -31,6 +31,7 @@ export function MatchMenu({local, children, resume}: {local?: boolean; children?
     {!local && <p>The round continues while this menu is open.</p>}
     <button className="match-menu-return" onClick={dismiss}>{local ? 'Resume match' : 'Return to match'}</button>
     <div className="match-menu-settings"><GraphicsSelect /><MuteButton /></div>
+    <VolumeControls />
     {children}
   </dialog>, document.body);
 }
