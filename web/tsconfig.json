@@ -6,5 +6,5 @@
     "noUnusedParameters": true, "skipLibCheck": true, "noEmit": true,
     "types": ["vite/client", "node"]
   },
-  "include": ["src", "tests", "benchmarks/endurance/*.ts", "*.ts"]
+  "include": ["src", "tests", "deployment-tests", "benchmarks/endurance/*.ts", "*.ts"]
 }

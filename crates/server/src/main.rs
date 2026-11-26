@@ -18,7 +18,15 @@ where
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let address = setting("BRAWLER_LISTEN", SocketAddr::from(([127, 0, 0, 1], 8080)))?;
+    let address: SocketAddr = match env::var("BRAWLER_LISTEN") {
+        Ok(value) => value.parse()?,
+        Err(env::VarError::NotPresent) => match env::var("PORT") {
+            Ok(port) => ([0, 0, 0, 0], port.parse()?).into(),
+            Err(env::VarError::NotPresent) => ([127, 0, 0, 1], 8080).into(),
+            Err(error) => return Err(error.into()),
+        },
+        Err(error) => return Err(error.into()),
+    };
     let workers = setting("BRAWLER_WORKERS", 1usize)?;
     let origin = setting("BRAWLER_ORIGIN", "http://127.0.0.1:5173".to_owned())?;
     let app = api_for_origin(Arc::new(WorkerPool::new(workers)?), &origin)?;

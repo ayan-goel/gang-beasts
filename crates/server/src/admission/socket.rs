@@ -31,11 +31,22 @@ pub(super) async fn upgrade(
 ) -> Result<Response, Fault> {
     let (session, code) = {
         let mut dir = state.directory.lock().unwrap();
-        let session = dir.sessions.authenticate(&headers, Instant::now())?;
-        let code = dir
-            .current(session)
-            .ok_or(Fault(StatusCode::FORBIDDEN, "not_a_member"))?;
-        (session, code)
+        let now = Instant::now();
+        if let Some(protocols) = headers.get(axum::http::header::SEC_WEBSOCKET_PROTOCOL) {
+            let (session, room) = dir
+                .tickets
+                .redeem(protocols.to_str().map_err(|_| Fault::UNAUTHORIZED)?, now)?;
+            if dir.current(session).as_deref() != Some(&room) {
+                return Err(Fault::UNAUTHORIZED);
+            }
+            (session, room)
+        } else {
+            let session = dir.sessions.authenticate(&headers, now)?;
+            let code = dir
+                .current(session)
+                .ok_or(Fault(StatusCode::FORBIDDEN, "not_a_member"))?;
+            (session, code)
+        }
     };
     let permit = state
         .sockets
@@ -58,6 +69,7 @@ pub(super) async fn upgrade(
     };
     // Each admitted seat reserves a read buffer, and every game input fits within one message.
     Ok(ws
+        .protocols([super::socket_ticket::PROTOCOL])
         .read_buffer_size(INBOUND_BYTES)
         .max_frame_size(INBOUND_BYTES)
         .max_message_size(INBOUND_BYTES)

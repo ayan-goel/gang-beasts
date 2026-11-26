@@ -1,0 +1,12 @@
+**
+!Dockerfile
+!Cargo.toml
+!Cargo.lock
+!rust-toolchain.toml
+!config/
+!config/**
+!assets/
+!assets/maps/
+!assets/maps/**
+!crates/
+!crates/**

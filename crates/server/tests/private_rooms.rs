@@ -230,3 +230,23 @@ async fn a_room_code_cannot_read_names_and_leaving_cannot_replay_the_create_requ
         StatusCode::CONFLICT
     );
 }
+
+#[tokio::test]
+async fn only_an_admitted_member_can_request_a_socket_ticket() {
+    let app = api(Arc::new(WorkerPool::new(1).unwrap())).unwrap();
+    let member = session(&app).await;
+    let path = "/api/socket-ticket";
+    let issue = || Some(json!({}));
+    assert_eq!(
+        request(&app, path, issue(), "", ORIGIN).await.0,
+        StatusCode::UNAUTHORIZED
+    );
+    assert_eq!(
+        request(&app, path, issue(), &member, ORIGIN).await.0,
+        StatusCode::FORBIDDEN
+    );
+    request(&app, "/api/rooms", Some(create()), &member, ORIGIN).await;
+    let (status, reply, _) = request(&app, path, issue(), &member, ORIGIN).await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(reply["ticket"].as_str().unwrap().len(), 64);
+}

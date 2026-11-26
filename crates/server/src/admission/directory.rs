@@ -13,6 +13,7 @@ use std::{
 #[derive(Default)]
 pub(super) struct Directory {
     pub sessions: Sessions,
+    pub tickets: super::socket_ticket::Tickets,
     pub(super) next_connection: u64,
     pub(super) rooms: HashMap<String, Lobby>,
     traffic: HashMap<IpAddr, (Instant, u16)>,

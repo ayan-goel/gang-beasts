@@ -8,6 +8,7 @@ mod maintenance;
 mod matches;
 mod sessions;
 mod socket;
+mod socket_ticket;
 mod stream;
 mod types;
 
@@ -64,6 +65,7 @@ pub(crate) fn routes(origin: &str, pool: Arc<crate::WorkerPool>) -> Result<Route
     Ok(Router::new()
         .route("/ws", get(socket::upgrade))
         .route("/api/session", post(session))
+        .route("/api/socket-ticket", post(socket_ticket::issue))
         .route("/api/rooms", post(create))
         .route("/api/rooms/{code}", get(metadata))
         .route("/api/rooms/{code}/lobby", get(roster))

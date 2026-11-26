@@ -1072,12 +1072,13 @@ Use six-character human-readable random room codes with collision checks and rat
 | GET | `/api/rooms/:code` | Minimal allowed metadata; never session secrets |
 | GET | `/api/rooms/:code/lobby` | Member-only roster, capacity and viewer slot |
 | POST | `/api/rooms/:code/leave` | Release the authenticated seat and transfer lobby host |
+| POST | `/api/socket-ticket` | One-use upgrade credential for a room member connecting to a separate game origin |
 | WS upgrade | `/ws` | Authenticated/versioned gameplay session |
 | GET | `/metrics` | Internal/protected monitoring endpoint |
 
 The [native service](docs/server.md) implements liveness, worker admission readiness and a compatibility catalog built from the bundled engine and Skyline map. Use bounded JSON for low-rate HTTP control requests; binary protocol for realtime gameplay. Standard error codes include invalid input, unavailable/full room, expired session, incompatible version and rate limit. Create requests need request IDs/idempotency handling so an HTTP retry does not silently create duplicate rooms.
 
-Browsers use a Secure, HttpOnly, SameSite=Strict session cookie and explicit Origin validation. The [admission contract](docs/slices/16a-admission.md) defines room codes, retry semantics, quotas and expiry. WebSocket attachment must validate the same session, allowed Origin and room membership. Do not place reusable secrets in URLs/access logs. Unauthenticated sockets get a short handshake timeout and tiny resource allowance. Reconnect credentials are rotated/expired according to one documented policy.
+Browsers use a Secure, HttpOnly, SameSite=Strict session cookie and explicit Origin validation. On the [Vercel and Railway deployment](docs/deployment.md), room HTTP requests pass through the frontend origin and the browser opens a direct WSS connection to Railway with a short-lived [single-use upgrade ticket](docs/protocol.md#hosted-socket-upgrades). The [admission contract](docs/slices/16a-admission.md) defines room codes, retry semantics, quotas and expiry. WebSocket attachment must validate the same session, allowed Origin and room membership. Do not place reusable secrets in URLs/access logs. Unauthenticated sockets get a short handshake timeout and tiny resource allowance. Reconnect credentials are rotated/expired according to one documented policy.
 
 ### 19.4 Message catalog
 

@@ -2,6 +2,7 @@
 
 [Technical specification](../TECHNICAL_SPEC.md) is the canonical product and architecture contract. These documents record implementation choices and evidence; they do not redefine acceptance.
 
+- [Deploy from GitHub](deployment.md) covers Vercel, Railway and the two production environment variables.
 - [Snapshot delivery](slices/19c-snapshot-delivery.md) covers worker notifications, slow readers and measured eight-client cadence.
 - [Regional headbutt feedback](slices/15k-headbutt-feedback.md) measures a standing Q press through native acceptance and the first drawn head rotation.
 - [Regional punch feedback](slices/15j-punch-feedback.md) measures each hand from keyboard or mouse input to the first drawn punching motion.

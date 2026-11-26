@@ -56,3 +56,11 @@ export async function roster(code: string, signal: AbortSignal): Promise<Roster>
 export async function leave(code: string) { await request('rooms/' + code + '/leave', {}); }
 export const errorText = (e: unknown) => e instanceof TypeError ? 'Cannot reach the room service. Check your connection and try again.'
   : e instanceof Error ? e.message : 'Room request failed. Try again.';
+
+export async function socketTicket(signal: AbortSignal): Promise<string> {
+  const reply = await request('socket-ticket', {}, signal);
+  if (!object(reply) || typeof reply.ticket !== 'string' || !/^[a-f0-9]{64}$/.test(reply.ticket)) {
+    throw new Error('Invalid socket ticket.');
+  }
+  return reply.ticket;
+}

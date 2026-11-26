@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { decodeLobbyState, type LiveRoom } from './lobbyState';
+import { openRoomSocket } from './roomSocket';
 import { RoomTransport, type LinkState } from './RoomTransport';
 import { MatchLatency } from './MatchLatency';
 import { SnapshotWatchdog } from './SnapshotWatchdog';
@@ -30,11 +31,18 @@ export function useLiveRoom(code: string) {
       }
     });
     setLink('connected');
-    function open() {
+    async function open() {
       cleanup();
-      const url = new URL('/ws?resume=1&lineups=1&compact=1&landings=1&footsteps=1&timing=1', location.href);
-      url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const socket = new WebSocket(url);
+      const pending = new AbortController();
+      cleanup = () => pending.abort();
+      let socket: WebSocket;
+      try {
+        socket = await openRoomSocket(pending.signal);
+      } catch {
+        if (!pending.signal.aborted) recovery.closed(false, 1006);
+        return;
+      }
+      if (pending.signal.aborted) { socket.close(); return; }
       const content = new ContentHandshake(socket, setLoad);
       handshake.current = content;
       setLoad({loading:false, error:''});
