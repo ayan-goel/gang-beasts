@@ -14,5 +14,6 @@
 | Rooftop landings | [Original downward triangle sweep](../web/src/audio/landingSound.ts) | Camera-relative thump scaled by solved upward impulse. [Measured levels and duration](slices/17g-landing-audio.md) |
 | Combat impact | [Original synthesized thud](../web/src/audio/impactSound.ts) | A seeded noise transient and downward pitch sweep, generated once per audio context. [Spatialization and level limits](slices/17e-strike-audio.md) |
 | Knockout and get-up announcements | [Original condition tone definitions](../web/src/audio/matchTone.ts) | One descending knockout tone and two rising get-up pulses. [Timing and peak level](slices/17d-fighter-condition.md#sound) |
+| Round countdown and results | [Original sine sweeps and envelopes](../web/src/audio/matchTone.ts) | Five centered cues for countdown changes, the start of play, round wins, draws and match wins. [Pitch and level](slices/17h-round-audio.md) |
 
 These entries use geometry, colors and layouts authored in this repository. Three.js supplies the MIT-licensed rendering library and geometry primitives. The local presentation uses system-installed fonts. The fighter model uses original repository geometry and colors. Other core effects and final audiovisual acceptance remain open.

@@ -35,12 +35,12 @@ test('a local match unlocks audio on start and plays one walkway cue from physic
   expect(await warningSamples(page)).toHaveLength(1);
 });
 
-test('match warnings and condition cues render bounded pulse patterns in the browser audio graph', async ({page}) => {
+test('match warnings, condition and round cues render bounded pulse patterns in the browser audio graph', async ({page}) => {
   await page.goto('/play/');
   const shapes = await page.evaluate(async () => {
     const {playMatchTone} = await import(/* @vite-ignore */ String('/src/audio/matchTone.ts'));
     const patterns = [];
-    for (const stage of ['west_warning','east_warning','gust_warning','gust','knocked_out','recovering']) {
+    for (const stage of ['west_warning','east_warning','gust_warning','gust','knocked_out','recovering','count','go','round_win','draw','match_win']) {
       const context = new OfflineAudioContext(1, 48000, 48000);
       playMatchTone(context, stage);
       const samples = (await context.startRendering()).getChannelData(0);
@@ -56,10 +56,11 @@ test('match warnings and condition cues render bounded pulse patterns in the bro
     }
     return patterns;
   });
-  expect(shapes.map(s => s.pulses)).toEqual([2,3,2,1,1,2]);
+  expect(shapes.map(s => s.pulses)).toEqual([2,3,2,1,1,2,1,1,2,2,3]);
   for (const s of shapes) {
     expect(s.peak).toBeGreaterThan(0.05);
-    const cap = s.stage === 'knocked_out' || s.stage === 'recovering' ? 0.08 : 0.12;
+    const cap = ['count','go','round_win','draw','match_win'].includes(s.stage) ? 0.07
+      : s.stage === 'knocked_out' || s.stage === 'recovering' ? 0.08 : 0.12;
     expect(s.peak).toBeLessThanOrEqual(cap + 0.001);
     expect(s.silentEnd).toBe(true);
   }

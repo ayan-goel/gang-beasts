@@ -6,13 +6,14 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 import type { MatchView } from '../rendering/SkylineView';
 import type { FighterPhase } from '../game/fighterCondition';
 import { MatchCues, type Cues } from './MatchCues';
+import { RoundCues, type RoundCue } from './RoundCues';
 import { playMatchTone } from './matchTone';
 import './sound.css';
 
 const preference = 'skyline.audio.v1.muted';
 class SoundOutput {
   private context?: AudioContext;
-  private voices: Partial<Record<keyof Cues, () => void>> = {};
+  private voices: Partial<Record<keyof Cues | 'round', () => void>> = {};
   muted = false;
 
   unlock() {
@@ -26,6 +27,12 @@ class SoundOutput {
     } catch { /* Visual warnings remain available when the audio device is unavailable. */ }
   }
   resume() { if (this.context) this.unlock(); }
+  playRound(cue: RoundCue) {
+    this.silence();
+    if (!this.muted && this.context?.state === 'running' && !document.hidden) {
+      this.voices.round = playMatchTone(this.context, cue);
+    }
+  }
   play(cues: Cues) {
     if (this.muted || this.context?.state !== 'running' || document.hidden) return;
     if (cues.warning || cues.condition || cues.impact) this.voices.impact?.();
@@ -92,18 +99,27 @@ export function MuteButton() {
 export function useMatchSound(match: MatchView | undefined, active: boolean, phases: readonly FighterPhase[], audio?: GripAudioState & {impacts?: readonly ImpactSource[]}) {
   const output = useContext(AudioSettings)?.output;
   const cursor = useRef(new MatchCues());
+  const rounds = useRef(new RoundCues());
   useEffect(() => {
-    const reset = () => { cursor.current.reset(); output?.silence(); };
+    const reset = () => { cursor.current.reset(); rounds.current.reset(); output?.silence(); };
     document.addEventListener('visibilitychange', reset);
     return () => { document.removeEventListener('visibilitychange', reset); reset(); };
   }, [output]);
   useEffect(() => {
-    if (!active || !match || match.phase !== 'playing' || document.hidden) {
+    if (!active || !match || document.hidden) {
       cursor.current.reset();
+      rounds.current.reset();
       output?.silence();
       return;
     }
-    const cues = cursor.current.observe(match.epoch, match.hazard, phases, performance.now(), audio?.impacts, audio);
+    const now = performance.now();
+    const round = rounds.current.observe(match, now);
+    if (round) output?.playRound(round);
+    if (match.phase !== 'playing') {
+      cursor.current.reset();
+      return;
+    }
+    const cues = cursor.current.observe(match.epoch, match.hazard, phases, now, audio?.impacts, audio);
     if (cues.warning || cues.condition || cues.impact || cues.grip || cues.landing) output?.play(cues);
   }, [match, active, output, phases, audio]);
 }

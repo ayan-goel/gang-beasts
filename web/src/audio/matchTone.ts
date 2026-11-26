@@ -1,7 +1,16 @@
 import type { AudibleHazard, ConditionCue } from './MatchCues';
+import type { RoundCue } from './RoundCues';
 
 interface Tone { wave: OscillatorType; from: number; to: number; pulses: number; length: number }
-const tones: Record<AudibleHazard | ConditionCue, Tone> = {
+const roundTones: Record<RoundCue, Tone> = {
+  count: {wave:'sine', from:440, to:440, pulses:1, length:0.075},
+  go: {wave:'sine', from:660, to:880, pulses:1, length:0.16},
+  round_win: {wave:'sine', from:554, to:740, pulses:2, length:0.12},
+  draw: {wave:'sine', from:294, to:247, pulses:2, length:0.13},
+  match_win: {wave:'sine', from:784, to:1047, pulses:3, length:0.16},
+};
+const tones: Record<AudibleHazard | ConditionCue | RoundCue, Tone> = {
+  ...roundTones,
   knocked_out: {wave:'triangle', from:175, to:58, pulses:1, length:0.31},
   recovering: {wave:'sine', from:310, to:545, pulses:2, length:0.11},
   west_warning: {wave:'triangle', from:520, to:370, pulses:2, length:0.16},
@@ -10,9 +19,9 @@ const tones: Record<AudibleHazard | ConditionCue, Tone> = {
   gust: {wave:'sine', from:430, to:145, pulses:1, length:0.48},
 };
 
-export function playMatchTone(context: BaseAudioContext, cue: AudibleHazard | ConditionCue) {
+export function playMatchTone(context: BaseAudioContext, cue: AudibleHazard | ConditionCue | RoundCue) {
   const tone = tones[cue];
-  const peak = cue === 'knocked_out' || cue === 'recovering' ? 0.08 : 0.12;
+  const peak = cue in roundTones ? 0.07 : cue === 'knocked_out' || cue === 'recovering' ? 0.08 : 0.12;
   const voice = context.createOscillator();
   const volume = context.createGain();
   const start = context.currentTime;
