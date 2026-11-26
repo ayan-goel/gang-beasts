@@ -1,55 +1,17 @@
 use super::heartbeat::{Heartbeat, Probe};
 use super::{
     Admission,
+    binding::Binding,
     connection::Connection,
     matches::Match,
     socket::{send, send_message},
 };
 use axum::extract::ws::{Message, WebSocket};
-use brawler_engine::FighterId;
 use std::{
     sync::Arc,
     time::{Duration, Instant},
 };
 use tokio::time::{MissedTickBehavior, interval};
-
-// Generation changes bypass the bounded input queue, including when a socket drops mid-send.
-struct Binding<'a> {
-    game: &'a Match,
-    fighter: Option<FighterId>,
-    owner: Connection,
-}
-impl Drop for Binding<'_> {
-    fn drop(&mut self) {
-        if let Some(id) = self.fighter {
-            self.game.client.unbind(id, self.owner.generation);
-        }
-    }
-}
-
-fn current_host(
-    state: &Admission,
-    code: &str,
-    owner: Connection,
-    game: &Arc<Match>,
-    touch: bool,
-) -> Option<bool> {
-    let mut dir = state.directory.lock().unwrap();
-    let membership = dir.live_state(code, owner, None)?;
-    if !dir
-        .rooms
-        .get(code)?
-        .game
-        .as_ref()
-        .is_some_and(|current| Arc::ptr_eq(current, game))
-    {
-        return None;
-    }
-    if touch {
-        *dir.sessions.0.get_mut(&owner.session)? = Instant::now();
-    }
-    Some(usize::from(membership.host) == owner.slot)
-}
 
 pub(super) async fn play(
     socket: &mut WebSocket,
@@ -57,31 +19,11 @@ pub(super) async fn play(
     code: &str,
     owner: Connection,
     game: Arc<Match>,
+    supports_lineups: bool,
 ) {
-    let fighter = game.fighter(owner.session);
-    {
-        let mut dir = state.directory.lock().unwrap();
-        if dir.live_state(code, owner, None).is_none()
-            || !dir
-                .rooms
-                .get(code)
-                .and_then(|r| r.game.as_ref())
-                .is_some_and(|g| Arc::ptr_eq(&game, g))
-        {
-            return;
-        }
-        if let Some(id) = fighter {
-            game.client.bind(id, owner.generation);
-        }
-    }
-    let _binding = Binding {
-        game: &game,
-        fighter,
-        owner,
-    };
-    if !send(socket, game.welcome(owner.session)).await {
+    let Some(mut binding) = Binding::open(state, code, owner, &game) else {
         return;
-    }
+    };
     let mut timer = interval(Duration::from_nanos(1_000_000_000 / 30));
     timer.set_missed_tick_behavior(MissedTickBehavior::Skip);
     let mut tick = None;
@@ -98,7 +40,7 @@ pub(super) async fn play(
                 if since.elapsed() >= Duration::from_secs(1) { since = Instant::now(); received = 0; }
                 received += 1;
                 let user_activity = matches!(&message, Some(Ok(Message::Binary(_))));
-                if received > 120 || current_host(state, code, owner, &game, user_activity).is_none() { return; }
+                if received > 120 || binding.host(&mut state.directory.lock().unwrap(), user_activity).is_none() { return; }
                 match message {
                     Some(Ok(Message::Pong(bytes))) => heartbeat.pong(&bytes, Instant::now()),
                     Some(Ok(Message::Ping(_))) => (),
@@ -112,8 +54,8 @@ pub(super) async fn play(
                             if published == Some(claimed) { acknowledged = Some(claimed); }
                         },
                         [1,1,..] if bytes.len()==brawler_protocol::INPUT_BYTES => {
-                            if let (Some(id),Some(epoch))=(fighter,acknowledged) {
-                                match game.client.input_for(id, owner.generation, epoch, &bytes) {
+                            if let (Some(_),Some(epoch))=(binding.fighter,acknowledged) {
+                                match game.client.input_for_slot(owner.slot, owner.generation, epoch, &bytes) {
                                     Ok(()) | Err(crate::DispatchError::Busy) => (),
                                     _ => return,
                                 }
@@ -136,7 +78,7 @@ pub(super) async fn play(
                 }
             }
         }
-        let Some(host) = current_host(state, code, owner, &game, false) else {
+        let Some(host) = binding.host(&mut state.directory.lock().unwrap(), false) else {
             return;
         };
         if game.client.returning_to_lobby() {
@@ -145,6 +87,21 @@ pub(super) async fn play(
         let Some(frame) = game.client.latest() else {
             continue;
         };
+        match binding.assignment(state, &frame) {
+            Ok(Some(packet)) => {
+                if packet[0] == 34 && !supports_lineups {
+                    // Older clients can re-enter through their existing lobby handshake and get a fresh assignment.
+                    send(socket, vec![27, 1]).await;
+                    return;
+                }
+                if !send(socket, packet).await {
+                    return;
+                }
+                acknowledged = None;
+            }
+            Ok(None) => (),
+            Err(()) => return,
+        }
         if frame.match_finished && rematch_permission != Some(host) {
             if !send(socket, vec![29, 1, u8::from(host)]).await {
                 return;
@@ -158,7 +115,9 @@ pub(super) async fn play(
             acknowledged = None;
         }
         published = Some(frame.round);
-        let bytes = fighter.map_or_else(|| frame.for_spectator(), |id| frame.for_recipient(id));
+        let bytes = binding
+            .fighter
+            .map_or_else(|| frame.for_spectator(), |id| frame.for_recipient(id));
         if !send(socket, bytes).await {
             return;
         }

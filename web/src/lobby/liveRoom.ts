@@ -30,7 +30,7 @@ export function useLiveRoom(code: string) {
     setLink('connected');
     function open() {
       cleanup();
-      const url = new URL('/ws?resume=1', location.href);
+      const url = new URL('/ws?resume=1&lineups=1', location.href);
       url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const socket = new WebSocket(url);
       const content = new ContentHandshake(socket, setLoad);
@@ -84,13 +84,16 @@ export function useLiveRoom(code: string) {
             setAttempt(n => n + 1);
             return;
           }
-          if ((bytes[0] === 23 || bytes[0] === 26) && last && !feed) {
+          if (last && ((!feed && (bytes[0] === 23 || bytes[0] === 26)) || (feed && bytes[0] === 34))) {
             if (!content.arena) throw new Error('Match assigned before content loaded');
-            feed = new MatchFeed(bytes, packet => {
-              if (socket.readyState !== WebSocket.OPEN) return;
+            const transmit = (packet: Uint8Array) => {
+              // Disposal of the old canvas can emit a final neutral input after the new assignment.
+              if (feed !== assigned || socket.readyState !== WebSocket.OPEN) return;
               if (socket.bufferedAmount > 16384) { disconnected(4008); return; }
               socket.send(new Uint8Array(packet));
-            });
+            };
+            const assigned: MatchFeed = feed ? feed.reassign(bytes, transmit) : new MatchFeed(bytes, transmit);
+            feed = assigned;
             watchdog.progress();
             return;
           }

@@ -92,7 +92,7 @@ fn a_full_old_input_queue_cannot_take_over_or_release_the_replacement_connection
     let (client, queues) = RoomClient::channel(2);
     let rx = &queues[0];
     let id = FighterId::First;
-    client.bind(id, 41);
+    client.bind_slot(id as usize, 41);
     room.replace_connection(id, true);
     for sequence in 0..8 {
         let bytes = InputFrame {
@@ -101,10 +101,10 @@ fn a_full_old_input_queue_cannot_take_over_or_release_the_replacement_connection
         }
         .encode()
         .unwrap();
-        client.input_for(id, 41, 1, &bytes).unwrap();
+        client.input_for_slot(id as usize, 41, 1, &bytes).unwrap();
     }
-    client.bind(id, 42);
-    client.unbind(id, 41);
+    client.bind_slot(id as usize, 42);
+    client.unbind_slot(id as usize, 41);
     assert_eq!(client.shared.owners[0].load(Ordering::Acquire), 42);
     room.replace_connection(id, true);
     drain(&mut room, id, rx, &client.shared, &mut None, 42);
@@ -112,11 +112,11 @@ fn a_full_old_input_queue_cannot_take_over_or_release_the_replacement_connection
     assert_eq!(room.applied(id), None);
     assert_eq!(client.rejected_inputs(), 8);
     client
-        .input_for(id, 42, 1, &InputFrame::default().encode().unwrap())
+        .input_for_slot(id as usize, 42, 1, &InputFrame::default().encode().unwrap())
         .unwrap();
     drain(&mut room, id, rx, &client.shared, &mut None, 42);
     room.step();
     assert_eq!(room.applied(id), Some(0));
-    client.unbind(id, 42);
+    client.unbind_slot(id as usize, 42);
     assert_eq!(client.shared.owners[0].load(Ordering::Acquire), 0);
 }

@@ -1,3 +1,4 @@
+mod binding;
 mod connection;
 mod content;
 mod directory;

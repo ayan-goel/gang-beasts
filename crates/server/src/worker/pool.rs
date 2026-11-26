@@ -91,6 +91,24 @@ impl WorkerPool {
         count: usize,
         match_serial: u32,
     ) -> Result<RoomClient, DispatchError> {
+        self.reserve(count, match_serial, None)
+    }
+
+    pub(crate) fn open_hosted(
+        &self,
+        serial: u32,
+        lineup: super::HostedLineup,
+    ) -> Result<RoomClient, DispatchError> {
+        let count = lineup.lock().unwrap().active.len();
+        self.reserve(count, serial, Some(lineup))
+    }
+
+    fn reserve(
+        &self,
+        count: usize,
+        match_serial: u32,
+        lineup: Option<super::HostedLineup>,
+    ) -> Result<RoomClient, DispatchError> {
         if !(2..=brawler_engine::FighterId::ALL.len()).contains(&count) {
             return Err(DispatchError::Initialization);
         }
@@ -106,9 +124,11 @@ impl WorkerPool {
                     .is_ok()
             })
             .ok_or(DispatchError::Capacity)?;
-        let (client, incoming) = RoomClient::channel(count);
+        let (client, incoming) = RoomClient::channel(if lineup.is_some() { 8 } else { count });
         let (ready, started) = sync_channel(1);
         let job = Job {
+            count,
+            lineup,
             match_serial,
             shared: Arc::clone(&client.shared),
             incoming,

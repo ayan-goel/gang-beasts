@@ -15,4 +15,4 @@ The engine constructs the next world with its fresh bodies, grips, health, stami
 
 All 301 native workspace tests, warning-denied Clippy, TypeScript and the production build passed. Seven of eight Chromium cases passed together, including local and online scoring, rematches and reconnect. The narrow-screen start button missed its five-second readiness check once and passed three traced repeats. The local preview server and browser report engine fingerprint `c7f509a7225ff049e341584554951ab9e1914e03057a24d0902f31e8d9a7fd6c`.
 
-This slice covers the native room transition. Private-room admission still needs to select the waiting spectators and announce their new assignments to connected browsers.
+This slice covers the native room transition. The [private-room promotion slice](16j-spectator-promotion.md) connects that transition to waiting spectators and their browsers.

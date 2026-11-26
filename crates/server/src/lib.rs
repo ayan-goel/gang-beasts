@@ -2,6 +2,7 @@
 
 mod controls;
 mod inbox;
+mod lineup;
 mod room;
 
 pub use inbox::SubmitError;

@@ -19,7 +19,11 @@ use std::{
     time::{Duration, Instant},
 };
 
+type HostedLineup = Arc<std::sync::Mutex<crate::lineup::Lineup>>;
+
 struct Job {
+    count: usize,
+    lineup: Option<HostedLineup>,
     match_serial: u32,
     shared: Arc<Shared>,
     incoming: Vec<Receiver<Command>>,
@@ -27,19 +31,24 @@ struct Job {
 }
 
 fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), DispatchError> {
-    let mut room = Room::skyline_in_match(job.incoming.len(), job.match_serial)
+    let mut room = Room::skyline_in_match(job.count, job.match_serial)
         .map_err(|_| DispatchError::Initialization)?;
-    let publish = |r: &Room| {
-        let frame = r.capture().map_err(|_| DispatchError::Initialization)?;
+    let mut lineup = job
+        .lineup
+        .as_ref()
+        .map(|l| l.lock().unwrap().active.clone());
+    let publish = |r: &Room, lineup: &Option<Arc<[crate::lineup::Participant]>>| {
+        let mut frame = r.capture().map_err(|_| DispatchError::Initialization)?;
+        frame.lineup.clone_from(lineup);
         job.shared.latest.lock().unwrap().replace(Arc::new(frame));
         Ok(())
     };
-    publish(&room)?;
+    publish(&room, &lineup)?;
     job.ready.send(Ok(())).map_err(|_| DispatchError::Closed)?;
     let origin = Instant::now();
     let mut clock = Cadence::default();
     let mut accepted = [None; FighterId::ALL.len()];
-    let mut owners = [0u64; FighterId::ALL.len()];
+    let mut owners = [Some(0u64); FighterId::ALL.len()];
     while !stop.load(Ordering::Acquire) && !job.shared.closed.load(Ordering::Acquire) {
         let elapsed = origin.elapsed();
         let debt = clock.debt(elapsed);
@@ -50,11 +59,14 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
         }
         for _ in 0..clock.take(elapsed) {
             for &id in room.game().fighter_ids() {
-                let i = id as usize;
+                // Queues belong to lobby seats, so a new compact index cannot inherit another socket's input.
+                let i = lineup
+                    .as_ref()
+                    .map_or(id as usize, |p| usize::from(p[id as usize].slot));
                 let generation = job.shared.owners[i].load(Ordering::Acquire);
-                if owners[i] != generation {
+                if owners[i] != Some(generation) {
                     room.replace_connection(id, generation != 0);
-                    owners[i] = generation;
+                    owners[i] = Some(generation);
                     accepted[i] = None;
                 }
                 drain(
@@ -66,13 +78,29 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
                     generation,
                 );
             }
-            room.step_with_forfeits(job.shared.forfeits.load(Ordering::Acquire));
+            let (advanced, forfeits) = if let Some(roster) = &job.lineup {
+                let mut roster = roster.lock().unwrap();
+                let advanced = roster
+                    .try_start_next_round(&mut room)
+                    .map_err(|_| DispatchError::Initialization)?;
+                if advanced {
+                    lineup = Some(roster.active.clone());
+                    accepted.fill(None);
+                    owners.fill(None);
+                }
+                (advanced, roster.forfeits)
+            } else {
+                (false, 0)
+            };
+            if !advanced {
+                room.step_with_forfeits(forfeits);
+            }
             if room.finished_for_lack_of_players() {
                 job.shared.return_to_lobby.store(true, Ordering::Release);
                 return Ok(());
             }
             if room.snapshot_due() {
-                publish(&room)?;
+                publish(&room, &lineup)?;
             }
         }
         let wait = clock.wait(origin.elapsed());

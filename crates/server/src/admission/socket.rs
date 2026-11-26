@@ -11,6 +11,12 @@ use brawler_protocol::lobby::Command;
 use std::time::{Duration, Instant};
 use tokio::time::{MissedTickBehavior, interval, timeout};
 
+#[derive(Clone, Copy)]
+struct Capabilities {
+    resume: bool,
+    lineups: bool,
+}
+
 pub(super) async fn upgrade(
     State(state): State<Admission>,
     headers: HeaderMap,
@@ -30,6 +36,16 @@ pub(super) async fn upgrade(
         .clone()
         .try_acquire_owned()
         .map_err(|_| Fault::SERVICE)?;
+    let has = |field| {
+        uri.query()
+            .unwrap_or_default()
+            .split('&')
+            .any(|part| part == field)
+    };
+    let capabilities = Capabilities {
+        resume: has("resume=1"),
+        lineups: has("lineups=1"),
+    };
     Ok(ws
         .max_frame_size(4096)
         .max_message_size(4096)
@@ -37,14 +53,7 @@ pub(super) async fn upgrade(
         .max_write_buffer_size(8192)
         .on_upgrade(move |socket| async move {
             let _permit = permit;
-            serve(
-                socket,
-                state,
-                code,
-                session,
-                uri.query() == Some("resume=1"),
-            )
-            .await;
+            serve(socket, state, code, session, capabilities).await;
         })
         .into_response())
 }
@@ -54,7 +63,7 @@ async fn serve(
     state: Admission,
     code: String,
     session: SessionId,
-    supports_resume: bool,
+    capabilities: Capabilities,
 ) {
     let Ok(Some(Ok(Message::Binary(packet)))) =
         timeout(Duration::from_secs(3), socket.recv()).await
@@ -63,7 +72,7 @@ async fn serve(
     };
     let (requested, ticket) = match Command::decode(&packet) {
         Some(Command::Connect(code)) => (code, None),
-        Some(Command::Resume(code, ticket)) if supports_resume => (code, Some(ticket)),
+        Some(Command::Resume(code, ticket)) if capabilities.resume => (code, Some(ticket)),
         _ => return,
     };
     if requested.as_slice() != code.as_bytes() {
@@ -79,8 +88,16 @@ async fn serve(
     let Some(owner) = owner else { return };
     let mut receipt = vec![31, 1];
     receipt.extend(ticket.unwrap_or(owner.generation).to_le_bytes());
-    if !supports_resume || send(&mut socket, receipt).await {
-        exchange(&mut socket, &state, &code, owner, ticket.is_some()).await;
+    if !capabilities.resume || send(&mut socket, receipt).await {
+        exchange(
+            &mut socket,
+            &state,
+            &code,
+            owner,
+            ticket.is_some(),
+            capabilities.lineups,
+        )
+        .await;
     }
     state.directory.lock().unwrap().disconnect(&code, owner);
 }
@@ -91,6 +108,7 @@ async fn exchange(
     code: &str,
     owner: Connection,
     resuming: bool,
+    supports_lineups: bool,
 ) {
     let mut timer = interval(Duration::from_millis(150));
     timer.set_missed_tick_behavior(MissedTickBehavior::Skip);
@@ -139,7 +157,8 @@ async fn exchange(
                 dir.rooms.get(code).and_then(|r| r.game.clone())
             };
             if let Some(game) = game {
-                super::stream::play(socket, state, code, owner, game.clone()).await;
+                super::stream::play(socket, state, code, owner, game.clone(), supports_lineups)
+                    .await;
                 let returned = {
                     let mut dir = state.directory.lock().unwrap();
                     dir.prune(Instant::now());

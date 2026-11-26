@@ -1,44 +1,26 @@
-use super::{Admission, connection::Connection, directory::Directory, sessions::SessionId};
+use super::{Admission, connection::Connection, directory::Directory};
 use crate::RoomClient;
+use crate::lineup::{Lineup, Participant};
 use brawler_engine::FighterId;
-use std::sync::Arc;
-
-#[derive(Clone, PartialEq, Eq)]
-struct Participant {
-    session: SessionId,
-    generation: u64,
-    slot: u8,
-    name: String,
-    color: u8,
-}
+use std::sync::{Arc, Mutex};
 
 pub(super) struct Match {
     pub client: RoomClient,
-    players: Vec<Participant>,
+    pub lineup: Arc<Mutex<Lineup>>,
 }
 
-impl Match {
-    pub fn fighter(&self, session: SessionId) -> Option<FighterId> {
-        self.players
-            .iter()
-            .position(|p| p.session == session)
-            .map(|i| FighterId::ALL[i])
-            .filter(|&id| !self.client.forfeited(id))
+pub(super) fn welcome(players: &[Participant], fighter: Option<FighterId>) -> Vec<u8> {
+    let own = fighter.map_or(255, |id| id as u8);
+    let mut bytes = if players.len() == 2 {
+        vec![23, 1, own]
+    } else {
+        vec![26, 1, own, players.len() as u8]
+    };
+    for p in players {
+        bytes.extend([p.slot, p.color, p.name.len() as u8]);
+        bytes.extend(p.name.bytes());
     }
-
-    pub fn welcome(&self, session: SessionId) -> Vec<u8> {
-        let own = self.fighter(session).map_or(255, |id| id as u8);
-        let mut bytes = if self.players.len() == 2 {
-            vec![23, 1, own]
-        } else {
-            vec![26, 1, own, self.players.len() as u8]
-        };
-        for p in &self.players {
-            bytes.extend([p.slot, p.color, p.name.len() as u8]);
-            bytes.extend(p.name.bytes());
-        }
-        bytes
-    }
+    bytes
 }
 
 impl Directory {
@@ -77,14 +59,7 @@ impl Directory {
             if !member.ready {
                 return None;
             }
-            let seat = room.seat(slot);
-            players.push(Participant {
-                session: member.session,
-                generation: member.generation?,
-                slot: seat.slot,
-                name: seat.name,
-                color: seat.color,
-            });
+            players.push(room.participant(slot)?);
         }
         (players.len() >= 2).then_some(players)
     }
@@ -98,8 +73,9 @@ pub(super) async fn start(state: &Admission, code: &str, owner: Connection) -> R
     };
     let next = serial.checked_add(1).ok_or(2u8)?;
     let pool = Arc::clone(&state.pool);
-    let count = ticket.len();
-    let client = tokio::task::spawn_blocking(move || pool.open_in_match(count, serial))
+    let lineup = Arc::new(Mutex::new(Lineup::new(ticket.clone())));
+    let worker_lineup = lineup.clone();
+    let client = tokio::task::spawn_blocking(move || pool.open_hosted(serial, worker_lineup))
         .await
         .map_err(|_| 2u8)?
         .map_err(|_| 2u8)?;
@@ -112,10 +88,7 @@ pub(super) async fn start(state: &Admission, code: &str, owner: Connection) -> R
     }
     let room = dir.rooms.get_mut(code).unwrap();
     room.matches_started = next;
-    room.game = Some(Arc::new(Match {
-        client,
-        players: ticket,
-    }));
+    room.game = Some(Arc::new(Match { client, lineup }));
     Ok(())
 }
 
@@ -161,16 +134,15 @@ mod tests {
             let member = dir.connect(&code, [slot; 32]).unwrap();
             dir.live_state(&code, member, Some(true)).unwrap();
         }
+        let former = dir.rooms[&code].participant(1).unwrap().member;
+        let last = dir.rooms[&code].participant(3).unwrap().member;
         dir.leave([1; 32], &code, now).ok().unwrap();
         let players = dir.starters(&code, connection).unwrap();
-        let pool = crate::WorkerPool::new(1).unwrap();
-        let game = Match {
-            client: pool.open_with_players(players.len()).unwrap(),
-            players,
-        };
+        assert!(players.iter().all(|p| p.member != former));
+        assert_eq!(players[2].member, last);
         let expected = [26, 1, 2, 3, 0, 7, 1, b'A', 2, 5, 1, b'C', 3, 4, 1, b'D'];
-        assert_eq!(game.welcome([3; 32]), expected);
-        let spectator = game.welcome([1; 32]);
+        assert_eq!(welcome(&players, Some(FighterId::Third)), expected);
+        let spectator = welcome(&players, None);
         assert_eq!(spectator[2], 255);
         assert_eq!(spectator[3..], expected[3..]);
     }

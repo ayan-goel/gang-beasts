@@ -6,6 +6,7 @@ use axum::http::StatusCode;
 use std::time::Instant;
 
 pub(super) struct Member {
+    pub identity: Option<u64>,
     pub session: SessionId,
     pub ready: bool,
     pub resume_id: Option<u64>,
@@ -40,6 +41,7 @@ impl Lobby {
     ) -> Self {
         let mut members: Vec<_> = (0..capacity).map(|_| None).collect();
         members[0] = Some(Member {
+            identity: None,
             session,
             ready: false,
             generation: None,
@@ -79,29 +81,31 @@ impl Lobby {
         }
     }
     pub fn release_seats(&mut self, slots: u8, now: Instant) {
-        let mut forfeits = 0;
+        let mut lineup = self
+            .game
+            .as_ref()
+            .filter(|_| slots != 0)
+            .map(|game| game.lineup.lock().unwrap());
         for (slot, seat) in self.members.iter_mut().enumerate() {
             if slots & (1 << slot) == 0 {
                 continue;
             }
             let Some(member) = seat.take() else { continue };
-            if let Some((game, id)) = self
-                .game
-                .as_ref()
-                .and_then(|g| g.fighter(member.session).map(|id| (g, id)))
-            {
-                forfeits |= 1 << id as u8;
+            if let (Some(lineup), Some(identity)) = (&mut lineup, member.identity) {
+                lineup.depart(identity);
                 if let Some(generation) = member.generation {
-                    game.client.unbind(id, generation);
+                    self.game
+                        .as_ref()
+                        .unwrap()
+                        .client
+                        .unbind_slot(slot, generation);
                 }
             }
             self.revision = self.revision.wrapping_add(1);
         }
         // The worker samples all expirations from this sweep together before resolving the winner.
+        drop(lineup);
         if let Some(game) = &self.game {
-            if forfeits != 0 {
-                game.client.forfeit(forfeits);
-            }
             if game.client.returning_to_lobby() {
                 self.return_to_lobby();
             }
@@ -137,6 +141,16 @@ impl Lobby {
         self.members
             .iter()
             .position(|m| m.as_ref().is_some_and(|m| m.session == session))
+    }
+    pub fn participant(&self, slot: usize) -> Option<crate::lineup::Participant> {
+        let member = self.members.get(slot)?.as_ref()?;
+        Some(crate::lineup::Participant {
+            member: member.identity?,
+            generation: member.generation?,
+            slot: slot as u8,
+            color: member.color,
+            name: member.name.clone(),
+        })
     }
     pub fn seat(&self, slot: usize) -> Seat {
         let member = self.members[slot].as_ref().expect("occupied session slot");
@@ -180,6 +194,7 @@ impl Lobby {
         }
         self.revision = self.revision.wrapping_add(1);
         self.members[slot] = Some(Member {
+            identity: None,
             session,
             ready: false,
             generation: None,

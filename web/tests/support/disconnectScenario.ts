@@ -47,12 +47,18 @@ export async function verifyDisconnectGrace({page: host, browser}: {page: Page; 
     await blue.getByRole('button',{name:'Leave room'}).click();
     await Promise.all([host,gold].map(async player => {
       await expect(player.getByLabel('Gold score')).toHaveText('1');
-      await expect(player.getByRole('heading',{name:'Room lobby'})).toBeVisible({timeout:10000});
-      await expect(player.getByRole('button',{name:'Ready up'})).toBeVisible();
+      await expect(player.getByLabel('Round number')).toHaveText('Round 2',{timeout:12000});
+      await expect(player.getByLabel('Mint again score')).toHaveText('0');
+      await expect(player.getByLabel('Mint score')).toHaveCount(0);
+      await expect(player.getByLabel('Blue score')).toHaveCount(0);
     }));
+    await expect(host.getByRole('heading',{name:'Playing as Mint again'})).toBeVisible();
+    await expect(gold.getByRole('heading',{name:'Playing as Gold'})).toBeVisible();
+    await host.getByRole('button',{name:'Leave room'}).click();
+    await expect(gold.getByLabel('Gold score')).toHaveText('2',{timeout:12000});
+    await expect(gold.getByRole('heading',{name:'Room lobby'})).toBeVisible({timeout:10000});
     await expect(gold.getByRole('button',{name:'Start match'})).toBeDisabled();
-    await expect(host.getByRole('button',{name:'Start match'})).toHaveCount(0);
-    for (const player of [host,gold]) await player.getByRole('button',{name:'Leave room'}).click();
+    await gold.getByRole('button',{name:'Leave room'}).click();
   } finally {
     try { await releaseRoom(invite,[host.context(),...profiles]); }
     finally { await Promise.all(profiles.map(profile => profile.close())); }

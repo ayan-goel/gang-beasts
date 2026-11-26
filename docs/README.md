@@ -41,6 +41,7 @@
 - [Online hazard warnings](slices/17a-hazard-warnings.md) documents the walkway and wind messages and their timing after reconnect.
 - [Online rematches](slices/16f-online-rematch.md) covers first-to-three results, host authority and fresh round epochs.
 - [Silent match outages](slices/16h-silent-match-outages.md) covers detection and recovery when a socket stays open.
+- [Late joins in private rooms](slices/16j-spectator-promotion.md) covers watching a round, entering the next and reusing a forfeited seat.
 - [Round lineups](slices/16i-round-lineups.md) covers native round-boundary spawns, score continuity and input ownership.
 - [Automatic match reconnect](slices/16g-automatic-reconnect.md) explains retry timing, input reset and ownership across tabs.
 - [Disconnect grace and forfeits](slices/16e-disconnect-grace.md) covers seat expiry, reconnect, scoring and abandoned rooms.

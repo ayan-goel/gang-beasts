@@ -4,7 +4,7 @@ use brawler_protocol::{INPUT_BYTES, InputFrame};
 use std::{
     sync::{
         Arc, Mutex,
-        atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc::{Receiver, SyncSender, TrySendError, sync_channel},
     },
     time::Instant,
@@ -34,7 +34,6 @@ pub(super) struct Shared {
     pub latest: Mutex<Option<Arc<RoomFrame>>>,
     pub closed: AtomicBool,
     pub rejected: AtomicU64,
-    pub forfeits: AtomicU8,
     pub return_to_lobby: AtomicBool,
     pub owners: [AtomicU64; FighterId::ALL.len()],
     pub delayed: AtomicU64,
@@ -52,7 +51,6 @@ impl RoomClient {
             latest: Mutex::default(),
             closed: AtomicBool::new(false),
             owners: Default::default(),
-            forfeits: AtomicU8::new(0),
             return_to_lobby: AtomicBool::new(false),
             rejected: AtomicU64::new(0),
             delayed: AtomicU64::new(0),
@@ -72,27 +70,19 @@ impl RoomClient {
     }
 
     pub fn input(&self, id: FighterId, round: u64, bytes: &[u8]) -> Result<(), DispatchError> {
-        self.input_for(id, 0, round, bytes)
-    }
-
-    pub(crate) fn forfeit(&self, mask: u8) {
-        self.shared.forfeits.fetch_or(mask, Ordering::AcqRel);
-    }
-
-    pub(crate) fn forfeited(&self, id: FighterId) -> bool {
-        self.shared.forfeits.load(Ordering::Acquire) & (1 << id as u8) != 0
+        self.input_for_slot(id as usize, 0, round, bytes)
     }
 
     pub(crate) fn returning_to_lobby(&self) -> bool {
         self.shared.return_to_lobby.load(Ordering::Acquire)
     }
 
-    pub(crate) fn bind(&self, id: FighterId, generation: u64) {
-        self.shared.owners[id as usize].store(generation, Ordering::Release);
+    pub(crate) fn bind_slot(&self, slot: usize, generation: u64) {
+        self.shared.owners[slot].store(generation, Ordering::Release);
     }
 
-    pub(crate) fn unbind(&self, id: FighterId, generation: u64) {
-        let _ = self.shared.owners[id as usize].compare_exchange(
+    pub(crate) fn unbind_slot(&self, slot: usize, generation: u64) {
+        let _ = self.shared.owners[slot].compare_exchange(
             generation,
             0,
             Ordering::AcqRel,
@@ -100,16 +90,16 @@ impl RoomClient {
         );
     }
 
-    pub(crate) fn input_for(
+    pub(crate) fn input_for_slot(
         &self,
-        id: FighterId,
+        slot: usize,
         generation: u64,
         round: u64,
         bytes: &[u8],
     ) -> Result<(), DispatchError> {
         InputFrame::decode(bytes).map_err(|e| DispatchError::Invalid(SubmitError::Invalid(e)))?;
         self.send(
-            id,
+            slot,
             Command::Input {
                 generation,
                 round,
@@ -119,18 +109,18 @@ impl RoomClient {
         )
     }
     pub fn attach(&self, id: FighterId) -> Result<(), DispatchError> {
-        self.send(id, Command::Attach)
+        self.send(id as usize, Command::Attach)
     }
     pub fn detach(&self, id: FighterId) -> Result<(), DispatchError> {
-        self.send(id, Command::Detach)
+        self.send(id as usize, Command::Detach)
     }
 
-    fn send(&self, id: FighterId, command: Command) -> Result<(), DispatchError> {
+    fn send(&self, slot: usize, command: Command) -> Result<(), DispatchError> {
         if self.shared.closed.load(Ordering::Acquire) {
             return Err(DispatchError::Closed);
         }
         self.senders
-            .get(id as usize)
+            .get(slot)
             .ok_or(DispatchError::Invalid(SubmitError::Detached))?
             .try_send(command)
             .map_err(|e| match e {

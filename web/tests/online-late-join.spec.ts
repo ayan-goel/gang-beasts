@@ -1,0 +1,92 @@
+import {expect, test, type Browser, type Page} from '@playwright/test';
+import {decodeSnapshot} from '../src/net/snapshot';
+import {gripMatch} from './support/gripMatch';
+import {releaseRoom} from './support/releaseRoom';
+
+if (process.platform === 'darwin') test.use({launchOptions:{args:['--use-gl=angle','--use-angle=metal']}});
+
+function observe(page: Page) {
+  const view = {sockets:0, inputs:0, tick:0, players:0, x:0, handoffs:[] as number[]};
+  page.on('websocket', socket => {
+    if (!socket.url().includes('/ws?')) return;
+    view.sockets++;
+    socket.on('framesent', ({payload}) => {
+      if (Buffer.isBuffer(payload) && payload[0] === 1) view.inputs++;
+    });
+    socket.on('framereceived', ({payload}) => {
+      if (!Buffer.isBuffer(payload)) return;
+      if (payload[0] === 27 || payload[0] === 34) view.handoffs.push(payload[0]);
+      if (payload[0] !== 2) return;
+      const frame = decodeSnapshot(payload);
+      view.players = frame.fighters.length;
+      view.tick = frame.tick;
+      if (view.players === 3) view.x = frame.bodies.get(35)!.position[0];
+    });
+  });
+  return view;
+}
+
+async function verifyJoin(host: Page, browser: Browser, legacyPeer: boolean) {
+  const profile = await browser.newContext();
+  const newcomer = await profile.newPage();
+  let invite = '';
+  try {
+    await gripMatch(host, browser, async (guest, start) => {
+      const views = [host, guest, newcomer].map(observe);
+      if (legacyPeer) await guest.addInitScript(() => {
+        window.WebSocket = class extends WebSocket {
+          constructor(url: string | URL, protocols?: string | string[]) {
+            const path = new URL(url, location.href);
+            if (path.pathname === '/ws') path.search = '?resume=1';
+            super(path, protocols);
+          }
+        };
+      });
+      await start();
+      invite = guest.url();
+      await newcomer.goto(invite);
+      await newcomer.getByLabel('Player name').fill('Gold');
+      await newcomer.getByRole('button',{name:'Join room',exact:true}).click();
+      await expect(newcomer.getByRole('heading',{name:'Spectating Skyline'})).toBeVisible({timeout:15000});
+      await newcomer.locator('canvas').focus();
+      await newcomer.keyboard.down('KeyD');
+      const waiting = views[2]!.tick;
+      await expect.poll(() => views[2]!.tick).toBeGreaterThan(waiting + 8);
+      await newcomer.keyboard.up('KeyD');
+      expect(views[2]!.inputs).toBe(0);
+      expect(views.map(v => v.players)).toEqual([2,2,2]);
+      await guest.bringToFront();
+      await guest.locator('canvas').focus();
+      await guest.keyboard.down('ShiftLeft');
+      await guest.keyboard.down('KeyD');
+      try { await expect(host.getByLabel('Mint score')).toHaveText('1',{timeout:20000}); }
+      finally { await guest.keyboard.up('KeyD'); await guest.keyboard.up('ShiftLeft'); }
+      for (const page of [host,guest,newcomer]) {
+        await expect(page.getByLabel('Round number')).toHaveText('Round 2',{timeout:15000});
+        await expect(page.getByLabel('Gold score')).toHaveText('0');
+        await expect(page.getByLabel('Mint score')).toHaveText('1');
+        await expect(page.getByLabel('Round phase')).toHaveText('Playing',{timeout:12000});
+      }
+      await expect(newcomer.getByRole('heading',{name:'Playing as Gold'})).toBeVisible();
+      await newcomer.bringToFront();
+      await newcomer.locator('canvas').focus();
+      const before = views.map(v => v.x);
+      await newcomer.keyboard.down('KeyD');
+      try { await expect.poll(() => views.every((v,i) => v.x > before[i]! + 1)).toBe(true); }
+      finally { await newcomer.keyboard.up('KeyD'); }
+      expect(views[2]!.inputs).toBeGreaterThan(0);
+      expect(views.map(v => v.handoffs)).toEqual([[34],[legacyPeer ? 27 : 34],[34]]);
+      expect(views.map(v => [v.sockets, v.players])).toEqual([[1,3],[legacyPeer ? 2 : 1,3],[1,3]]);
+    });
+  } finally {
+    try { await releaseRoom(invite,[profile]); } finally { await profile.close(); }
+  }
+}
+
+test('a late spectator enters the next round with their own fighter on the same socket', async ({page,browser}) => {
+  await verifyJoin(page,browser,false);
+});
+
+test('a peer using the original handshake receives its new lineup over a fresh socket', async ({page,browser}) => {
+  await verifyJoin(page,browser,true);
+});

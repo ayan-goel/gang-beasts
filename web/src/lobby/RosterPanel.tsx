@@ -48,7 +48,7 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
   </section>;
   if (game) {
     const {View, feed, content} = game;
-    return <><View feed={feed} content={content} exit={exit} rematch={canRematch ? requestRematch : undefined}/>
+    return <><View key={feed.assignmentRound?.toString() ?? 'start'} feed={feed} content={content} exit={exit} rematch={canRematch ? requestRematch : undefined}/>
       {error && <p role="alert">{error}</p>}</>;
   }
   if (lostAccess && disconnected) return <section className="room-panel">

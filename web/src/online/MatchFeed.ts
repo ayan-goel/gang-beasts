@@ -12,7 +12,7 @@ export class MatchFeed {
   readonly fighters: readonly Fighter[];
   readonly own: number | null;
 
-  constructor(packet: Uint8Array, readonly transmit: (packet: Uint8Array) => void) {
+  constructor(packet: Uint8Array, readonly transmit: (packet: Uint8Array) => void, readonly assignmentRound?: bigint) {
     const duel = packet[0] === 23;
     const count = duel ? 2 : packet[3];
     const own = packet[2];
@@ -35,8 +35,16 @@ export class MatchFeed {
     }
   }
 
+  reassign(packet: Uint8Array, transmit: (packet: Uint8Array) => void) {
+    if (!this.latest || packet.length < 13 || packet[0] !== 34 || packet[1] !== 1) throw new Error('Invalid roster change');
+    const epoch = new DataView(packet.buffer, packet.byteOffset, packet.byteLength).getBigUint64(2, true);
+    if (epoch <= this.latest.round || (epoch >> 32n) !== (this.latest.round >> 32n)) throw new Error('Invalid roster epoch');
+    return new MatchFeed(packet.subarray(10), transmit, epoch);
+  }
+
   receive(packet: Uint8Array) {
     const frame = decodeSnapshot(packet);
+    if (!this.latest && this.assignmentRound !== undefined && frame.round !== this.assignmentRound) throw new Error('Wrong first roster snapshot');
     if (frame.fighters.length !== this.fighters.length) throw new Error('Snapshot roster changed');
     if (!this.timeline.push(frame, performance.now())) return false;
     if (this.latest?.round !== frame.round) {

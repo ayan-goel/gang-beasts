@@ -31,3 +31,23 @@ describe('online match assignment', () => {
     }
   });
 });
+
+it('requires a newer roster epoch in the same match and its matching first snapshot', () => {
+  const snapshot = new Uint8Array(readFileSync(new URL('../../../tests/fixtures/protocol/full-skyline-v1.bin', import.meta.url)));
+  const duel = Uint8Array.of(23,1,255,0,0,1,65,1,1,1,66);
+  const current = new MatchFeed(duel, () => {});
+  current.receive(snapshot);
+  const epoch = current.latest!.round;
+  const reassignment = Uint8Array.of(34,1,...new Uint8Array(8),...duel);
+  const setEpoch = (value: bigint) => new DataView(reassignment.buffer).setBigUint64(2, value, true);
+  setEpoch(epoch);
+  expect(() => current.reassign(reassignment, () => {})).toThrow();
+  setEpoch(epoch + (1n << 32n));
+  expect(() => current.reassign(reassignment, () => {})).toThrow();
+  setEpoch(epoch + 1n);
+  const sent: Uint8Array[] = [];
+  const next = current.reassign(reassignment, packet => sent.push(packet));
+  expect(() => next.receive(snapshot)).toThrow();
+  expect(sent).toEqual([]);
+  expect(next.latest).toBeNull();
+});

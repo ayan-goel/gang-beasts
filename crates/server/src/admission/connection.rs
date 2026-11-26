@@ -4,6 +4,7 @@ use std::time::Instant;
 
 #[derive(Clone, Copy)]
 pub(super) struct Connection {
+    pub member: u64,
     pub session: SessionId,
     pub slot: usize,
     pub generation: u64,
@@ -61,14 +62,14 @@ impl Directory {
         let generation = self.next_connection;
         member.resume_id = ticket.or(Some(generation));
         if let (Some(game), Some(previous)) = (&room.game, member.generation) {
-            if let Some(id) = game.fighter(session) {
-                game.client.unbind(id, previous);
-            }
+            game.lineup.lock().unwrap().cancel_wait(previous);
+            game.client.unbind_slot(slot, previous);
         }
         member.disconnected_at = None;
         member.generation = Some(generation);
         member.ready = false;
         Some(Connection {
+            member: *member.identity.get_or_insert(generation),
             session,
             slot,
             generation,
