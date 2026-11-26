@@ -33,3 +33,11 @@ Two Chromium 159.0.8154.6 clients ran on an Apple M3 Pro with macOS 26.6.2 and A
 Each percentile is computed independently. The final two runs include the slower-route correction. The raw file also retains the two development runs that preceded it. Standing jumps meet this measured profile on the tested hardware. The overall multiplayer gate still requires broader action and network coverage and human playability.
 
 The final production bundle also passed the attached-fighter punch, five-second stream stall and recovery, and eight-player scoring and rendering scenarios. The unit fixtures cover steady motion between uneven arrivals, missing publications, route changes, epoch resets and capped extrapolation.
+
+## Recovering from queued publications
+
+On an M3 Pro with two default headless Chromium clients, a stall during initial rendering allowed more than a second of server snapshots to queue. The original clock could correct its origin by only 0.1 physics tick per publication. On the guest, the server had reached timeline tick 422 while the oldest retained snapshot was already at 360. The client was still reporting buffering and drawing the oldest pose. Both clients received the same landing record, but this buffering state kept the guest's audio cursor inactive.
+
+The clock now limits how far its origin can trail the fastest arrival in the current history to one nominal 30 Hz publication (33.3 ms). Small delivery changes retain the gradual correction. The adaptive interpolation delay and extrapolation ceiling still apply, and the shared presentation tick moves monotonically. A deterministic test drains 55 queued packets in about one millisecond after a long client stall, then checks live status, fighter position, round state and continued progress. The previous implementation failed at the live-status assertion. [Timeline regression](../../web/src/online/SnapshotTimeline.test.ts)
+
+Both browsers then produced one landing cue for the same server-owned jump on the default Chromium renderer. A separate stall during the first WebGL draw can still suppress an early countdown beep when the interval between observations exceeds 500 ms.

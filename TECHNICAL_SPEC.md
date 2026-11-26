@@ -942,7 +942,7 @@ Reusable estimator: `B = (15P + E) × record_bytes × snapshot_rate × changed_f
 
 ### 17.7 Interpolation
 
-Maintain snapshots keyed by round epoch and server tick. Start private matches with an **83 ms interpolation delay**. After 16 accepted snapshots, size the buffer to the observed arrival gaps within **42–100 ms**, with a shared clock for the whole scene. [Presentation clock and measurements](docs/slices/15i-snapshot-clock.md) Interpolate positions linearly and orientations with shortest-path SLERP. Use consistent time for all limbs so a character does not tear apart across mixed ticks.
+Maintain snapshots keyed by round epoch and server tick. Start private matches with an **83 ms interpolation delay**. After 16 accepted snapshots, size the buffer to the observed arrival gaps within **42–100 ms**, with a shared clock for the whole scene. After a backlog drains, the clock origin stays within one publication on the late side of the fastest observed arrival. [Presentation clock and measurements](docs/slices/15i-snapshot-clock.md) Interpolate positions linearly and orientations with shortest-path SLERP. Use consistent time for all limbs so a character does not tear apart across mixed ticks.
 
 The [initial browser implementation](docs/slices/15c-interpolation.md) uses one delayed tick for every limb and arena object and checks bounded extrapolation, stall recovery and epoch discontinuities. Adapt buffering to measured jitter with bounded changes. On missing future state, extrapolate for a short capped interval (initial candidate 100 ms), then freeze/fade appropriately and show connection status. Do not allow indefinite extrapolation. Spawn, deletion, teleport/reset and round boundaries are discontinuities, not poses to blend through.
 

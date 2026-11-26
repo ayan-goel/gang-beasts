@@ -140,3 +140,32 @@ it('retains enough history while the shared clock adjusts to a slower route', ()
     if (tick >= 250) expect(timeline.sample((arrival + 1.95) * dt)!.status).toBe('live');
   }
 });
+
+it('catches up to fresh poses and round state after queued snapshots arrive together', () => {
+  const timeline = new SnapshotTimeline();
+  timeline.push(frame(0, 0), 0);
+  timeline.sample(0);
+  const delayedUntil = 110 * dt;
+  // A busy client receives the first post-stall record late, then drains the socket in order.
+  for (let tick = 2; tick <= 110; tick += 2) {
+    const state = frame(tick, tick / 100);
+    state.phase = tick < 90 ? 0 : 1;
+    timeline.push(state, delayedUntil + tick / 100);
+  }
+  const now = delayedUntil + 1.1;
+  const caughtUp = timeline.sample(now)!;
+  expect(caughtUp.status).toBe('live');
+  expect(caughtUp.state.phase).toBe(1);
+  const presented = pose(timeline, now)![0]! * 100;
+  expect(110 - presented).toBeGreaterThanOrEqual(2);
+  expect(110 - presented).toBeLessThanOrEqual(timeline.delayTicks + 2.01);
+  let previous = presented;
+  for (let tick = 112; tick <= 132; tick += 2) {
+    const at = tick * dt + 1.1;
+    timeline.push(frame(tick, tick / 100), at);
+    expect(timeline.sample(at)!.status).toBe('live');
+    const next = pose(timeline, at)![0]! * 100;
+    expect(next).toBeGreaterThan(previous);
+    previous = next;
+  }
+});

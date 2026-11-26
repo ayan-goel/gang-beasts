@@ -2,6 +2,7 @@ import type { Snapshot } from '../net/snapshot';
 
 const tickMs = 1000 / 60;
 const maxPrediction = 6;
+const publicationMs = 2 * tickMs;
 interface Entry { at: number; received: number; frame: Snapshot; cuts: Set<number> }
 export type StreamStatus = 'buffering' | 'live' | 'estimating' | 'stalled';
 export interface PoseSample {
@@ -62,7 +63,9 @@ export class SnapshotTimeline {
       if (i) latestGapEndMs = Math.max(latestGapEndMs, entry.received - this.entries[i-1]!.at * tickMs);
     }
     const correction = Math.max(-.1 * tickMs, Math.min(.1 * tickMs, earliestOriginMs - this.clockOriginMs));
-    this.clockOriginMs += correction;
+    // A queued batch can advance server time while almost no arrival time elapses.
+    // Keep gradual clock correction within one 30 Hz publication of the fastest observed arrival.
+    this.clockOriginMs = Math.min(this.clockOriginMs + correction, earliestOriginMs + publicationMs);
     if (this.entries.length < 16) return;
     // While a slower route moves the reference forward, the current clock still needs the extra buffered time.
     const coverage = (latestGapEndMs - Math.min(this.clockOriginMs, earliestOriginMs)) / tickMs;
