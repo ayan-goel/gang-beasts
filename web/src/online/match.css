@@ -20,3 +20,6 @@
 .online-controls { margin:0; padding:.4rem clamp(1rem,3vw,3rem) 1rem; color:#ccdad9; }
 .online-fighter { display: inline-flex; align-items: center; gap: .45rem; }
 .online-callout button { display: block; margin: .5rem auto 0; }
+
+.online-grips:not(:empty) { padding: 0 clamp(1rem,3vw,3rem) .5rem; display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; color: #d1e0df; font-size: .85rem; }
+.online-grips b { color: #faf7ee; margin-right: .25rem; }

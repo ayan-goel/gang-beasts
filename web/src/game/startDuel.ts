@@ -1,3 +1,4 @@
+import { arenaGripName, fighterGripName, handGripLabels } from './gripLabels';
 import type { FighterPhase } from './fighterCondition';
 import type { Object3D } from 'three';
 import type { MatchView, SkylineMap } from '../rendering/SkylineView';
@@ -79,17 +80,10 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     }, () => !paused && (!match || match.phase === 'playing'));
     const inputs = [playerInput(0), playerInput(1)];
     unbind = bindMovementInput(canvas, inputs[0]!, inputs[1]!);
-    const readGrips = (owner: Player) => ([0, 1] as const).flatMap(side => {
+    const readGrips = (owner: Player) => handGripLabels(side => {
       const region = duel.grip_region(owner, side);
-      if (region === undefined) {
-        const id = map && duel.arena_grip(owner, side);
-        const target = id === undefined ? undefined : map?.objects.find(o => o.id === id);
-        if (!target) return [];
-        const label = { deck: 'roof edge', panel: 'walkway edge', crate: 'crate', vent: 'vent' }[target.kind];
-        return [`${side === 0 ? 'Left' : 'Right'} hand on ${label}`];
-      }
-      const part = definition.bodies[region]!.part.replaceAll('_', ' ');
-      return [`${side === 0 ? 'Left' : 'Right'} hand on ${owner === 0 ? 'Blue' : 'Coral'}’s ${part}`];
+      if (region !== undefined) return fighterGripName(owner === 0 ? 'Blue' : 'Coral', definition.bodies[region]!.part);
+      return map && arenaGripName(map, duel.arena_grip(owner, side));
     });
     const snapshot = () => publish({
       match,

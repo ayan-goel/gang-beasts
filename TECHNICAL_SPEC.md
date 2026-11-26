@@ -642,6 +642,8 @@ The local opponent-grip fixture uses a 25 mm maximum gap between collider surfac
 
 Skyline uses compliant constraints and per-hand stamina accounting for crates, vents and exposed upper roof or walkway edges. Solid lips also limit slip and use the fall-arrest overload calibration in §13.7. Reach motors angle toward lower props during approach. Grips remain attached to a falling panel until release, failure or debris retirement. [Surface eligibility and verification](docs/slices/10c1-arena-grips.md).
 
+Local and online Skyline identify each attached hand and its target. Private matches resolve the target from the displayed authoritative snapshot, including on reconnect. A free hand can land a qualifying punch while the other attachment persists. [Independent hand verification](docs/slices/09e-online-hand-actions.md#verification)
+
 ### 13.7 Stamina and grip failure
 
 | Parameter | Proposed value |
@@ -1674,7 +1676,7 @@ Retain all 18 original completion checks, with explicit evidence expectations:
 - [x] **Friend joining:** Two to eight players join a private room link/code without accounts; ninth player is handled safely. [Browser lobby evidence](docs/slices/16b-browser-lobby.md#verification)
 - [ ] **Active ragdolls:** Characters use the physical rig and motors; body/joint/mass checks pass.
 - [ ] **Locomotion:** Walking, running, jumping and recovery are controllable in human playtests.
-- [ ] **Independent hands:** Either hand can punch/grab while the other performs a different permitted action.
+- [x] **Independent hands:** Either hand can punch/grab while the other performs a different permitted action. [Physical strikes under a maintained grip and two-client hand states](docs/slices/09e-online-hand-actions.md#verification)
 - [ ] **Lifts/throws:** Opponents can be physically lifted/thrown with momentum and counterplay.
 - [x] **Knockout/recovery:** Consciousness changes do not eliminate automatically or snap poses. [Per-limb continuity, score preservation and post-recovery control](docs/slices/17d-fighter-condition.md#verification)
 - [ ] **Ledge recovery:** Standard Skyline rescue cases pass and feel intentional.

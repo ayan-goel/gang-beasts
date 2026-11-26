@@ -40,6 +40,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 09b — verified browser fixture | Playable opponent grips | Both rigs and all four grip slots agree across native and WASM, with keyboard release and blur cleanup |
 | 09c — verified local fixtures | Grip stamina and overload | Owner-specific stamina, calibrated suspended weights, exhaustion, sustained overload and release |
 | 09d | World grip targets and lifecycle | Props and fixed holds, reverse lookup on destruction, multi-party stress and cleanup |
+| 09e — online hand actions | Identify each grip and strike independently with the free hand | Mirrored physical hits, shared limb IDs, moving crate, release and reconnect |
 | 10a — verified local encounter | Lift and release in motion | Valid support, per-hand force budget, all target colliders airborne, momentum-preserving release and matching browser trace |
 | 10b — local punch and recovery fixtures | Knockout and recovery | Physical impacts, bounded unconscious time, grip ownership, motor ramp and get-up |
 | 10c1 — local arena grips | Physical prop and edge grips | Walk to a crate, lift and release it, preserve panel attachment on detachment and clean up retired bodies |

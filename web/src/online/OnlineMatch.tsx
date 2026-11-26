@@ -1,3 +1,5 @@
+import { GripNotices } from '../app/GripNotices';
+import { onlineGripLabels } from './gripLabels';
 import { FighterNotices } from '../app/FighterNotices';
 import { useMatchSound } from '../audio/SkylineSound';
 import { useEffect, useRef, useState } from 'react';
@@ -28,6 +30,7 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
     return () => { cancelAnimationFrame(frame); clearTimeout(timer); stop?.(); };
   }, [feed, content]);
   useMatchSound(match, status === 'live' || status === 'estimating', match.conditions);
+  const names = feed.fighters.map(f => f.name);
   const winner = match.winner == null ? 'Draw' : feed.fighters[match.winner]!.name + ' wins';
   return <section className="online-match" aria-label="Online Skyline arena">
     <div className="online-header"><h1>{feed.own === null ? 'Spectating Skyline' : 'Playing as ' + feed.fighters[feed.own]!.name}</h1><button onClick={exit}>Leave room</button></div>
@@ -38,7 +41,7 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
           {match.phase === 'playing' ? hazardWarnings[match.hazard] : ''}
         </p>
         <div className="online-conditions" aria-live="polite">
-          {match.phase === 'playing' && <FighterNotices names={feed.fighters.map(f => f.name)} phases={match.conditions} />}
+          {match.phase === 'playing' && <FighterNotices names={names} phases={match.conditions} />}
         </div>
       </div>
     </div>
@@ -52,6 +55,9 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
         {!match.visible[i] && <small aria-label={p.name + ' eliminated'}>Out</small>}
       </span>)}
     </div>
+    {match.phase === 'playing' && <div className="online-grips" aria-live="polite">
+      <GripNotices names={names} grips={match.gripTargets.map(targets => onlineGripLabels(targets,names,content.fighter.bodies,content.map))} />
+    </div>}
     <p className="online-controls">{feed.own === null ? 'Spectating · Z / X to turn the camera' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift · Q to headbutt · Z / X to turn the camera'}</p>
     {match.phase !== 'playing' && <div className="online-callout"><span role="status">{match.phase === 'countdown' ? Math.max(1,Math.ceil(match.remaining/60)) : winner}</span>
       {match.phase === 'match_results' && rematch && <button className="room-primary" onClick={rematch}>Play again</button>}

@@ -1,3 +1,4 @@
+import { GripNotices } from './GripNotices';
 import { FighterNotices } from './FighterNotices';
 import { MuteButton, useMatchSound } from '../audio/SkylineSound';
 import { useEffect, useRef, useState } from 'react';
@@ -70,9 +71,7 @@ export function SkylineGame() {
           {match.phase === 'playing' && <FighterNotices names={names} phases={conditions} />}
         </div>}
         {started && !menu && match?.phase === 'playing' && <div className="match-grips">
-          {state?.grips.map((hands, id) => hands.length > 0 && <div key={id} aria-label={`${names[id]} grips`}>
-            <b>{names[id]}</b> {hands.join(' · ')}
-          </div>)}
+          {state && <GripNotices names={names} grips={state.grips} />}
         </div>}
       </section>
     </div>
