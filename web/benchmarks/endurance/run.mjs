@@ -20,7 +20,7 @@ try {
   try {
     const catalog = server.identity;
     console.log(JSON.stringify({seconds,cpu:cpus()[0].model,platform:platform(),release:release(),browser:browser.version(),
-      engine:catalog.engineHash,map:catalog.maps[0].contentHash}));
+      serverSha256:server.serverSha256,engine:catalog.engineHash,map:catalog.maps[0].contentHash}));
     const pages = [];
     let code = null;
     for (let slot = 0; slot < 8; slot++) {

@@ -974,6 +974,8 @@ Rapier offers determinism under documented conditions, including feature and ini
 
 Use bounded per-client outgoing queues with separate control/event and replaceable snapshot handling. Replace superseded snapshots only before socket write; preserve lifecycle ordering and reconstruct a valid delta chain. Disconnect or reduce snapshot rate for persistently slow receivers. Never block the room on one client or grow queues without limit.
 
+The native server reserves a 4 KiB WebSocket read buffer per seat, matching its 4 KiB maximum inbound frame and message sizes. Eight seats reserve 32 KiB of initial read capacity. [Heap measurements](docs/verification/room-read-buffers.md)
+
 Initial proposed limits: two unsent snapshot slots, a bounded reliable queue, and a 256 KiB application send high-water mark. Measure actual socket buffering; values are operational candidates. If critical events cannot be delivered within bounds, close the connection with a recoverable reason and resync on return. Decreasing snapshot rate must not alter authoritative tick frequency.
 
 ## 18. Server architecture

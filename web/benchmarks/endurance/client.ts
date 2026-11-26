@@ -10,7 +10,7 @@ export async function admit(slot: number, code: string | null) {
 }
 
 export function play(slot: number, code: string, hashes: string) {
-  const stats = {frames:0, bytes:0, inputs:0, applied:0, rounds:0, matches:0, scored:0, gripFrames:0,
+  const stats = {frames:0, bytes:0, arenaTick:0, phase:0, inputs:0, applied:0, rounds:0, matches:0, scored:0, gripFrames:0,
     damageFrames:0, gustFrames:0, resumes:0, maxGapMs:0, error:''};
   let lastAt = performance.now(), lastEpoch = -1n, lastMatch = -1n, scoredEpoch = -1n;
   let socket: WebSocket, ticket: Uint8Array | undefined;
@@ -61,6 +61,8 @@ export function play(slot: number, code: string, hashes: string) {
             lastAt = now;
             stats.frames++;
             stats.bytes += bytes.length;
+            stats.arenaTick = state.arenaTick;
+            stats.phase = state.phase;
             if (awaitingResume) { stats.resumes++; awaitingResume = false; }
             if (verifyGrips(state.fighters)) stats.gripFrames++;
             const match = state.round >> 32n;

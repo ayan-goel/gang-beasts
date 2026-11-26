@@ -11,6 +11,8 @@ use brawler_protocol::lobby::Command;
 use std::time::{Duration, Instant};
 use tokio::time::{MissedTickBehavior, interval, timeout};
 
+const INBOUND_BYTES: usize = 4096;
+
 #[derive(Clone, Copy)]
 pub(super) struct Capabilities {
     resume: bool,
@@ -54,9 +56,11 @@ pub(super) async fn upgrade(
         landings: has("landings=1"),
         timing: has("timing=1"),
     };
+    // Each admitted seat reserves a read buffer, and every game input fits within one message.
     Ok(ws
-        .max_frame_size(4096)
-        .max_message_size(4096)
+        .read_buffer_size(INBOUND_BYTES)
+        .max_frame_size(INBOUND_BYTES)
+        .max_message_size(INBOUND_BYTES)
         .write_buffer_size(0)
         .max_write_buffer_size(8192)
         .on_upgrade(move |socket| async move {

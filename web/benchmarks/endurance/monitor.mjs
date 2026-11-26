@@ -32,7 +32,7 @@ export async function monitor(pages,server,seconds) {
       memory.push(usage);
       console.log(JSON.stringify({...usage,
         frames:samples.map(s => s.frames),applied:samples.map(s => s.applied),inputs:samples.map(s => s.inputs),
-        rounds:host.rounds,matches:host.matches,scored:host.scored,gripFrames:host.gripFrames,damageFrames:host.damageFrames,
+        rounds:host.rounds,matches:host.matches,phase:host.phase,arenaTick:host.arenaTick,scored:host.scored,gripFrames:host.gripFrames,damageFrames:host.damageFrames,
         gustFrames:host.gustFrames,bytes:host.bytes,maxGapMs:Math.round(Math.max(...samples.map(s => s.maxGapMs))),resumes:samples[7].resumes}));
       reportAt += 60;
     }

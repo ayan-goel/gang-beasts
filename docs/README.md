@@ -30,6 +30,7 @@
 - [Online hand actions](slices/09e-online-hand-actions.md) covers grip targets, free-hand strikes and reconnect verification.
 - [Round and match scoring](verification/round-scoring.md) covers same-tick falls, eight-player agreement and duplicate result delivery.
 - [Skyline round restoration](verification/skyline-round-restoration.md) covers visible walkway loss, restored crate and walkway poses, and round-two play in a private room.
+- [Room read buffers](verification/room-read-buffers.md) measures per-seat heap reservations and compares two live eight-client pilots.
 - [Live eight-player endurance](verification/live-endurance.md) describes the real-time workload, recovery, memory measurements and reproduction commands.
 - [Hundred-prop rooftop](verification/hundred-prop-rooftop.md) measures eight fighters and 100 awake extra crates in one solve, followed by crate retirement and a fresh match.
 - [Eight-fighter grip loop](verification/eight-fighter-grip-loop.md) records joint stretch, load, energy and release in two closed-ring fights.
