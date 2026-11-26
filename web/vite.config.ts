@@ -1,6 +1,10 @@
+import { readFileSync } from 'node:fs';
 import { defineConfig, type Connect } from 'vite';
 
 const target = process.env.BRAWLER_API_TARGET ?? 'http://127.0.0.1:8080';
+const cert = process.env.BRAWLER_TLS_CERT, key = process.env.BRAWLER_TLS_KEY;
+if (Boolean(cert) !== Boolean(key)) throw new Error('Set both BRAWLER_TLS_CERT and BRAWLER_TLS_KEY to enable HTTPS.');
+const https = cert && key ? {cert:readFileSync(cert), key:readFileSync(key)} : undefined;
 const proxy = { '/api': target, '/ws': { target, ws: true } };
 const gamePages = new Set(['/play', '/rooms', '/playground']);
 
@@ -22,7 +26,7 @@ export default defineConfig({
     configureServer(server) { server.middlewares.use(directoryIndex); },
     configurePreviewServer(server) { server.middlewares.use(directoryIndex); },
   }],
-  server: { proxy },
-  preview: { proxy },
+  server: { proxy, https },
+  preview: { proxy, https },
   build: { rollupOptions: { input: ['index.html', 'play/index.html', 'rooms/index.html', 'playground/index.html'] } },
 });

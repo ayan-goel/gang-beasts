@@ -117,6 +117,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
       });
     };
     const render = (dt = 0) => {
+      if (renderer.graphicsInterrupted) return;
       const first = duel.body_states(0), second = duel.body_states(1);
       if (match) {
         practice?.observe(first, match);
@@ -138,7 +139,16 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
         latest = hit;
       }
     };
+    renderer.onGraphicsChange = lost => {
+      if (lost) inputs.forEach(input => input.clear());
+      resetClock();
+      snapshot();
+    };
     const animate = (now: number) => {
+      if (renderer.graphicsInterrupted) {
+        frame = requestAnimationFrame(animate);
+        return;
+      }
       const previousHit = latest;
       if (!paused && (!skyline || !document.hidden)) {
         const waitingTicks = match?.phase === 'countdown' || match?.phase === 'round_results' ? match.remaining : 0;

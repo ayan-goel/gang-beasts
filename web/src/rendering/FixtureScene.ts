@@ -1,3 +1,5 @@
+import { createSceneRenderer } from './createSceneRenderer';
+import { GraphicsRecovery } from './GraphicsRecovery';
 import type { LandingEvent } from '../audio/landingSound';
 import { graphicsDriver, skylineQuality } from './skylineQuality';
 import { applySkylineQuality } from './applySkylineQuality';
@@ -22,10 +24,11 @@ interface SceneOptions {
   map?: SkylineMap;
   model?: THREE.Object3D;
   kit?: number;
+  online?: boolean;
 }
 
 export class FixtureScene {
-  private readonly renderer = new THREE.WebGLRenderer({ antialias: true });
+  private readonly renderer = createSceneRenderer();
   private readonly scene = new THREE.Scene();
   private readonly camera = new THREE.PerspectiveCamera(45, 1, 0.1, 150);
   private readonly colliders = new THREE.LineSegments(
@@ -36,6 +39,10 @@ export class FixtureScene {
     new THREE.BoxGeometry(1, 1, 1),
     new THREE.MeshStandardMaterial({ color: '#f58465', roughness: 0.65 }),
   );
+  private readonly recovery?: GraphicsRecovery;
+  onGraphicsChange?: (lost: boolean) => void;
+  get graphicsInterrupted() { return this.recovery?.interrupted ?? false; }
+
   private readonly resizeObserver?: ResizeObserver;
   private readonly unsubscribeGraphics?: () => void;
   private readonly opponents: (RagdollView | FighterSkin)[] = [];
@@ -113,11 +120,19 @@ export class FixtureScene {
       this.scene.add(sun);
       const applyQuality = () => applySkylineQuality(this.renderer, this.scene, sun,
         skylineQuality(driver, window.devicePixelRatio, map ? graphicsPreference() : 'medium'));
-      applyQuality();
-      if (map) this.unsubscribeGraphics = subscribeGraphics(applyQuality);
-      this.resizeObserver = new ResizeObserver(() => { applyQuality(); this.resize(); });
+      const refreshSize = () => {
+        if (this.graphicsInterrupted) return;
+        applyQuality();
+        this.resize();
+      };
+      this.recovery = new GraphicsRecovery(this.renderer.domElement, !!options.online, lost => {
+        if (!lost) refreshSize();
+        this.onGraphicsChange?.(lost);
+      });
+      if (map) this.unsubscribeGraphics = subscribeGraphics(refreshSize);
+      this.resizeObserver = new ResizeObserver(refreshSize);
       this.resizeObserver.observe(container);
-      this.resize();
+      refreshSize();
     } catch (error) {
       this.dispose();
       throw error;
@@ -197,10 +212,11 @@ export class FixtureScene {
         attribute.needsUpdate = true;
       }
     }
-    this.renderer.render(this.scene, this.camera);
+    if (!this.graphicsInterrupted) this.renderer.render(this.scene, this.camera);
   }
 
   dispose(): void {
+    this.recovery?.dispose();
     this.resizeObserver?.disconnect();
     this.unsubscribeGraphics?.();
     for (const fighter of [this.rig, ...this.opponents]) {

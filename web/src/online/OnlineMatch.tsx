@@ -1,3 +1,4 @@
+import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { GripNotices } from '../app/GripNotices';
 import { StaminaMeter } from '../app/StaminaMeter';
 import { onlineGripLabels } from './gripLabels';
@@ -22,21 +23,30 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
   const [match, setMatch] = useState(() => matchView(feed.latest!, content));
   const [status, setStatus] = useState<StreamStatus>('buffering');
   const [error, setError] = useState('');
+  const [graphicsAttempt, setGraphicsAttempt] = useState(0);
   const [choice, setChoice] = useState<CameraChoice | null>(null);
   const cameraChoice = useRef(choice);
   useLayoutEffect(() => { cameraChoice.current = choice; }, [choice]);
   useEffect(() => {
+    setError('');
     let stop: (() => void) | undefined;
     let timer: number | undefined;
     // Give the authoritative scoreboard a paint before WebGL compiles the arena shaders.
     const frame = requestAnimationFrame(() => {
       timer = window.setTimeout(() => {
         try { stop = startRemoteScene(container.current!, content, feed, setMatch, setStatus, cameraChoice); }
-        catch { setError('Could not display the arena. Reload to reconnect.'); }
+        catch (failure) {
+          setError(failure instanceof GraphicsUnavailable ? failure.message : 'Could not display the arena.');
+          // The room keeps playing even when this device cannot draw its first frame.
+          const scoreboard = () => { if (feed.latest) setMatch(matchView(feed.latest, content)); };
+          feed.onSnapshot = scoreboard;
+          scoreboard();
+          stop = () => { if (feed.onSnapshot === scoreboard) feed.onSnapshot = undefined; };
+        }
       }, 0);
     });
     return () => { cancelAnimationFrame(frame); clearTimeout(timer); stop?.(); };
-  }, [feed, content]);
+  }, [feed, content, graphicsAttempt]);
   useMatchSound(match, status === 'live' || status === 'estimating', match.conditions, match);
   const names = feed.fighters.map(f => f.name);
   const spectator = canSpectate(match, feed.own);
@@ -80,6 +90,6 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
       {match.phase === 'match_results' && rematch && <button className="room-primary" onClick={rematch}>Play again</button>}
     </div>}
     {status === 'stalled' && <p className="online-status" role="status">Waiting for the server…</p>}
-    {error && <p role="alert">{error}</p>}
+    {error && <div><p role="alert">{error}</p><button onClick={() => setGraphicsAttempt(n => n + 1)}>Retry graphics</button></div>}
   </section>;
 }

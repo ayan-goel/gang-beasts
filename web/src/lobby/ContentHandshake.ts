@@ -1,3 +1,4 @@
+import { supportsPhysics, physicsUnsupported } from '../game/physicsSupport';
 import { loadSkyline, loadedPacket, type SkylineContent } from './content';
 
 export interface LoadedArena {
@@ -16,6 +17,7 @@ export class ContentHandshake {
 
   async ready() {
     if (this.timer !== undefined) return;
+    if (!supportsPhysics()) { this.finish(physicsUnsupported); return; }
     const attempt = ++this.attempt;
     this.publish({loading: true, error: ''});
     this.timer = window.setTimeout(() => this.finish('Skyline took too long to load. Try again.'), 12000);

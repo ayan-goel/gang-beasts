@@ -29,4 +29,4 @@ The menu rendered at widths of 1440, 390 and 320 pixels with JavaScript disabled
 
 All 81 web unit tests, TypeScript checks and the production build passed. The development run covering the migrated playground tests passed 57 of 58 selected scenarios. The additional online knockout scenario observed zero impact sounds once. It passed on an isolated repeat in the same configuration and three consecutive packaged runs with Metal. The cause of the missed cue remains unverified.
 
-The measured local path is within the §28 download target. Hosted transfer and the Firefox and Safari release checks remain open under §33.
+The measured local path is within the §28 download target. The [subsequent browser checks](19g-graphics-recovery.md#macos-verification) cover Firefox and Playwright WebKit on loopback. Hosted transfer and retail Safari remain open under §33.

@@ -1,0 +1,180 @@
+{
+  "environment": "M3 Pro, macOS 26.6.2, Vite production preview over HTTPS loopback",
+  "measurement": "Same-origin navigation and resource encodedBodySize from the main-menu-to-playable test",
+  "browsers": {
+    "Firefox 159.0": {
+      "totalBytes": 2652419,
+      "menu": [
+        {
+          "path": "/",
+          "bytes": 759
+        },
+        {
+          "path": "/assets/index-CcPIeuCX.css",
+          "bytes": 1056
+        },
+        {
+          "path": "/assets/rooftop-throw-D53r9ypX.webp",
+          "bytes": 58680
+        }
+      ],
+      "arena": [
+        {
+          "path": "/play/",
+          "bytes": 546
+        },
+        {
+          "path": "/assets/index-fRxpyYad.js",
+          "bytes": 2001
+        },
+        {
+          "path": "/assets/GraphicsSelect-UlMx-Dad.js",
+          "bytes": 3400
+        },
+        {
+          "path": "/assets/client-xuIwkU5U.js",
+          "bytes": 70601
+        },
+        {
+          "path": "/assets/skylineHazards-BSAWRUYM.js",
+          "bytes": 645
+        },
+        {
+          "path": "/assets/brawler_wasm-Bxds7_6U.js",
+          "bytes": 3153
+        },
+        {
+          "path": "/assets/MovementInput-DUiSCFEq.js",
+          "bytes": 11430
+        },
+        {
+          "path": "/assets/mountSimulation-Bndmxjbh.js",
+          "bytes": 2293
+        },
+        {
+          "path": "/assets/BufferGeometryUtils-phzDQDVh.js",
+          "bytes": 135965
+        },
+        {
+          "path": "/assets/GraphicsSelect-CjnvEGZ7.css",
+          "bytes": 856
+        },
+        {
+          "path": "/assets/MovementInput-CVdgD_cy.css",
+          "bytes": 515
+        },
+        {
+          "path": "/assets/skylineHazards-B1ISdTkX.css",
+          "bytes": 302
+        },
+        {
+          "path": "/assets/index-7ZHUzBfp.css",
+          "bytes": 1521
+        },
+        {
+          "path": "/assets/mountSimulation-Dzf5bot9.css",
+          "bytes": 1459
+        },
+        {
+          "path": "/assets/brawler_wasm_bg-CeDsUetm.wasm",
+          "bytes": 2010024
+        },
+        {
+          "path": "/assets/GLTFLoader-UEvQzabe.js",
+          "bytes": 12897
+        },
+        {
+          "path": "/assets/roof-crew-C6QQ2dKX.glb",
+          "bytes": 334316
+        }
+      ]
+    },
+    "Playwright WebKit 27.2": {
+      "totalBytes": 2652805,
+      "menu": [
+        {
+          "path": "/",
+          "bytes": 776
+        },
+        {
+          "path": "/assets/index-CcPIeuCX.css",
+          "bytes": 1073
+        },
+        {
+          "path": "/assets/rooftop-throw-D53r9ypX.webp",
+          "bytes": 58680
+        }
+      ],
+      "arena": [
+        {
+          "path": "/play/",
+          "bytes": 563
+        },
+        {
+          "path": "/assets/index-fRxpyYad.js",
+          "bytes": 2018
+        },
+        {
+          "path": "/assets/GraphicsSelect-UlMx-Dad.js",
+          "bytes": 3417
+        },
+        {
+          "path": "/assets/client-xuIwkU5U.js",
+          "bytes": 70661
+        },
+        {
+          "path": "/assets/brawler_wasm-Bxds7_6U.js",
+          "bytes": 3170
+        },
+        {
+          "path": "/assets/skylineHazards-BSAWRUYM.js",
+          "bytes": 662
+        },
+        {
+          "path": "/assets/MovementInput-DUiSCFEq.js",
+          "bytes": 11448
+        },
+        {
+          "path": "/assets/GraphicsSelect-CjnvEGZ7.css",
+          "bytes": 856
+        },
+        {
+          "path": "/assets/MovementInput-CVdgD_cy.css",
+          "bytes": 515
+        },
+        {
+          "path": "/assets/skylineHazards-B1ISdTkX.css",
+          "bytes": 302
+        },
+        {
+          "path": "/assets/mountSimulation-Bndmxjbh.js",
+          "bytes": 2310
+        },
+        {
+          "path": "/assets/mountSimulation-Dzf5bot9.css",
+          "bytes": 1476
+        },
+        {
+          "path": "/assets/index-7ZHUzBfp.css",
+          "bytes": 1538
+        },
+        {
+          "path": "/assets/BufferGeometryUtils-phzDQDVh.js",
+          "bytes": 136085
+        },
+        {
+          "path": "/assets/brawler_wasm_bg-CeDsUetm.wasm",
+          "bytes": 2010024
+        },
+        {
+          "path": "/assets/GLTFLoader-UEvQzabe.js",
+          "bytes": 12915
+        },
+        {
+          "path": "/assets/roof-crew-C6QQ2dKX.glb",
+          "bytes": 334316
+        }
+      ]
+    }
+  }
+}

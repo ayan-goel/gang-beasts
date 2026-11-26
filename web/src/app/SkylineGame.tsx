@@ -1,3 +1,4 @@
+import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { pullHint } from '../game/ledgeHint';
 import { GraphicsSelect } from './GraphicsSelect';
 import { meleeResult } from '../game/meleeResult';
@@ -19,16 +20,16 @@ export function SkylineGame() {
   const runtime = useRef<ReturnType<typeof startDuel> | null>(null);
   const [state, setState] = useState<DuelState>();
   const [started, setStarted] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<{message: string; retry: string}>();
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
-    setError('');
+    setError(undefined);
     void loadFighterModel().then(model => {
       if (!active) return;
       try { runtime.current = startDuel(viewport.current!, setState, model); }
-      catch (e) { setError(String(e)); }
-    }).catch(() => { if (active) setError('Could not load the fighters. Check your connection and try again.'); });
+      catch (e) { setError({message:e instanceof GraphicsUnavailable ? e.message : String(e), retry:'Retry graphics'}); }
+    }).catch(() => { if (active) setError({message:'Could not load the fighters. Check your connection and try again.', retry:'Retry loading fighters'}); });
     return () => { active = false; runtime.current?.dispose(); runtime.current = null; };
   }, [attempt]);
   const match = state?.match;
@@ -58,7 +59,7 @@ export function SkylineGame() {
           <p>Hold a hand button to grab a fighter, crate, vent or roof edge. Release during a lift or swing to throw. While hanging, hold jump to pull up. Z / X turns the shared camera.</p>
         </div>
         <button className="skyline-start" disabled={!match} onClick={start}>{complete ? 'Rematch' : started ? 'Resume match' : 'Start match'} <span aria-hidden="true">→</span></button>
-        {error && <div><p role="alert">{error}</p><button onClick={() => setAttempt(n => n + 1)}>Retry loading fighters</button></div>}
+        {error && <div><p role="alert">{error.message}</p><button onClick={() => setAttempt(n => n + 1)}>{error.retry}</button></div>}
       </section>}
       <section className="skyline-stage" aria-label="Skyline arena">
         <div className="scene-canvas" ref={viewport} />

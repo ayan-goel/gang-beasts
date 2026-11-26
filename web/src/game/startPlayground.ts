@@ -47,7 +47,16 @@ export function startPlayground(container: HTMLElement, publish: (state: Playgro
       render();
       publish(playground.snapshot());
     };
+    liveScene.onGraphicsChange = lost => {
+      if (lost) playground.movementInput?.clear();
+      playground.resetFrameTime();
+      publish(playground.snapshot());
+    };
     const animate = (now: number) => {
+      if (liveScene.graphicsInterrupted) {
+        frame = requestAnimationFrame(animate);
+        return;
+      }
       playground.frame(now);
       render();
       if (now - previousDisplay >= 250) {
@@ -60,7 +69,11 @@ export function startPlayground(container: HTMLElement, publish: (state: Playgro
     frame = requestAnimationFrame(animate);
     return {
       playground,
-      act(action: (playground: Playground) => void) { action(playground); refresh(); },
+      act(action: (playground: Playground) => void) {
+        if (liveScene.graphicsInterrupted) return;
+        action(playground);
+        refresh();
+      },
       dispose,
     };
   } catch (error) {

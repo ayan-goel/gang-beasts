@@ -63,7 +63,7 @@ npm --prefix web run test:e2e
 npm --prefix web run build
 ```
 
-Browser integration tests start their own local server if needed. They compare a 600-tick WASM trace against the native release fixture and test canvas resize containment. The production static bundle is in `web/dist`; its directory indexes serve the main menu, local play, private rooms and the diagnostic playground.
+Browser integration tests start their own local server if needed. For WebKit private-room playtests, use the [local HTTPS setup](docs/slices/19g-graphics-recovery.md#local-https-reproduction). They compare a 600-tick WASM trace against the native release fixture and test canvas resize containment. The production static bundle is in `web/dist`; its directory indexes serve the main menu, local play, private rooms and the diagnostic playground.
 
 ## Playground controls
 

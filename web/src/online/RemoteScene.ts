@@ -29,7 +29,7 @@ export function matchView(frame: Snapshot, content: SkylineContent): RemoteMatch
 }
 
 export function startRemoteScene(container: HTMLElement, content: SkylineContent, feed: MatchFeed, update: (match: RemoteMatch) => void, status: (value: StreamStatus) => void, choice: {readonly current: CameraChoice | null}) {
-  const scene = new FixtureScene(container, content.fighter, {map: content.map, model: content.model, kit: feed.fighters[0]!.color, color: colors[feed.fighters[0]!.color]});
+  const scene = new FixtureScene(container, content.fighter, {online: true, map: content.map, model: content.model, kit: feed.fighters[0]!.color, color: colors[feed.fighters[0]!.color]});
   const bodies = feed.fighters.map(() => new Float32Array(15*14));
   const objects = new Float32Array(8*content.map.objects.length);
   let animation = 0, priorTime = performance.now(), prior: Snapshot | null = null, match: RemoteMatch | null = null;

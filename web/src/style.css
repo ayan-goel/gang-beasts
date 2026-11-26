@@ -73,3 +73,8 @@ dd { margin: 0; font-family: ui-monospace, monospace; }
 }
 
 .play-link { color: var(--accent); font-size: 0.85rem; font-weight: 700; }
+
+.simulation-startup { margin: auto; padding: 1.5rem; max-width: 30rem; }
+.simulation-startup [role=alert] { padding: 0; }
+.simulation-startup button { width: auto; margin-right: 1rem; }
+.simulation-startup a { color: var(--text); }

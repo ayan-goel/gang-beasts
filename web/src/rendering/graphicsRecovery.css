@@ -1,0 +1,12 @@
+.online-scene { position: relative; }
+.graphics-recovery {
+  position: absolute; inset: 0; z-index: 4; display: flex; flex-direction: column;
+  justify-content: center; align-items: center; gap: .6rem; padding: 1rem;
+  text-align: center; background: #19313c; color: #faf7ee;
+}
+.graphics-recovery strong { font-size: 1.25rem; }
+.graphics-recovery p { max-width: 32ch; margin: 0; font-size: .92rem; }
+.graphics-recovery button {
+  width: auto; margin-top: .4rem; padding: .55rem .9rem; cursor: pointer;
+  color: #19313c; background: #f8c660; border: 0; font-weight: 700;
+}

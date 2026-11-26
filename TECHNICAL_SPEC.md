@@ -1097,7 +1097,7 @@ The browser [automatically retries an interrupted match](docs/slices/16g-automat
 
 Authoritative transforms → snapshot buffer → interpolated render state → bone transforms → skinned mesh → GPU. Use an imperative `requestAnimationFrame` loop; React manages menus and low-rate state rather than every body transform.
 
-Keep render object IDs synchronized with entity generations. Scene teardown disposes geometry/material/texture/audio resources according to ownership, while shared assets use reference counting or a cache. Handle WebGL context loss with a clear restore/reload path.
+Keep render object IDs synchronized with entity generations. Scene teardown disposes geometry/material/texture/audio resources according to ownership, while shared assets use reference counting or a cache. During WebGL context loss, local simulations suspend and clear held input. Private matches send neutral input and continue receiving the live scoreboard. Restoration redraws the current scene and a reload fallback restarts local play or reconnects the room. A failed WebGL initialization offers an in-place retry. [Graphics recovery and browser checks](docs/slices/19g-graphics-recovery.md)
 
 ### 20.2 Character skinning
 

@@ -41,6 +41,10 @@ export class Playground {
     this.paused = paused || this.replayComplete();
     if (this.paused) this.movementInput?.clear();
     // Discard fractional playback debt so resume never consumes pre-pause time.
+    this.resetFrameTime();
+  }
+
+  resetFrameTime(): void {
     this.clock.clearDebt();
     this.previousTime = this.now();
   }
@@ -48,8 +52,7 @@ export class Playground {
   setRate(rate: PlaybackRate): void {
     if (![0.25, 0.5, 1].includes(rate)) throw new Error('Unsupported playback rate');
     this.rate = rate;
-    this.clock.clearDebt();
-    this.previousTime = this.now();
+    this.resetFrameTime();
   }
 
   singleStep(): void {

@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
-const site = 'http://127.0.0.1:5180';
+const tls = Boolean(process.env.BRAWLER_TLS_CERT && process.env.BRAWLER_TLS_KEY);
+const site = (tls ? 'https' : 'http') + '://127.0.0.1:5180';
 const server = 'http://127.0.0.1:5181';
 
 export default defineConfig({
@@ -8,7 +9,7 @@ export default defineConfig({
   // The eight-player scenario shares one renderer host with the real-time local physics tests.
   workers: 1,
   timeout: 120_000,
-  use: { baseURL: site, viewport: { width: 1440, height: 900 } },
+  use: { baseURL: site, ignoreHTTPSErrors: tls, viewport: { width: 1440, height: 900 } },
   webServer: [
     {
       command: 'cargo run --quiet --release --locked -p brawler-server',
@@ -19,6 +20,7 @@ export default defineConfig({
     {
       command: 'npm run dev -- --port 5180 --strictPort',
       url: site,
+      ignoreHTTPSErrors: tls,
       env: { BRAWLER_API_TARGET: server },
     },
   ],
