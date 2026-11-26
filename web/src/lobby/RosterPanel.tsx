@@ -7,7 +7,7 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
   const [fallback, setFallback] = useState<Roster | null>(null);
   const [error, setError] = useState('');
   const [lostAccess, setLostAccess] = useState<'seat' | 'room' | null>(null);
-  const {connection, disconnected, game, canRematch, requestRematch, start, startError, load, setReady, reconnect} = useLiveRoom(code);
+  const {connection, disconnected, reconnecting, game, canRematch, requestRematch, start, startError, load, setReady, reconnect} = useLiveRoom(code);
   const state = connection ?? (disconnected ? fallback : null);
   const mySlot = connection?.slot ?? fallback?.you;
   const myReady = !!(connection && (connection.ready & (1 << connection.slot)));
@@ -40,6 +40,12 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
     setLeaving(true);
     try { await leave(code); onLeave(); } catch (err) { setError(errorText(err)); setLeaving(false); }
   }
+  if (reconnecting) return <section className="room-panel">
+    <h1>Reconnecting to the match</h1>
+    <p role="status">Trying to recover your seat…</p>
+    <button className="room-secondary" onClick={exit} disabled={leaving}>Leave room</button>
+    {error && <p role="alert">{error}</p>}
+  </section>;
   if (game) {
     const {View, feed} = game;
     return <><View feed={feed} exit={exit} rematch={canRematch ? requestRematch : undefined}/>

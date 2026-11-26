@@ -38,21 +38,32 @@ fn only_the_current_generation_starts_grace_and_exact_expiry_releases_the_host_s
         .unwrap();
     let first = directory.connect(&code, host).unwrap();
     let replacement = directory.connect(&code, host).unwrap();
+    let resume =
+        |dir: &mut Directory, session, ticket, time| dir.resume_at(&code, session, ticket, time);
+    assert!(resume(&mut directory, host, replacement.generation, now).is_none());
     directory.disconnect_at(&code, first, now);
     directory.prune(now + Duration::from_secs(21));
     assert_eq!(directory.current(host).as_deref(), Some(code.as_str()));
     directory.disconnect_at(&code, replacement, now + Duration::from_secs(22));
     let deadline = now + Duration::from_secs(42);
-    let back = directory
-        .connect_at(&code, host, deadline - Duration::from_nanos(1))
-        .unwrap();
+    let before = deadline - Duration::from_nanos(1);
+    assert!(resume(&mut directory, host, first.generation, before).is_none());
+    assert!(resume(&mut directory, guest, replacement.generation, before).is_none());
+    let back = resume(&mut directory, host, replacement.generation, before).unwrap();
+    directory.disconnect_at(&code, back, before);
+    let back = resume(&mut directory, host, replacement.generation, before).unwrap();
+    assert_ne!(back.generation, replacement.generation);
     directory.prune(deadline);
     assert_eq!(directory.current(host).as_deref(), Some(code.as_str()));
     directory.disconnect_at(&code, back, deadline);
     assert!(
-        directory
-            .connect_at(&code, host, deadline + Duration::from_secs(20))
-            .is_none()
+        resume(
+            &mut directory,
+            host,
+            replacement.generation,
+            deadline + Duration::from_secs(20)
+        )
+        .is_none()
     );
     let roster = directory.roster(guest, &code).ok().unwrap();
     assert_eq!(roster.players.len(), 1);

@@ -4,6 +4,7 @@ use crate::VERSION;
 #[derive(Debug, PartialEq, Eq)]
 pub enum Command<'a> {
     Connect(&'a [u8; 6]),
+    Resume(&'a [u8; 6], u64),
     SetReady(bool),
     StartMatch,
     MapLoaded(&'a [u8; 128]),
@@ -13,6 +14,13 @@ impl<'a> Command<'a> {
     pub fn decode(bytes: &'a [u8]) -> Option<Self> {
         match bytes {
             [16, VERSION, code @ ..] => Some(Self::Connect(code.try_into().ok()?)),
+            [32, VERSION, rest @ ..] if rest.len() == 14 => {
+                let (code, ticket) = rest.split_at(6);
+                Some(Self::Resume(
+                    code.try_into().ok()?,
+                    u64::from_le_bytes(ticket.try_into().ok()?),
+                ))
+            }
             [22, VERSION] => Some(Self::StartMatch),
             [20, VERSION, hashes @ ..] => Some(Self::MapLoaded(hashes.try_into().ok()?)),
             [18, VERSION, value @ 0..=1] => Some(Self::SetReady(*value == 1)),
@@ -52,6 +60,15 @@ mod tests {
             Command::decode(b"\x10\x01AB2C3D"),
             Some(Command::Connect(b"AB2C3D"))
         );
+        let mut resume = b"\x20\x01AB2C3D".to_vec();
+        resume.extend(0x123456789abcdef0_u64.to_le_bytes());
+        assert_eq!(
+            Command::decode(&resume),
+            Some(Command::Resume(b"AB2C3D", 0x123456789abcdef0))
+        );
+        assert_eq!(Command::decode(&resume[..15]), None);
+        resume.push(0);
+        assert_eq!(Command::decode(&resume), None);
         for (value, expected) in [(0, false), (1, true)] {
             assert_eq!(
                 Command::decode(&[18, 1, value]),

@@ -14,6 +14,7 @@ use tokio::time::{MissedTickBehavior, interval, timeout};
 pub(super) async fn upgrade(
     State(state): State<Admission>,
     headers: HeaderMap,
+    uri: axum::http::Uri,
     ws: WebSocketUpgrade,
 ) -> Result<Response, Fault> {
     let (session, code) = {
@@ -36,29 +37,61 @@ pub(super) async fn upgrade(
         .max_write_buffer_size(8192)
         .on_upgrade(move |socket| async move {
             let _permit = permit;
-            serve(socket, state, code, session).await;
+            serve(
+                socket,
+                state,
+                code,
+                session,
+                uri.query() == Some("resume=1"),
+            )
+            .await;
         })
         .into_response())
 }
 
-async fn serve(mut socket: WebSocket, state: Admission, code: String, session: SessionId) {
+async fn serve(
+    mut socket: WebSocket,
+    state: Admission,
+    code: String,
+    session: SessionId,
+    supports_resume: bool,
+) {
     let Ok(Some(Ok(Message::Binary(packet)))) =
         timeout(Duration::from_secs(3), socket.recv()).await
     else {
         return;
     };
-    if !matches!(Command::decode(&packet), Some(Command::Connect(requested)) if requested.as_slice() == code.as_bytes())
-    {
+    let (requested, ticket) = match Command::decode(&packet) {
+        Some(Command::Connect(code)) => (code, None),
+        Some(Command::Resume(code, ticket)) if supports_resume => (code, Some(ticket)),
+        _ => return,
+    };
+    if requested.as_slice() != code.as_bytes() {
         return;
     }
-    let Some(owner) = state.directory.lock().unwrap().connect(&code, session) else {
-        return;
+    let owner = {
+        let mut dir = state.directory.lock().unwrap();
+        match ticket {
+            Some(id) => dir.resume_at(&code, session, id, Instant::now()),
+            None => dir.connect(&code, session),
+        }
     };
-    exchange(&mut socket, &state, &code, owner).await;
+    let Some(owner) = owner else { return };
+    let mut receipt = vec![31, 1];
+    receipt.extend(ticket.unwrap_or(owner.generation).to_le_bytes());
+    if !supports_resume || send(&mut socket, receipt).await {
+        exchange(&mut socket, &state, &code, owner, ticket.is_some()).await;
+    }
     state.directory.lock().unwrap().disconnect(&code, owner);
 }
 
-async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: Connection) {
+async fn exchange(
+    socket: &mut WebSocket,
+    state: &Admission,
+    code: &str,
+    owner: Connection,
+    resuming: bool,
+) {
     let mut timer = interval(Duration::from_millis(150));
     timer.set_missed_tick_behavior(MissedTickBehavior::Skip);
     let mut previous = None;
@@ -157,6 +190,9 @@ async fn exchange(socket: &mut WebSocket, state: &Admission, code: &str, owner: 
             return;
         }
         if running_match && !send(socket, vec![28, 1]).await {
+            return;
+        }
+        if previous.is_none() && resuming && !running_match && !send(socket, vec![33, 1]).await {
             return;
         }
         previous = Some(current);

@@ -8,6 +8,7 @@ use std::time::Instant;
 pub(super) struct Member {
     pub session: SessionId,
     pub ready: bool,
+    pub resume_id: Option<u64>,
     pub generation: Option<u64>,
     pub disconnected_at: Option<Instant>,
     name: String,
@@ -42,6 +43,7 @@ impl Lobby {
             session,
             ready: false,
             generation: None,
+            resume_id: None,
             disconnected_at: None,
             name: name.to_owned(),
             color: color.unwrap_or(0),
@@ -181,6 +183,7 @@ impl Lobby {
             session,
             ready: false,
             generation: None,
+            resume_id: None,
             disconnected_at: None,
             name: name.to_owned(),
             color,

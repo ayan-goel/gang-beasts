@@ -73,6 +73,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 16d — map loading | Load the renderer and validate the engine and map before ready | Failed WASM download, successful retry, mismatched hashes and new socket checks |
 | 16e — disconnect grace | Reserve an offline seat for 20 seconds and reclaim abandoned rooms | Reconnect, batch forfeits, stable scoring and host transfer |
 | 16f — online rematch | Replay a completed match in the same room | Host-only return, fresh serial, scores and ready roster |
+| 16g — automatic match reconnect | Reclaim an interrupted fighter from the same tab | Failed retry, full snapshot, neutral controls and newer-tab ownership |
 | 16 | Private sessions and lobby | Link/code, ready/start, auth, reconnect, host transfer, late joining |
 | 17a — hazard warnings | Show the current walkway and wind warnings during online play | Shared text, server timing, reconnect and round cleanup |
 | 17 | Original presentation and audio | Original skinned characters, effects, warnings, licensed asset manifest |

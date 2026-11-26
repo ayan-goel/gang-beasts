@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
 import { decodeLobbyState, type LiveRoom } from './lobbyState';
+import { RoomTransport, type LinkState } from './RoomTransport';
 import { MatchFeed } from '../online/MatchFeed';
 import { ContentHandshake, type LoadState, type MatchRenderer } from './ContentHandshake';
 
 export function useLiveRoom(code: string) {
   const [connection, setConnection] = useState<LiveRoom | null>(null);
-  const [disconnected, setDisconnected] = useState(false);
+  const [link, setLink] = useState<LinkState>('connected');
   const [attempt, setAttempt] = useState(0);
   const [game, setGame] = useState<{feed: MatchFeed; View: MatchRenderer} | null>(null);
   const [startError, setStartError] = useState('');
@@ -15,76 +16,99 @@ export function useLiveRoom(code: string) {
   const handshake = useRef<ContentHandshake | null>(null);
   const transport = useRef<WebSocket | null>(null);
   useEffect(() => {
-    const url = new URL('/ws', location.href);
-    url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = new WebSocket(url);
-    const content = new ContentHandshake(socket, setLoad);
-    handshake.current = content;
-    setLoad({loading:false, error:''});
-    transport.current = socket;
-    socket.binaryType = 'arraybuffer';
-    setConnection(null);
-    setDisconnected(false);
-    let last: LiveRoom | null = null;
-    let feed: MatchFeed | null = null;
-    setGame(null);
-    setCanRematch(false);
-    setStartError('');
-    socket.onopen = () => {
-      const connect = new Uint8Array(8);
-      connect.set([16, 1]);
-      connect.set(new TextEncoder().encode(code), 2);
-      socket.send(connect);
-    };
-    socket.onmessage = event => {
-      try {
-        const bytes = new Uint8Array(event.data);
-        if (bytes.length === 3 && bytes[0] === 29 && bytes[1] === 1 && bytes[2]! <= 1 && feed) {
-          setCanRematch(bytes[2] === 1);
-          return;
-        }
-        if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 28 && last && !feed) {
-          void content.ready();
-          return;
-        }
-        if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 27 && feed) {
-          setAttempt(n => n + 1);
-          return;
-        }
-        if ((bytes[0] === 23 || bytes[0] === 26) && last && !feed) {
-          if (!content.renderer) throw new Error('Match assigned before content loaded');
-          feed = new MatchFeed(bytes, packet => {
-            if (socket.readyState !== WebSocket.OPEN) return;
-            if (socket.bufferedAmount > 16384) { socket.close(4008, 'Input queue stalled'); return; }
-            socket.send(new Uint8Array(packet));
-          });
-          setGame({feed, View:content.renderer});
-          return;
-        }
-        if (bytes[0] === 2 && feed) { feed.receive(bytes); return; }
-        if (bytes[0] === 25 && bytes.length === 3 && bytes[1] === 1) {
-          setStartError(bytes[2] === 2 ? 'All match servers are busy. Try again.' : 'All players must be ready to start.');
-          return;
-        }
-        if (bytes[0] === 21 && last) { content.acknowledge(bytes); return; }
-        last = decodeLobbyState(bytes, last);
-        setConnection(last);
-      } catch { socket.close(4002, 'Invalid room state'); }
-    };
-    socket.onclose = () => {
-      content.dispose();
+    let cleanup = () => {};
+    const recovery = new RoomTransport(code, open, state => {
+      setLink(state);
+      if (state === 'disconnected') {
+        cleanup();
+        setLoad({loading: false, error: ''});
+        setConnection(null);
+        setGame(null);
+      }
+    });
+    setLink('connected');
+    function open() {
+      cleanup();
+      const url = new URL('/ws?resume=1', location.href);
+      url.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const socket = new WebSocket(url);
+      const content = new ContentHandshake(socket, setLoad);
+      handshake.current = content;
       setLoad({loading:false, error:''});
+      transport.current = socket;
+      socket.binaryType = 'arraybuffer';
       setConnection(null);
-      setDisconnected(true);
+
+      let last: LiveRoom | null = null;
+      let feed: MatchFeed | null = null;
+      let invalidState = false;
       setGame(null);
-    };
-    return () => {
-      content.dispose();
-      handshake.current = null;
-      transport.current = null;
-      socket.onopen = socket.onmessage = socket.onclose = null;
-      socket.close();
-    };
+      setCanRematch(false);
+      setStartError('');
+      socket.onopen = () => {
+        socket.send(recovery.connectPacket());
+      };
+      socket.onmessage = event => {
+        try {
+          const bytes = new Uint8Array(event.data);
+          if (bytes[0] === 31 && !last) { recovery.acceptTicket(bytes); return; }
+          if (bytes.length === 2 && bytes[0] === 33 && bytes[1] === 1 && last && !feed) {
+            recovery.restored();
+            return;
+          }
+          if (bytes.length === 3 && bytes[0] === 29 && bytes[1] === 1 && bytes[2]! <= 1 && feed) {
+            setCanRematch(bytes[2] === 1);
+            return;
+          }
+          if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 28 && last && !feed) {
+            void content.ready();
+            return;
+          }
+          if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 27 && feed) {
+            cleanup();
+            setAttempt(n => n + 1);
+            return;
+          }
+          if ((bytes[0] === 23 || bytes[0] === 26) && last && !feed) {
+            if (!content.renderer) throw new Error('Match assigned before content loaded');
+            feed = new MatchFeed(bytes, packet => {
+              if (socket.readyState !== WebSocket.OPEN) return;
+              if (socket.bufferedAmount > 16384) { socket.close(4008, 'Input queue stalled'); return; }
+              socket.send(new Uint8Array(packet));
+            });
+            setGame({feed, View:content.renderer});
+            return;
+          }
+          if (bytes[0] === 2 && feed) { feed.receive(bytes); recovery.restored(); return; }
+          if (bytes[0] === 25 && bytes.length === 3 && bytes[1] === 1) {
+            setStartError(bytes[2] === 2 ? 'All match servers are busy. Try again.' : 'All players must be ready to start.');
+            return;
+          }
+          if (bytes[0] === 21 && last) { content.acknowledge(bytes); return; }
+          last = decodeLobbyState(bytes, last);
+          setConnection(last);
+        } catch {
+          invalidState = true;
+          socket.close(4002, 'Invalid room state');
+        }
+      };
+      socket.onclose = event => {
+        content.dispose();
+        setLoad({loading:false, error:''});
+        setConnection(null);
+        recovery.closed(feed !== null, invalidState ? 4002 : event.code);
+        setGame(null);
+      };
+      cleanup = () => {
+        content.dispose();
+        handshake.current = null;
+        transport.current = null;
+        socket.onopen = socket.onmessage = socket.onclose = null;
+        socket.close();
+      };
+    }
+    open();
+    return () => { recovery.dispose(); cleanup(); };
   }, [code, attempt]);
   function setReady(ready: boolean) {
     if (transport.current?.readyState === WebSocket.OPEN && connection) {
@@ -99,5 +123,5 @@ export function useLiveRoom(code: string) {
   function requestRematch() {
     if (canRematch) game?.feed.transmit(Uint8Array.of(30, 1));
   }
-  return {connection, disconnected, game, canRematch, requestRematch, start, startError, load, setReady, reconnect: () => setAttempt(n => n + 1)};
+  return {connection, disconnected: link === 'disconnected', reconnecting: link === 'recovering', game, canRematch, requestRematch, start, startError, load, setReady, reconnect: () => setAttempt(n => n + 1)};
 }

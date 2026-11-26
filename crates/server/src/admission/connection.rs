@@ -31,20 +31,35 @@ impl Lobby {
 
 impl Directory {
     pub fn connect(&mut self, code: &str, session: SessionId) -> Option<Connection> {
-        self.connect_at(code, session, Instant::now())
+        self.attach_at(code, session, None, Instant::now())
     }
-    pub fn connect_at(
+    pub fn resume_at(
         &mut self,
         code: &str,
         session: SessionId,
+        ticket: u64,
+        now: Instant,
+    ) -> Option<Connection> {
+        self.attach_at(code, session, Some(ticket), now)
+    }
+    fn attach_at(
+        &mut self,
+        code: &str,
+        session: SessionId,
+        ticket: Option<u64>,
         now: Instant,
     ) -> Option<Connection> {
         self.prune(now);
         let room = self.rooms.get_mut(code)?;
         let slot = room.slot(session)?;
+        let member = room.members[slot].as_mut()?;
+        // A retry may reclaim only its own disconnected seat, even after a newer tab disconnects.
+        if ticket.is_some() && (member.resume_id != ticket || member.disconnected_at.is_none()) {
+            return None;
+        }
         self.next_connection = self.next_connection.checked_add(1)?;
         let generation = self.next_connection;
-        let member = room.members[slot].as_mut()?;
+        member.resume_id = ticket.or(Some(generation));
         if let (Some(game), Some(previous)) = (&room.game, member.generation) {
             if let Some(id) = game.fighter(session) {
                 game.client.unbind(id, previous);

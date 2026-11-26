@@ -1071,8 +1071,7 @@ Keep a disconnected slot for **20 seconds** initially. Immediately neutralize co
 
 The [disconnect implementation](docs/slices/16e-disconnect-grace.md) uses monotonic server time, reserves a seat until its deadline, and publishes expirations together for the worker to score. Explicit leave forfeits immediately. With fewer than two eligible competitors after the results interval, return remaining members to the lobby. A service timer reclaims empty rooms even when no further HTTP requests arrive.
 
-
-Reconnect proves session ownership, replaces any stale connection, receives current epoch/full state and resumes only if still eligible. No rewind, respawn or score duplication. Late joiners spectate until the next round. Transfer lobby-host privileges to a stable eligible player on host departure; the host is never simulation authority. Destroy empty rooms after a proposed 60-second inactivity interval. Grace expiry and room expiry use server-controlled time.
+The browser [automatically retries an interrupted match](docs/slices/16g-automatic-reconnect.md) for up to 20 seconds from the observed socket close. A retry can reclaim only the disconnected seat last controlled by that tab. An intentional new connection can replace its predecessor. Each restored fighter receives current full state and acknowledges the epoch before sending fresh controls. No rewind, respawn or score duplication. Late joiners spectate until the next round. Transfer lobby-host privileges to a stable eligible player on host departure; the host is never simulation authority. Destroy empty rooms after a proposed 60-second inactivity interval. Grace expiry and room expiry use server-controlled time.
 
 ## 20. Rendering engine
 
