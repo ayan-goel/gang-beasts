@@ -14,8 +14,8 @@ export class GroupCamera {
   private preset = 0;
   private readonly radii: number[];
 
-  constructor(bodies: RigDefinition['bodies']) {
-    this.radii = bodies.map(({shape}) => {
+  constructor(bodies: RigDefinition['bodies'], visualRadii?: number[]) {
+    this.radii = visualRadii ?? bodies.map(({shape}) => {
       switch (shape.kind) {
         case 'sphere': return shape.radius;
         case 'capsule': return shape.half_height + shape.radius;

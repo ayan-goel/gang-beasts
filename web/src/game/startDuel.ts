@@ -1,3 +1,4 @@
+import type { Object3D } from 'three';
 import type { MatchView, SkylineMap } from '../rendering/SkylineView';
 import { LocalDuel } from '../generated/wasm/brawler_wasm';
 import configuration from '../generated/physics.json?raw';
@@ -28,7 +29,8 @@ export interface DuelState {
   latest?: DuelHit;
 }
 
-export function startDuel(container: HTMLElement, publish: (snapshot: DuelState) => void, skyline = false) {
+export function startDuel(container: HTMLElement, publish: (snapshot: DuelState) => void, model?: Object3D) {
+  const skyline = model !== undefined;
   const duel = skyline ? LocalDuel.skyline_match(configuration) : new LocalDuel(configuration);
   const clock = new FixedClock();
   let frame = 0;
@@ -53,7 +55,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
   try {
     const definition: RigDefinition = JSON.parse(duel.definition_json());
     const map: SkylineMap | undefined = skyline ? JSON.parse(duel.map_json()!) : undefined;
-    scene = new FixtureScene(container, definition, { map });
+    scene = new FixtureScene(container, definition, { map, model });
     scene.addOpponent(definition);
     const renderer = scene;
     const canvas = container.querySelector('canvas')!;

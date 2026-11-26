@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { loadFighterModel } from '../rendering/fighter/loadFighterModel';
 import { startDuel, type DuelState } from '../game/startDuel';
 import { hazardWarnings } from '../game/skylineHazards';
 import './skyline.css';
@@ -12,11 +13,17 @@ export function SkylineGame() {
   const [state, setState] = useState<DuelState>();
   const [started, setStarted] = useState(false);
   const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    try { runtime.current = startDuel(viewport.current!, setState, true); }
-    catch (e) { setError(String(e)); }
-    return () => { runtime.current?.dispose(); runtime.current = null; };
-  }, []);
+    let active = true;
+    setError('');
+    void loadFighterModel().then(model => {
+      if (!active) return;
+      try { runtime.current = startDuel(viewport.current!, setState, model); }
+      catch (e) { setError(String(e)); }
+    }).catch(() => { if (active) setError('Could not load the fighters. Check your connection and try again.'); });
+    return () => { active = false; runtime.current?.dispose(); runtime.current = null; };
+  }, [attempt]);
   const match = state?.match;
   const complete = match?.phase === 'match_results';
   const menu = !started || state?.paused || complete;
@@ -42,6 +49,7 @@ export function SkylineGame() {
           <p>Hold a hand button to grab a fighter, crate, vent or roof edge. Release during a lift or swing to throw. While hanging, hold jump to pull up. Z / X turns the shared camera.</p>
         </div>
         <button className="skyline-start" disabled={!match} onClick={start}>{complete ? 'Rematch' : started ? 'Resume match' : 'Start match'} <span aria-hidden="true">→</span></button>
+        {error && <div><p role="alert">{error}</p><button onClick={() => setAttempt(n => n + 1)}>Retry loading fighters</button></div>}
       </section>}
       <section className="skyline-stage" aria-label="Skyline arena">
         <div className="scene-canvas" ref={viewport} />
@@ -62,7 +70,6 @@ export function SkylineGame() {
             <b>{names[id]}</b> {hands.join(' · ')}
           </div>)}
         </div>}
-        {error && <p role="alert">{error}</p>}
       </section>
     </div>
   </main>;

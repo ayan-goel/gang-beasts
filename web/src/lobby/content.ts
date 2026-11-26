@@ -1,9 +1,12 @@
+import type { Group } from 'three';
+import { loadFighterModel } from '../rendering/fighter/loadFighterModel';
 import type { RigDefinition } from '../game/rigDefinition';
 import type { SkylineMap } from '../rendering/SkylineView';
 
 export interface SkylineContent {
   map: SkylineMap & { schedule: { warn_tick: number; west_tick: number; east_tick: number; gust_tick: number; end_tick: number } };
   fighter: RigDefinition;
+  model: Group;
   engineHash: string;
   mapHash: string;
 }
@@ -13,14 +16,14 @@ let cached: SkylineContent | undefined;
 export async function loadSkyline(): Promise<SkylineContent> {
   if (cached) return cached;
   const wasm = await import('../generated/wasm/brawler_wasm');
-  await wasm.default();
-  const content: SkylineContent = JSON.parse(wasm.skyline_content());
+  const [, model] = await Promise.all([wasm.default(), loadFighterModel()]);
+  const content: Omit<SkylineContent, 'model'> = JSON.parse(wasm.skyline_content());
   const digest = /^[a-f0-9]{64}$/;
   if (!digest.test(content.engineHash) || !digest.test(content.mapHash) || content.fighter.bodies.length !== 15) {
     throw new Error('Invalid Skyline build');
   }
-  cached = content;
-  return content;
+  cached = {...content, model};
+  return cached;
 }
 
 export function loadedPacket(content: SkylineContent) {

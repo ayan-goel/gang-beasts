@@ -1,3 +1,5 @@
+import { graphicsDriver, skylineQuality } from './skylineQuality';
+import { FighterSkin } from './fighter/FighterSkin';
 import { ContactNormals } from './ContactNormals';
 import { GroupCamera } from './GroupCamera';
 import { SkylineView, type SkylineMap, type MatchView } from './SkylineView';
@@ -15,6 +17,8 @@ interface SceneOptions {
   terrainBoxes?: Float32Array;
   target?: Float32Array;
   map?: SkylineMap;
+  model?: THREE.Object3D;
+  kit?: number;
 }
 
 export class FixtureScene {
@@ -30,22 +34,26 @@ export class FixtureScene {
     new THREE.MeshStandardMaterial({ color: '#f58465', roughness: 0.65 }),
   );
   private readonly resizeObserver?: ResizeObserver;
-  private readonly opponents: RagdollView[] = [];
+  private readonly opponents: (RagdollView | FighterSkin)[] = [];
   private skyline?: SkylineView;
   readonly groupCamera?: GroupCamera;
   private readonly practice?: PracticeTargetView;
-  private readonly rig?: RagdollView;
+  private readonly rig?: RagdollView | FighterSkin;
+  private readonly model?: THREE.Object3D;
   readonly contactNormals?: ContactNormals;
   private readonly joints?: JointOverlay;
 
   private readonly followRig: boolean;
   constructor(private readonly container: HTMLElement, definition?: RigDefinition, options: SceneOptions = {}) {
     const { focusHeight = 1.7, terrainBoxes, target, map } = options;
+    this.model = options.model;
     this.followRig = options.followRig ?? false;
     try {
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      const driver = map ? graphicsDriver(this.renderer.getContext()) : '';
+      const quality = skylineQuality(driver, window.devicePixelRatio);
+      this.renderer.setPixelRatio(quality.pixelRatio);
       this.renderer.shadowMap.enabled = true;
-      this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      this.renderer.shadowMap.type = quality.basic ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
       this.renderer.setClearColor('#182c38');
       this.renderer.domElement.setAttribute('aria-label', 'Live physics fixture on a floating platform');
       container.append(this.renderer.domElement);
@@ -56,9 +64,13 @@ export class FixtureScene {
           this.contactNormals = new ContactNormals();
           this.scene.add(this.contactNormals);
         }
-        this.rig = new RagdollView(definition, options.color);
-        this.joints = new JointOverlay(definition.joints.length);
-        this.scene.add(this.rig.root, this.joints.root);
+        if (this.model) this.rig = new FighterSkin(this.model, definition, options.color ?? '#f58465', options.kit ?? 0);
+        else {
+          this.rig = new RagdollView(definition, options.color);
+          this.joints = new JointOverlay(definition.joints.length);
+          this.scene.add(this.joints.root);
+        }
+        this.scene.add(this.rig.root);
         this.cube.visible = false;
         this.camera.position.set(4, 3.8, 6);
         this.camera.lookAt(0, focusHeight, 0);
@@ -75,7 +87,7 @@ export class FixtureScene {
       if (map) {
         this.skyline = new SkylineView(map);
         if (!definition) throw new Error('Skyline framing requires fighter geometry');
-        this.groupCamera = new GroupCamera(definition.bodies);
+        this.groupCamera = new GroupCamera(definition.bodies, this.rig instanceof FighterSkin ? this.rig.radii : undefined);
         this.scene.add(this.skyline.root);
         this.renderer.setClearColor(0xb8cfce);
         this.scene.fog = new THREE.FogExp2(0xb8cfce,0.013);
@@ -92,7 +104,7 @@ export class FixtureScene {
       const sun = new THREE.DirectionalLight('#fff0d9', 3);
       sun.position.set(-5, 12, 6);
       sun.castShadow = true;
-      sun.shadow.mapSize.set(1024, 1024);
+      sun.shadow.mapSize.setScalar(quality.shadowSize);
       sun.shadow.camera.left = -9;
       sun.shadow.camera.right = 9;
       sun.shadow.camera.top = 9;
@@ -108,8 +120,8 @@ export class FixtureScene {
     }
   }
 
-  addOpponent(definition: RigDefinition, color = '#559ed8'): void {
-    const opponent = new RagdollView(definition, color);
+  addOpponent(definition: RigDefinition, color = '#559ed8', kit = 1): void {
+    const opponent = this.model ? new FighterSkin(this.model, definition, color, kit) : new RagdollView(definition, color);
     this.opponents.push(opponent);
     this.scene.add(opponent.root);
     const count = this.opponents.length + 1;
@@ -172,6 +184,13 @@ export class FixtureScene {
 
   dispose(): void {
     this.resizeObserver?.disconnect();
+    for (const fighter of [this.rig, ...this.opponents]) {
+      if (fighter instanceof FighterSkin) {
+        // Geometry is shared by the cached GLB and every live instance.
+        fighter.root.removeFromParent();
+        fighter.dispose();
+      }
+    }
     this.scene.traverse(object => {
       if (object instanceof THREE.Mesh || object instanceof THREE.LineSegments || object instanceof THREE.Points) {
         object.geometry.dispose();

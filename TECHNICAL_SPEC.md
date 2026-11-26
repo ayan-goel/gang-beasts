@@ -1087,6 +1087,8 @@ Map each physical body world transform through a fixed body-to-bone offset, then
 
 Use one original rounded skinned mesh per character, shared geometry/material variants, expressive faces and optional cosmetic squash. A skeleton can have additional visual bones, but their procedural movement cannot alter authoritative collisions. Three.js supplies skinned-mesh/skeleton facilities; our physical mapping is custom. [Three.js documentation](https://threejs.org/docs/)
 
+Skyline renders the [Roof Crew fighter](docs/slices/17b-skinned-fighters.md) from a shared original GLB. Each local or online player has an independent skeleton and kit palette. Diagnostic scenes retain individual collider meshes.
+
 ### 20.3 Art direction
 
 Rounded exaggerated characters, distinct color/pattern identity, readable large props, simple expressive faces, original costumes and limited combat-area clutter. Prefer stylized visual clarity over realism. Preserve shape readability while a character is lying down, tangled or silhouetted against the background. Include non-color identity cues for accessibility.
@@ -1094,6 +1096,8 @@ Rounded exaggerated characters, distinct color/pattern identity, readable large 
 ### 20.4 Lighting and materials
 
 MVP: one primary directional light, ambient/hemisphere fill, bounded shadow maps and baked static detail. Share materials and atlases. Later: optional ambient occlusion, bloom, reflections, water shaders and atmosphere. Expensive effects must be disabled on low presets without hiding gameplay warnings.
+
+Skyline selects a lower render resolution and a 512-pixel basic shadow map on recognized software renderers. The match HUD uses the first accepted authoritative snapshot so round, score and hazard information can appear before the 3D scene initializes. Both paths use the same simulation timing and controls.
 
 ### 20.5 Optimization
 

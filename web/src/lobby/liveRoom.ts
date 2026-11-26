@@ -4,13 +4,13 @@ import { decodeLobbyState, type LiveRoom } from './lobbyState';
 import { RoomTransport, type LinkState } from './RoomTransport';
 import { SnapshotWatchdog } from './SnapshotWatchdog';
 import { MatchFeed } from '../online/MatchFeed';
-import { ContentHandshake, type LoadState, type MatchRenderer } from './ContentHandshake';
+import { ContentHandshake, type LoadState, type LoadedArena } from './ContentHandshake';
 
 export function useLiveRoom(code: string) {
   const [connection, setConnection] = useState<LiveRoom | null>(null);
   const [link, setLink] = useState<LinkState>('connected');
   const [attempt, setAttempt] = useState(0);
-  const [game, setGame] = useState<{feed: MatchFeed; View: MatchRenderer} | null>(null);
+  const [game, setGame] = useState<(LoadedArena & {feed: MatchFeed}) | null>(null);
   const [startError, setStartError] = useState('');
   const [canRematch, setCanRematch] = useState(false);
   const [load, setLoad] = useState<LoadState>({loading: false, error: ''});
@@ -85,19 +85,20 @@ export function useLiveRoom(code: string) {
             return;
           }
           if ((bytes[0] === 23 || bytes[0] === 26) && last && !feed) {
-            if (!content.renderer) throw new Error('Match assigned before content loaded');
+            if (!content.arena) throw new Error('Match assigned before content loaded');
             feed = new MatchFeed(bytes, packet => {
               if (socket.readyState !== WebSocket.OPEN) return;
               if (socket.bufferedAmount > 16384) { disconnected(4008); return; }
               socket.send(new Uint8Array(packet));
             });
             watchdog.progress();
-            setGame({feed, View:content.renderer});
             return;
           }
           if (bytes[0] === 2 && feed) {
+            const entering = feed.latest === null;
             if (feed.receive(bytes) && !closed) {
               watchdog.progress();
+              if (entering && content.arena) setGame({...content.arena, feed});
               recovery.restored();
             }
             return;

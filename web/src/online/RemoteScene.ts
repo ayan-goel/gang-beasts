@@ -21,14 +21,14 @@ export function matchView(frame: Snapshot, content: SkylineContent): MatchView {
 }
 
 export function startRemoteScene(container: HTMLElement, content: SkylineContent, feed: MatchFeed, update: (match: MatchView) => void, status: (value: StreamStatus) => void) {
-  const scene = new FixtureScene(container, content.fighter, {map: content.map, color: colors[feed.fighters[0]!.color]});
+  const scene = new FixtureScene(container, content.fighter, {map: content.map, model: content.model, kit: feed.fighters[0]!.color, color: colors[feed.fighters[0]!.color]});
   const bodies = feed.fighters.map(() => new Float32Array(15*14));
   const objects = new Float32Array(8*content.map.objects.length);
   let animation = 0, priorTime = performance.now(), prior: Snapshot | null = null, match: MatchView | null = null;
   let previousStatus: StreamStatus | undefined;
   let unbind: (() => void) | undefined;
   try {
-    for (const fighter of feed.fighters.slice(1)) scene.addOpponent(content.fighter, colors[fighter.color]);
+    for (const fighter of feed.fighters.slice(1)) scene.addOpponent(content.fighter, colors[fighter.color], fighter.color);
     unbind = bindRemoteControls(container.querySelector('canvas')!, feed, scene.groupCamera!);
     function render(now: number) {
       const sample = feed.timeline.sample(now);

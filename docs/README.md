@@ -28,6 +28,7 @@
 - [Internal pose continuity](verification/support-loss-pose.md): bounded target release during unsupported ticks, landing-shock reproduction and complete backward/cross-slope matrices.
 - [Joint effort allocation](verification/motor-effort-allocation.md): directional torque budgets, causal motor tests and remaining rotating-stop/impact failures.
 - [Playable asset provenance](asset-provenance.md) identifies the source of the current arena, fighter geometry and interface.
+- [Skinned Skyline fighters](slices/17b-skinned-fighters.md) covers the original Roof Crew model, its skeleton and the shared game renderer.
 - [Online hazard warnings](slices/17a-hazard-warnings.md) documents the walkway and wind messages and their timing after reconnect.
 - [Online rematches](slices/16f-online-rematch.md) covers first-to-three results, host authority and fresh round epochs.
 - [Silent match outages](slices/16h-silent-match-outages.md) covers detection and recovery when a socket stays open.
