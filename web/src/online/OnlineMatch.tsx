@@ -4,7 +4,9 @@ import { onlineGripLabels } from './gripLabels';
 import { gripHint } from './gripHint';
 import { FighterNotices } from '../app/FighterNotices';
 import { useMatchSound } from '../audio/SkylineSound';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { canSpectate, followedFighter, type CameraChoice } from './spectatorCamera';
+import { SpectatorControls } from './SpectatorControls';
 import { colors } from '../lobby/api';
 import { hazardWarnings } from '../game/skylineHazards';
 import { meleeResult } from '../game/meleeResult';
@@ -20,13 +22,16 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
   const [match, setMatch] = useState(() => matchView(feed.latest!, content));
   const [status, setStatus] = useState<StreamStatus>('buffering');
   const [error, setError] = useState('');
+  const [choice, setChoice] = useState<CameraChoice | null>(null);
+  const cameraChoice = useRef(choice);
+  useLayoutEffect(() => { cameraChoice.current = choice; }, [choice]);
   useEffect(() => {
     let stop: (() => void) | undefined;
     let timer: number | undefined;
     // Give the authoritative scoreboard a paint before WebGL compiles the arena shaders.
     const frame = requestAnimationFrame(() => {
       timer = window.setTimeout(() => {
-        try { stop = startRemoteScene(container.current!, content, feed, setMatch, setStatus); }
+        try { stop = startRemoteScene(container.current!, content, feed, setMatch, setStatus, cameraChoice); }
         catch { setError('Could not display the arena. Reload to reconnect.'); }
       }, 0);
     });
@@ -34,6 +39,7 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
   }, [feed, content]);
   useMatchSound(match, status === 'live' || status === 'estimating', match.conditions, match.impacts);
   const names = feed.fighters.map(f => f.name);
+  const spectator = canSpectate(match, feed.own);
   const winner = meleeResult(match, names);
   const hint = feed.own !== null && match.phase === 'playing' && match.conditions[feed.own] === 'active'
     ? gripHint(feed.own, match.gripTargets, match.hazard) : '';
@@ -67,7 +73,9 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
     {match.phase === 'playing' && <div className="online-grips" aria-live="polite">
       <GripNotices names={names} grips={match.gripTargets.map(targets => onlineGripLabels(targets,names,content.fighter.bodies,content.map))} />
     </div>}
-    <p className="online-controls">{hint || (feed.own === null ? 'Spectating until the next round · Z / X to turn the camera' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift · Q to headbutt · Z / X to turn the camera')}</p>
+    {spectator && <SpectatorControls names={names} visible={match.visible} target={followedFighter(match, feed.own, choice)}
+      choose={slot => setChoice(slot === null ? null : {epoch:match.epoch, slot})}/>}
+    <p className="online-controls">{hint || (spectator || feed.own === null ? 'Spectating until the next round · Z / X to turn the camera' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift · Q to headbutt · Z / X to turn the camera')}</p>
     {match.phase !== 'playing' && <div className="online-callout"><span role="status">{match.phase === 'countdown' ? Math.max(1,Math.ceil(match.remaining/60)) : winner}</span>
       {match.phase === 'match_results' && rematch && <button className="room-primary" onClick={rematch}>Play again</button>}
     </div>}

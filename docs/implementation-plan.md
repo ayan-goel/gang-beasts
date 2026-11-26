@@ -58,6 +58,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 12e — camera framing | Fit full fighters inside the safe screen area | Per-limb bounds, 15% inset, owned-fighter priority and portrait resizing |
 | 12f — Skyline occlusion | Show the concealed parts of the fighter through opaque scenery | West-edge hang, orbit, narrow viewport, moving crate and private-room views |
 | 12g — round and match results | Identify wins and draws in local and online Skyline | Same-tick physical falls, duplicate verdicts, first to three and all eight scores after reset |
+| 12h — spectator camera | Let an eliminated fighter or waiting spectator follow a survivor | Independent orbit, target handoff after a fall, group view and respawn focus |
 | 12 | Melee match lifecycle | Simultaneous elimination, scoring, full reset and rematch |
 | 13a — input wire contract | Browser sampling and native codec | Shared 18-byte golden record, edge ordering, malformed input, bounded burst and wraparound |
 | 13b — full snapshot codec | Rust encoder and browser decoder | Independent binary fixture, stable body and grip IDs, bounded validation, exact epoch and optional input acknowledgement |

@@ -1,6 +1,6 @@
 import type { GroupCamera } from '../rendering/GroupCamera';
 
-export function bindCameraOrbit(canvas: HTMLCanvasElement, camera: GroupCamera, allowed: () => boolean) {
+export function bindCameraOrbit(canvas: HTMLCanvasElement, camera: GroupCamera, allowed: () => boolean, scope: HTMLElement = canvas) {
   canvas.tabIndex = 0;
   canvas.setAttribute('aria-keyshortcuts', 'Z X');
   const keydown = (event: KeyboardEvent) => {
@@ -9,6 +9,6 @@ export function bindCameraOrbit(canvas: HTMLCanvasElement, camera: GroupCamera, 
     camera.turn(event.code === 'KeyX' ? 1 : -1);
     event.preventDefault();
   };
-  canvas.addEventListener('keydown', keydown);
-  return () => canvas.removeEventListener('keydown', keydown);
+  scope.addEventListener('keydown', keydown);
+  return () => scope.removeEventListener('keydown', keydown);
 }

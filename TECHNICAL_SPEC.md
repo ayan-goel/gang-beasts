@@ -813,7 +813,7 @@ Weighted center: `center = Σ(weight_i × position_i) / Σ(weight_i)`. Give the 
 
 Remove eliminated players. Continue framing a falling player while recovery remains possible, with a smooth reduction once they pass the unrecoverable region. Do not let debris or an already eliminated body pull the camera away. Handle zero tracked players with the map overview. Retarget smoothly when a player leaves.
 
-Skyline weights the active online player at 1.35 and each peer at 1. Local shared-screen matches and spectators use equal weights. Full limb bounding spheres must clear the inset planes at the current orbit and aspect ratio. [Framing geometry and verification](docs/slices/12e-skyline-framing.md)
+Skyline weights the active online player at 1.35 and each peer at 1. Local shared-screen matches and spectators in group view use equal weights. Full limb bounding spheres must clear the inset planes at the current orbit and aspect ratio. [Framing geometry and verification](docs/slices/12e-skyline-framing.md)
 
 ### 16.3 Dynamic zoom
 
@@ -844,6 +844,8 @@ The server receives world-space intent, not camera yaw or trusted speed. Rotatin
 ### 16.7 Spectating
 
 After elimination, support group view, survivor cycling, allowed orbit changes and scoreboard. Spectating never generates gameplay input. When a target is eliminated, choose the next surviving target or map overview. Full-game local multiplayer must handle a mix of living and eliminated local players without obscuring the shared fight.
+
+In private Skyline matches, eliminated fighters and spectators waiting to join can use **Previous fighter**, **Next fighter** and **Group view**. Following frames the selected fighter’s full body, including during knockout or ledge recovery. A fall advances the camera to the next survivor in roster order. An empty roof returns to the arena overview. Each new round starts with the default framing for the viewer’s seat. [Spectator camera](docs/slices/12h-spectator-camera.md)
 
 ## 17. Networking architecture
 

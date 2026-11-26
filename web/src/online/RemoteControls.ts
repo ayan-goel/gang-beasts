@@ -5,8 +5,8 @@ import { bindCameraOrbit } from '../game/bindCameraOrbit';
 import type { GroupCamera } from '../rendering/GroupCamera';
 import type { MatchFeed } from './MatchFeed';
 
-export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, camera: GroupCamera) {
-  const unbindOrbit = bindCameraOrbit(canvas, camera, () => !document.hidden);
+export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, camera: GroupCamera, orbitKeys: HTMLElement = canvas) {
+  const unbindOrbit = bindCameraOrbit(canvas, camera, () => !document.hidden, orbitKeys);
   if (feed.own === null) return unbindOrbit;
   let sampler = new InputSampler();
   let active = false;

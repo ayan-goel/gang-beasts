@@ -6,6 +6,7 @@
 - [Compact match snapshots](slices/19b-compact-snapshots.md) records the rotation codec, compatibility tests and eight-player traffic.
 - [Eight-player room performance](verification/eight-player-room.md) records native tick times, the combat workload and per-player snapshot traffic.
 - [Skyline occlusion](slices/12f-skyline-occlusion.md) covers the view of a fighter behind the roof or a moving prop.
+- [Spectator camera](slices/12h-spectator-camera.md) covers following survivors, switching back to the group and returning to play.
 - [Ledge rescue](slices/10e-ledge-rescue.md) covers fall-arrest timing, the pull-up controls and the west walkway in a private match.
 - [Skyline throws](slices/10d-skyline-throws.md) covers lift controls, release momentum, counter-grips and an east-edge ring-out.
 - [Stamina feedback](slices/09f-stamina-feedback.md) covers the local and online meters, grip exhaustion and recovery.

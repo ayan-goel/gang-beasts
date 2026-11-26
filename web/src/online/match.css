@@ -23,3 +23,7 @@
 
 .online-grips:not(:empty) { padding: 0 clamp(1rem,3vw,3rem) .5rem; display: flex; flex-wrap: wrap; gap: .35rem 1.25rem; color: #d1e0df; font-size: .85rem; }
 .online-grips b { color: #faf7ee; margin-right: .25rem; }
+.spectator-camera { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; padding: .4rem clamp(1rem,3vw,3rem); }
+.spectator-camera output { color: #f8c660; font-weight: 700; margin-right: .4rem; }
+.spectator-camera button { background: #19313c; color: #faf7ee; border: 1px solid #92acaf; padding: .4rem .7rem; }
+.spectator-camera button:disabled { opacity: .55; }

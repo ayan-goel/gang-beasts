@@ -2,6 +2,8 @@ import {expect, test, type Browser, type Page} from '@playwright/test';
 import {decodeSnapshot} from '../src/net/snapshot';
 import {gripMatch} from './support/gripMatch';
 import {releaseRoom} from './support/releaseRoom';
+import {observeArenaMeshes} from './support/arenaMeshes';
+import {cameraAim} from './support/cameraAim';
 
 if (process.platform === 'darwin') test.use({launchOptions:{args:['--use-gl=angle','--use-angle=metal']}});
 
@@ -29,6 +31,8 @@ function observe(page: Page) {
 async function verifyJoin(host: Page, browser: Browser, legacyPeer: boolean) {
   const profile = await browser.newContext();
   const newcomer = await profile.newPage();
+  if (!legacyPeer) await newcomer.setViewportSize({width:390, height:800});
+  await observeArenaMeshes(newcomer);
   let invite = '';
   try {
     await gripMatch(host, browser, async (guest, start) => {
@@ -48,6 +52,25 @@ async function verifyJoin(host: Page, browser: Browser, legacyPeer: boolean) {
       await newcomer.getByLabel('Player name').fill('Gold');
       await newcomer.getByRole('button',{name:'Join room',exact:true}).click();
       await expect(newcomer.getByRole('heading',{name:'Spectating Skyline'})).toBeVisible({timeout:15000});
+      const camera = newcomer.getByRole('group', {name:'Spectator camera'});
+      await expect(host.getByRole('group', {name:'Spectator camera'})).toHaveCount(0);
+      await expect(camera.getByLabel('Camera view')).toHaveText('Group view');
+      await camera.getByRole('button', {name:'Next fighter'}).click();
+      await expect(camera.getByLabel('Camera view')).toHaveText('Following Mint');
+      await expect.poll(async () => (await cameraAim(newcomer))?.x).toBeLessThan(-1);
+      await camera.getByRole('button', {name:'Group view'}).click();
+      await expect.poll(async () => Math.abs((await cameraAim(newcomer))?.x ?? Infinity)).toBeLessThan(.65);
+      await camera.getByRole('button', {name:'Previous fighter'}).click();
+      await expect(camera.getByLabel('Camera view')).toHaveText('Following Blue');
+      const initialYaw = (await cameraAim(newcomer))!.yaw;
+      await newcomer.keyboard.press('KeyX');
+      await expect.poll(async () => (await cameraAim(newcomer))?.yaw).toBeGreaterThan(initialYaw + .6);
+      await expect.poll(async () => (await cameraAim(newcomer))?.x).toBeGreaterThan(1);
+      if (!legacyPeer) {
+        const panel = await camera.boundingBox();
+        expect(panel!.x + panel!.width).toBeLessThanOrEqual(390);
+        await newcomer.getByLabel('Online Skyline arena').screenshot({path:test.info().outputPath('spectator-camera.png')});
+      }
       await newcomer.locator('canvas').focus();
       await newcomer.keyboard.down('KeyD');
       const waiting = views[2]!.tick;
@@ -61,6 +84,8 @@ async function verifyJoin(host: Page, browser: Browser, legacyPeer: boolean) {
       await guest.keyboard.down('KeyD');
       try { await expect(host.getByLabel('Mint score')).toHaveText('1',{timeout:20000}); }
       finally { await guest.keyboard.up('KeyD'); await guest.keyboard.up('ShiftLeft'); }
+      await expect(camera.getByLabel('Camera view')).toHaveText('Following Mint');
+      await expect.poll(async () => (await cameraAim(newcomer))?.x).toBeLessThan(-1);
       for (const page of [host,guest,newcomer]) {
         await expect(page.getByLabel('Round number')).toHaveText('Round 2',{timeout:15000});
         await expect(page.getByLabel('Gold score')).toHaveText('0');

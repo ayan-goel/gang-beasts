@@ -74,6 +74,12 @@ test('eight ready browsers share the rooftop and agree on the surviving fighterâ
     }
     for (const player of pages) await expect(player.getByLabel('Fighter 8 eliminated')).toHaveText('Out');
     await expect(host.getByLabel('Round phase')).toHaveText('Playing');
+    const spectator = eighth.getByRole('group', {name:'Spectator camera'});
+    await expect(spectator.getByLabel('Camera view')).toHaveText('Group view');
+    const lastInput = traces[7]!.inputs;
+    await spectator.getByRole('button', {name:'Next fighter'}).click();
+    await spectator.getByRole('button', {name:'Next fighter'}).click();
+    await expect(spectator.getByLabel('Camera view')).toHaveText('Following Fighter 2');
     const exits = ['KeyD', 'KeyA', 'KeyD', 'KeyW', 'KeyD', 'KeyW'];
     for (const [offset, key] of exits.entries()) {
       const player = pages[offset + 1]!;
@@ -87,6 +93,10 @@ test('eight ready browsers share the rooftop and agree on the surviving fighterâ
         await player.keyboard.up(key);
         await player.keyboard.up('ShiftLeft');
       }
+      if (offset === 0) {
+        await expect(spectator.getByLabel('Camera view')).toHaveText('Following Fighter 3');
+        expect(traces[7]!.inputs).toBe(lastInput);
+      }
     }
     await Promise.all(pages.map(async player => {
       const scores = player.getByLabel(/^Fighter \d score$/);
@@ -96,7 +106,9 @@ test('eight ready browsers share the rooftop and agree on the surviving fighterâ
       await expect(player.getByLabel('Round number')).toHaveText('Round 2', {timeout:12_000});
       await expect(scores).toHaveText(expected);
       await expect(player.getByLabel(/^Fighter \d eliminated$/)).toHaveCount(0);
+      await expect(player.getByRole('group', {name:'Spectator camera'})).toHaveCount(0);
     }));
+    await expect(eighth.locator('.online-scene canvas')).toBeFocused();
   } catch (error) {
     const clients = await Promise.all(pages.map(async (p,slot) => ({
       fighter:slot+1, ...traces[slot],

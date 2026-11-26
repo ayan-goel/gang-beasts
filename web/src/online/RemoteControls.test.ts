@@ -51,8 +51,9 @@ it('lets a spectator turn the view without sending fighter inputs and releases i
   const feed = new MatchFeed(Uint8Array.of(23,1,255,0,0,1,65,1,1,1,66), transmit);
   const camera = new GroupCamera([]);
   const turn = vi.spyOn(camera,'turn');
-  const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed, camera);
-  const key = (code: string, repeat = false) => canvas.dispatchEvent(Object.assign(new Event('keydown'), {code,repeat}));
+  const matchRegion = new EventTarget();
+  const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed, camera, matchRegion as HTMLElement);
+  const key = (code: string, repeat = false) => matchRegion.dispatchEvent(Object.assign(new Event('keydown'), {code,repeat}));
   try {
     key('KeyX'); key('KeyX',true); key('KeyW'); key('KeyZ');
     expect(turn.mock.calls).toEqual([[1],[-1]]);

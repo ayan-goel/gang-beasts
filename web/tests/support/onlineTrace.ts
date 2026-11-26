@@ -27,10 +27,13 @@ export function observeMatch(page: Page) {
 }
 
 export function observeEighthFighter(page: Page) {
-  const trace = {frames:0, tick:0, closed:false, eliminated:false};
+  const trace = {frames:0, inputs:0, tick:0, closed:false, eliminated:false};
   page.on('websocket', socket => {
     if (new URL(socket.url()).pathname !== '/ws') return;
     socket.on('close', () => { trace.closed = true; });
+    socket.on('framesent', ({payload}) => {
+      if (Buffer.isBuffer(payload) && payload[0] === 1) trace.inputs++;
+    });
     socket.on('framereceived', ({payload}) => {
       if (!Buffer.isBuffer(payload) || payload[0] !== 2) return;
       trace.frames++;

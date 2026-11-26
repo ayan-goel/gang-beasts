@@ -141,7 +141,7 @@ export class FixtureScene {
     });
   }
 
-  renderSkyline(players: Float32Array[], props: Float32Array, match: MatchView, dt: number, owner?: Float32Array): boolean {
+  renderSkyline(players: Float32Array[], props: Float32Array, match: MatchView, dt: number, owner?: Float32Array, follow?: number | null): boolean {
     this.playerPoses = players;
     this.skyline!.update(props, match.hazard);
     this.rig!.root.visible = match.visible[0]!;
@@ -149,7 +149,7 @@ export class FixtureScene {
       rig.root.visible = match.visible[i + 1]!;
       if (rig.root.visible) rig.update(players[i + 1]!, -1);
     });
-    const present = players.filter((_, slot) => match.visible[slot]);
+    const present = follow != null && match.visible[follow] ? [players[follow]!] : players.filter((_, slot) => match.visible[slot]);
     const turned = this.groupCamera!.update(this.camera, present, match.phase === 'countdown' || match.phase === 'match_results', dt, owner);
     this.render(players[0]!, undefined, undefined, -1);
     return turned;
