@@ -1,3 +1,4 @@
+import { assetWaitMs } from '../game/assetLoading';
 import { supportsPhysics, physicsUnsupported } from '../game/physicsSupport';
 import { loadSkyline, loadedPacket, type SkylineContent } from './content';
 import type { PreparedArena } from '../online/preparedArena';
@@ -24,9 +25,9 @@ export class ContentHandshake {
     const attempt = ++this.attempt;
     const pending = this.pending = new AbortController();
     this.publish({loading: true, error: ''});
-    this.timer = window.setTimeout(() => this.finish('Skyline took too long to load. Try again.'), 12000);
+    this.timer = window.setTimeout(() => this.finish('Skyline took too long to load. Try again.'), assetWaitMs);
     try {
-      const [content, arena] = await Promise.all([loadSkyline(), import('../online/OnlineMatch')]);
+      const [content, arena] = await Promise.all([loadSkyline(pending.signal), import('../online/OnlineMatch')]);
       if (attempt !== this.attempt || this.socket.readyState !== WebSocket.OPEN) return;
       const graphics = prepareGraphics ? new arena.PreparedArena() : undefined;
       this.arena?.graphics?.dispose();

@@ -13,10 +13,13 @@ export interface SkylineContent {
 
 let cached: SkylineContent | undefined;
 
-export async function loadSkyline(): Promise<SkylineContent> {
+export async function loadSkyline(signal: AbortSignal): Promise<SkylineContent> {
   if (cached) return cached;
-  const wasm = await import('../generated/wasm/brawler_wasm');
-  const [, model] = await Promise.all([wasm.default(), loadFighterModel()]);
+  const [wasm, model] = await Promise.all([
+    import('../game/loadPhysics').then(({loadPhysics}) => loadPhysics(signal)),
+    loadFighterModel(signal),
+  ]);
+  signal.throwIfAborted();
   const content: Omit<SkylineContent, 'model'> = JSON.parse(wasm.skyline_content());
   const digest = /^[a-f0-9]{64}$/;
   if (!digest.test(content.engineHash) || !digest.test(content.mapHash) || content.fighter.bodies.length !== 15) {

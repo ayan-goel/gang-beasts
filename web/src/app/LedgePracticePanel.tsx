@@ -21,7 +21,7 @@ export function LedgePracticePanel({ viewport }: { viewport: RefObject<HTMLDivEl
   useEffect(() => {
     const controller = new AbortController();
     async function prepare() {
-      const model = await loadFighterModel();
+      const model = await loadFighterModel(controller.signal);
       const practice = await prepareLedgePractice(controller.signal);
       if (controller.signal.aborted) { practice.duel.free(); return; }
       runtime.current = startDuel(viewport.current!, () => setStatus(practice.status), model, practice);

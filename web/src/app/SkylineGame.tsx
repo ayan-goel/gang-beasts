@@ -1,3 +1,4 @@
+import { assetWaitMs } from '../game/assetLoading';
 import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { pullHint } from '../game/ledgeHint';
 import { DisplaySettings } from './DisplaySettings';
@@ -25,14 +26,19 @@ export function SkylineGame() {
   const [error, setError] = useState<{message: string; retry: string}>();
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    let active = true;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => setError({
+      message:'The fighters are taking longer than usual to load. You can keep waiting or retry.',
+      retry:'Retry loading fighters',
+    }), assetWaitMs);
     setError(undefined);
-    void loadFighterModel().then(model => {
-      if (!active) return;
+    void loadFighterModel(controller.signal).then(model => {
+      if (controller.signal.aborted) return;
+      setError(undefined);
       try { runtime.current = startDuel(viewport.current!, setState, model); }
       catch (e) { setError({message:e instanceof GraphicsUnavailable ? e.message : String(e), retry:'Retry graphics'}); }
-    }).catch(() => { if (active) setError({message:'Could not load the fighters. Check your connection and try again.', retry:'Retry loading fighters'}); });
-    return () => { active = false; runtime.current?.dispose(); runtime.current = null; };
+    }).catch(() => { if (!controller.signal.aborted) setError({message:'Could not load the fighters. Check your connection and try again.', retry:'Retry loading fighters'}); }).finally(() => clearTimeout(timer));
+    return () => { clearTimeout(timer); controller.abort(); runtime.current?.dispose(); runtime.current = null; };
   }, [attempt]);
   const match = state?.match;
   const complete = match?.phase === 'match_results';

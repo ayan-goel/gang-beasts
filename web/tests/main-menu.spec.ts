@@ -23,14 +23,16 @@ test('direct game URLs reach their screens with or without a trailing slash', as
   }
 });
 
-test('the game menu works without JavaScript on desktop and narrow screens', async ({browser}, info) => {
+test('the game menu works without JavaScript on desktop and narrow screens', async ({browser, browserName}, info) => {
   const context = await browser.newContext({javaScriptEnabled:false, viewport:{width:1440,height:900}});
   try {
     const page = await context.newPage();
     await page.goto('/');
     const poster = page.getByRole('img');
     expect(await poster.evaluate(element => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
-    await page.keyboard.press('Tab');
+    // macOS WebKit uses Option-Tab for links when full keyboard access is off.
+    const linkKey = process.platform === 'darwin' && browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
+    await page.keyboard.press(linkKey);
     await expect(page.getByRole('link', {name:'Host a room'})).toBeFocused();
     for (const width of [1440, 390, 320]) {
       await page.setViewportSize({width, height:width === 1440 ? 900 : 800});
