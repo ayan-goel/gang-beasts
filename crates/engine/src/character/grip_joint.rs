@@ -112,7 +112,11 @@ mod tests {
         assert_eq!(broke, None);
         assert!((normal[0] - 392.4).abs() < 4.);
         let (_, broke) = suspend(80., 1, 4, true);
-        assert!(matches!(broke, Some(24..=90)), "break tick {broke:?}");
+        let window = usize::from(GripTuning::bundled().unwrap().costs.ledge_break_after_ticks);
+        assert!(
+            broke.is_some_and(|tick| (window..=90).contains(&tick)),
+            "break tick {broke:?}"
+        );
     }
 
     #[test]

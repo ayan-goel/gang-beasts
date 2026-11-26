@@ -35,7 +35,7 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
   const names = feed.fighters.map(f => f.name);
   const winner = match.winner == null ? 'Draw' : feed.fighters[match.winner]!.name + ' wins';
   const hint = feed.own !== null && match.phase === 'playing' && match.conditions[feed.own] === 'active'
-    ? gripHint(feed.own, match.gripTargets) : '';
+    ? gripHint(feed.own, match.gripTargets, match.hazard) : '';
   return <section className="online-match" aria-label="Online Skyline arena">
     <div className="online-header"><h1>{feed.own === null ? 'Spectating Skyline' : 'Playing as ' + feed.fighters[feed.own]!.name}</h1><button onClick={exit}>Leave room</button></div>
     <div className="online-stage">

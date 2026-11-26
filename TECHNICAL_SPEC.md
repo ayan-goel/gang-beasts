@@ -664,7 +664,7 @@ The source playground's **250 N** grip threshold is illustrative. A 40 kg charac
 
 The local simulation samples each grip’s last solver-substep force at 60 Hz and smooths it over a 0.08 s time constant. Opponent, crate and vent grips accumulate overload at 650 N with an eight-tick break threshold. Subthreshold or released ticks reduce accumulated strain by one tick. Additional drain sums across attached hands and caps at 12 points/s per fighter. The acquisition tick incurs base drain. A failed grip needs a fresh hand press. [Calibration, sampling units and verified scope](docs/slices/09c-grip-stamina.md).
 
-A Skyline lip permits up to 25 mm travel per linear axis before its constraint limit engages. The solver reaction from both the spring and the limit counts toward load. For an arrested fall the lip overload preset is 740 N for 24 accumulated ticks. One hand supports the 40 kg fixture and releases a sustained 80 kg load. [Ledge catch calibration](docs/slices/10c2-ledge-catch.md).
+A Skyline lip permits up to 25 mm travel per linear axis before its constraint limit engages. The solver reaction from both the spring and the limit counts toward load. For an arrested fall the lip overload preset is 740 N for 72 accumulated ticks. One hand supports the 40 kg fixture and releases a sustained 80 kg load within 90 ticks. [Catch geometry](docs/slices/10c2-ledge-catch.md) and [fall-arrest timing](docs/slices/10e-ledge-rescue.md).
 
 ### 13.8 Lifting and throwing
 
@@ -684,7 +684,7 @@ Require a valid grip, remaining stamina and plausible ledge/surface geometry. A 
 
 MVP: simple Skyline edges, both one- and two-hand rescue cases. Full game: vertical surfaces, moving holds and alternating hand-over-hand climbing. Tests must include occupied ledges, low ceilings, broken panels, high latency and a second player hanging from the climber.
 
-The local Skyline controller can aim a reaching hand at an exposed lip within anatomical reach and hang from it as the floor falls away. The physical catch and release are covered by a normal-input round fixture. Holding jump now drives a local one- or two-hand mantle. The controller checks the approach and landing every assisted tick, limits one-hand and two-hand force to 760 N and 960 N, and releases the roof grips after the pelvis is inside and the trunk or legs bear weight. Native fixtures cover obstruction, panel failure and a hanging passenger. Network latency and human evaluation remain open. [Catch and release](docs/slices/10c2-ledge-catch.md) and [mantle calibration and verification](docs/slices/10c3-mantling.md).
+In local and private Skyline matches, a reaching hand can catch an exposed lip within anatomical reach as the floor falls away. The climber sees their pull-up key while holding a fixed roof edge. Holding jump drives a one- or two-hand mantle. The controller checks the approach and landing every assisted tick, caps one-hand and two-hand force at 760 N and 960 N, and releases the roof grips once the pelvis is inside and the trunk or legs bear weight. Native fixtures cover obstruction, panel failure and a hanging passenger. Two private-room clients observed a catch below the main deck and a return to play after the west walkway collapsed. Human evaluation and the full latency matrix remain open. [Catch geometry](docs/slices/10c2-ledge-catch.md), [mantle calibration](docs/slices/10c3-mantling.md) and [private-room rescue](docs/slices/10e-ledge-rescue.md).
 
 ## 14. Map engine and environment system
 

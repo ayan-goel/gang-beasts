@@ -13,14 +13,15 @@ pub(super) fn hanging() -> Duel {
     game
 }
 
+fn hips(game: &Duel) -> [f32; 3] {
+    game.body_states(CORAL)[BodyPart::Pelvis.index()]
+        .state
+        .position
+}
+
 #[test]
 fn one_hand_pull_returns_a_hanging_fighter_to_supported_play() {
     let mut game = hanging();
-    let hips = |g: &Duel| {
-        g.body_states(CORAL)[BodyPart::Pelvis.index()]
-            .state
-            .position
-    };
     let mut previous = hips(&game);
     assert!(previous[1] < -0.5);
     game.set_jump(CORAL, true);
@@ -97,4 +98,48 @@ fn the_real_west_walkway_catch_can_be_mantled() {
         .position;
     assert!(p[0] > -10. && p[1] > 0.55, "west rescue pelvis {p:?}");
     assert!(game.fighters[0].walking.state.feet.contains(&true));
+}
+
+#[test]
+fn nearby_catches_allow_the_fall_to_settle_before_the_player_pulls_up() {
+    // A few input ticks change the landing angle on the same walkway. Each run
+    // must make real palm contact, bear the hanging load and return to foot support.
+    for stop in 7076..=7083 {
+        let mut game = Duel::skyline(crate::PhysicsConfig::default()).unwrap();
+        let mut caught = None;
+        for tick in 0..7750 {
+            match tick {
+                6800 => game.set_input(CORAL, [-1., 0.], false).unwrap(),
+                7050 => game.set_input(CORAL, [1., 0.], false).unwrap(),
+                t if t == stop => game.set_input(CORAL, [0., 0.], false).unwrap(),
+                7160 => {
+                    for hand in [Hand::Left, Hand::Right] {
+                        game.set_hand(CORAL, hand, true);
+                    }
+                }
+                _ => {}
+            }
+            let held = [Hand::Left, Hand::Right]
+                .iter()
+                .any(|&hand| game.arena_grip(CORAL, hand) == Some(1));
+            if tick >= 7200 && held && caught.is_none() {
+                caught = Some(tick);
+            }
+            if caught.is_some_and(|start| tick == start + 40) {
+                let hip = hips(&game);
+                assert!(
+                    held && hip[0] < -10. && hip[1] < -0.4,
+                    "stop {stop}: lost catch at {hip:?}"
+                );
+                game.set_jump(CORAL, true);
+            }
+            game.step();
+        }
+        assert!(caught.is_some(), "stop {stop}: missed lip");
+        let hip = hips(&game);
+        assert!(
+            hip[0] > -10. && hip[1] > 0.55 && game.fighters[0].walking.state.feet.contains(&true),
+            "stop {stop}: failed to recover at {hip:?}"
+        );
+    }
 }

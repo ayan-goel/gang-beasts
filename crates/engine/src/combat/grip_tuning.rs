@@ -61,7 +61,8 @@ impl GripCosts {
             && (0.0..=100.).contains(&self.maximum_extra_per_s)
             && (self.reference_force_n..=ceiling).contains(&self.break_force_n)
             && (self.break_force_n..=ceiling).contains(&self.ledge_break_force_n)
-            && (self.break_after_ticks..=60).contains(&self.ledge_break_after_ticks)
+            // Reserve time for the force filter within the bundled 80 kg fixture's 1.5 s break deadline.
+            && (self.break_after_ticks..=75).contains(&self.ledge_break_after_ticks)
             && (2..=120).contains(&self.break_after_ticks)
             && (0.001..=1.0).contains(&self.smoothing_s)
     }

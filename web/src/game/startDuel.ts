@@ -1,4 +1,5 @@
 import { arenaGripName, fighterGripName, handGripLabels } from './gripLabels';
+import { fixedLedge } from './ledgeHint';
 import type { FighterPhase } from './fighterCondition';
 import type { Object3D } from 'three';
 import type { MatchView, SkylineMap } from '../rendering/SkylineView';
@@ -27,6 +28,7 @@ export interface DuelState {
   paused: boolean;
   hits: [number, number];
   grips: [string[], string[]];
+  fixedLedge: [boolean, boolean];
   stamina: [number, number];
   latest?: DuelHit;
 }
@@ -80,17 +82,27 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     }, () => !paused && (!match || match.phase === 'playing'));
     const inputs = [playerInput(0), playerInput(1)];
     unbind = bindMovementInput(canvas, inputs[0]!, inputs[1]!);
-    const readGrips = (owner: Player) => handGripLabels(side => {
-      const region = duel.grip_region(owner, side);
-      if (region !== undefined) return fighterGripName(owner === 0 ? 'Blue' : 'Coral', definition.bodies[region]!.part);
-      return map && arenaGripName(map, duel.arena_grip(owner, side));
-    });
-    const snapshot = () => publish({
-      match,
-      tick: duel.tick().toString(), hits: [...hits], latest, paused, grips: [readGrips(0), readGrips(1)],
-      stamina: [duel.stamina(0), duel.stamina(1)],
-      conditions: [JSON.parse(duel.condition_json(0)), JSON.parse(duel.condition_json(1))],
-    });
+    const readGrips = (owner: Player) => {
+      let onLedge = false;
+      const labels = handGripLabels(side => {
+        const region = duel.grip_region(owner, side);
+        if (region !== undefined) return fighterGripName(owner === 0 ? 'Blue' : 'Coral', definition.bodies[region]!.part);
+        if (!map || !match) return undefined;
+        const target = duel.arena_grip(owner, side);
+        onLedge ||= fixedLedge(target, match.hazard);
+        return arenaGripName(map, target);
+      });
+      return {labels, onLedge};
+    };
+    const snapshot = () => {
+      const first = readGrips(0), second = readGrips(1);
+      publish({
+        match, tick: duel.tick().toString(), hits: [...hits], latest, paused,
+        grips: [first.labels, second.labels], fixedLedge: [first.onLedge, second.onLedge],
+        stamina: [duel.stamina(0), duel.stamina(1)],
+        conditions: [JSON.parse(duel.condition_json(0)), JSON.parse(duel.condition_json(1))],
+      });
+    };
     const render = (dt = 0) => {
       const first = duel.body_states(0), second = duel.body_states(1);
       if (match) {

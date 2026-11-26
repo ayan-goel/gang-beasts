@@ -8,7 +8,7 @@ The reaching hand uses the existing arm torque budget to apply a bounded impulse
 
 A lip adds 25 mm of linear travel in each constraint axis to the compliant grip as its maximum permitted slip. The hand can rotate freely. Load sampling sums the spring and travel-limit impulses on each axis before computing the resultant. The limit prevents the visual hand from swinging metres away from a lip that the simulation still considers held.
 
-The 40 kg fixture supports its full weight on one hand. The arrest of a fall briefly exceeds the ordinary opponent-grip overload threshold. Roof and walkway grips break after 24 accumulated overloaded ticks at 740 N. A sustained 80 kg single-hand load breaks in the calibration fixture. Opponent, crate and vent holds keep the previous 650 N / 8 tick calibration. Both policies use the same smoothing, stamina and release history.
+The 40 kg fixture supports its full weight on one hand. The initial roof and walkway preset used 24 accumulated overloaded ticks at 740 N. The [subsequent fall-arrest calibration](10e-ledge-rescue.md) extends that window to 72 ticks. A sustained 80 kg single-hand load still breaks within 90 ticks. Opponent, crate and vent holds use 650 N for eight ticks. Both policies use the same smoothing, stamina and release history.
 
 ## Evidence
 

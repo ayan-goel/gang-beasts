@@ -1,3 +1,4 @@
+import { pullHint } from '../game/ledgeHint';
 import { GripNotices } from './GripNotices';
 import { StaminaMeter } from './StaminaMeter';
 import { FighterNotices } from './FighterNotices';
@@ -76,7 +77,8 @@ export function SkylineGame() {
           {match.phase === 'playing' && <FighterNotices names={names} phases={conditions} />}
         </div>}
         {started && !menu && match?.phase === 'playing' && <div className="match-grips">
-          {state && <GripNotices names={names} grips={state.grips} />}
+          {state && <GripNotices names={names} grips={state.grips}
+            hints={state.fixedLedge.map((onLedge, slot) => onLedge && conditions[slot] === 'active' ? pullHint(slot === 0 ? 'Space' : 'Enter') : '')} />}
         </div>}
       </section>
     </div>

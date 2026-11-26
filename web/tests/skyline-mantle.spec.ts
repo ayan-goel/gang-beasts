@@ -35,6 +35,7 @@ test('Space pulls Coral from the collapsed walkway back into the same live round
   });
   await page.getByRole('button', { name: 'Start match' }).click();
   await expect(page.getByLabel('Coral grips')).toContainText('roof edge', { timeout: 14000 });
+  await expect(page.getByLabel('Coral grips')).toContainText('Hold Space to pull up');
   await page.keyboard.down('Space');
   await expect.poll(() => page.evaluate(() => {
     const [tick, x, y] = JSON.parse(document.documentElement.dataset.testFighter!);
