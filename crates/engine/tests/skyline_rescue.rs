@@ -61,8 +61,7 @@ fn rescue(reach: u64, delay: u64) -> Result<(), &'static str> {
 #[test]
 fn standard_west_rescue_succeeds_across_reach_and_pull_timings() {
     let mut misses = Vec::new();
-    // The spec allows two misses. Keep the full response-time grid so a tuning change
-    // cannot improve the score by dropping a previously unsuccessful approach.
+    // Keep every recorded input timing, including the inverted landing at (7164, 70).
     for reach in [7150, 7157, 7164, 7171] {
         for delay in [25, 40, 55, 70, 85] {
             if let Err(reason) = rescue(reach, delay) {
@@ -74,5 +73,5 @@ fn standard_west_rescue_succeeds_across_reach_and_pull_timings() {
         "Skyline rescue: {}/20 successful, misses {misses:?}",
         20 - misses.len()
     );
-    assert!(misses.len() <= 2, "spec section 29.1: {misses:?}");
+    assert!(misses.is_empty(), "failed west roof transfers: {misses:?}");
 }

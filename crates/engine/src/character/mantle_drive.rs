@@ -22,6 +22,14 @@ pub(super) fn drive(
     let mass: f32 = bodies.iter().map(|&h| world.bodies[h].mass()).sum();
     let force = ((velocity - hip.linvel()) * 8. - Vector::y() * gravity_y) * mass;
     let impulse = force.cap_magnitude(cap) * TICK_SECONDS;
+    let head = &world.bodies[bodies[BodyPart::Head.index()]];
+    let head_offset = head.center_of_mass() - landing.edge;
+    let head_bottom = world.colliders[head.colliders()[0]].compute_aabb().mins.y;
+    let sweep_shins = crossing
+        && head_offset.dot(&landing.inward) > 0.
+        && head_offset.y > 0.
+        && head_bottom < landing.edge.y + 0.02
+        && head.center_of_mass().y < hip.center_of_mass().y;
     // Load the torso while rising. Once it clears the rim, bring the shins inward
     // so the body can transfer weight off the anchored hand onto the roof.
     let shares = if crossing {
@@ -38,7 +46,20 @@ pub(super) fn drive(
     .into_iter()
     .zip(shares)
     {
-        world.bodies[bodies[part.index()]].apply_impulse(impulse * share, true);
+        let body = &mut world.bodies[bodies[part.index()]];
+        // An inverted climber can balance on its head while its feet still hang
+        // outside. Use each shin's share to swing it onto the checked landing.
+        let drive = if sweep_shins && matches!(part, BodyPart::LeftShin | BodyPart::RightShin) {
+            let offset = target + Vector::y() * 0.48 - body.center_of_mass();
+            let desired =
+                (landing.inward * offset.dot(&landing.inward) + Vector::y() * offset.y) * 5.;
+            ((desired.cap_magnitude(tuning.speed_m_s) - body.linvel()) * 8. * mass)
+                .cap_magnitude(cap)
+                * TICK_SECONDS
+        } else {
+            impulse
+        };
+        body.apply_impulse(drive * share, true);
     }
 }
 
