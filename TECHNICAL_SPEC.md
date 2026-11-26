@@ -326,7 +326,7 @@ Use integer ticks for gameplay timers. Rendering frequency, network jitter and h
 | Explicit world substeps | 1; compare 2 or 4 only when justified |
 | Character restitution | Low; initial candidate 0–0.1 |
 | Friction | Material-specific; tune feet, body, surfaces separately |
-| Collision detection | Discrete generally, selective CCD for fast limbs/props |
+| Collision detection | Discrete by default. Fast hands and loose crates use a linear shape cast to select predictive contacts on a possible solid crossing. [Fixture and limits](docs/verification/swept-collisions.md) |
 
 **Keep settings distinct.** If a gameplay tick contains `N` explicit physics calls, each has `h = (1/60)/N`; recompute continuous controller forces consistently for each call. One-time jump/throw impulses apply once per gameplay event, not once per substep. Aggregate contacts and damage before resolving the gameplay tick. Rapier solver iteration terminology and internal substepping are version-specific; `max_ccd_substeps` is not a substitute for explicit whole-world substeps. Map these concepts to the pinned API and benchmark the combined cost. [Rapier integration parameters](https://rapier.rs/docs/user_guides/rust/integration_parameters/)
 
@@ -1582,7 +1582,7 @@ Use scenario-based tolerances and invariants, with exact replay comparisons only
 | One-/two-hand hang | Load/stamina behavior matches configured thresholds |
 | Moving/rotating support | Relative movement and departure momentum are correct |
 | Eight-player grip loop | Finite state, bounded error/velocity; no unbounded energy growth. [Native left- and right-hand cycles under load and after release](docs/verification/eight-fighter-grip-loop.md) |
-| High-speed collision | Selective CCD prevents unacceptable fixture tunneling |
+| High-speed collision | Both articulated hands stop at a 2 cm barrier at 7.5, 15 and 20 m/s. A Skyline crate stays on the approach side at 90 m/s. Sensors and lateral near misses preserve hand travel. [Regression](docs/verification/swept-collisions.md) |
 | Simultaneous elimination | Stable draw/winner independent of player iteration order |
 | Round reset | Counts, seeds, inputs, hazards, constraints and epochs reset |
 

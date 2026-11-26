@@ -32,6 +32,12 @@ pub(super) fn insert_oriented_rig(
             handle,
             &mut world.bodies,
         );
+        if matches!(
+            body.part,
+            super::BodyPart::LeftHand | super::BodyPart::RightHand
+        ) {
+            world.track_fast_body(handle, body.shape.bounding_radius());
+        }
         handle
     });
     let joints = std::array::from_fn(|index| {
@@ -80,3 +86,7 @@ pub(super) fn insert_oriented_rig(
     });
     (bodies, joints)
 }
+
+#[cfg(test)]
+#[path = "fast_hand_tests.rs"]
+mod fast_hand_tests;

@@ -1,3 +1,4 @@
+mod swept_contacts;
 use rapier3d::prelude::*;
 use std::num::NonZeroUsize;
 
@@ -16,6 +17,7 @@ pub(crate) struct PhysicsWorld {
     pub impulse_joints: ImpulseJointSet,
     multibody_joints: MultibodyJointSet,
     ccd: CCDSolver,
+    fast_bodies: Vec<(RigidBodyHandle, Real)>,
     debug_renderer: DebugRenderPipeline,
 }
 
@@ -45,6 +47,7 @@ impl PhysicsWorld {
             impulse_joints: ImpulseJointSet::new(),
             multibody_joints: MultibodyJointSet::new(),
             ccd: CCDSolver::new(),
+            fast_bodies: Vec::new(),
             debug_renderer: DebugRenderPipeline::new(
                 DebugRenderStyle::default(),
                 DebugRenderMode::COLLIDER_SHAPES,
@@ -53,6 +56,7 @@ impl PhysicsWorld {
     }
 
     pub fn step(&mut self) {
+        self.prepare_sweeps();
         self.pipeline.step(
             &self.gravity,
             &self.parameters,

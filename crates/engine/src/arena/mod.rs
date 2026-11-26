@@ -46,6 +46,9 @@ fn insert_object(world: &mut PhysicsWorld, obj: &definition::ArenaObject) -> Rig
         body,
         &mut world.bodies,
     );
+    if obj.kind == ArenaKind::Crate {
+        world.track_fast_body(body, x.min(y).min(z));
+    }
     body
 }
 
@@ -237,3 +240,6 @@ mod tests {
         assert!(world.bodies[box_id].translation().x > before[1].x + 0.15);
     }
 }
+
+#[cfg(test)]
+mod fast_crate_tests;

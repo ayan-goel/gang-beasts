@@ -32,6 +32,7 @@
 - [Skyline round restoration](verification/skyline-round-restoration.md) covers visible walkway loss, restored crate and walkway poses, and round-two play in a private room.
 - [Room read buffers](verification/room-read-buffers.md) measures per-seat heap reservations and compares two live eight-client pilots.
 - [Live eight-player endurance](verification/live-endurance.md) describes the real-time workload, recovery, memory measurements and reproduction commands.
+- [High-speed collisions](verification/swept-collisions.md) records thin-barrier approaches with both hands and thrown crates, plus sensor and near-miss controls.
 - [Hundred-prop rooftop](verification/hundred-prop-rooftop.md) measures eight fighters and 100 awake extra crates in one solve, followed by crate retirement and a fresh match.
 - [Eight-fighter grip loop](verification/eight-fighter-grip-loop.md) records joint stretch, load, energy and release in two closed-ring fights.
 - [Eight-player reset endurance](verification/reset-endurance.md) covers repeated Skyline fights, score continuity, clean spawns and timed hazards.
