@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import type { RigDefinition } from '../game/rigDefinition';
 import { expect, test } from 'vitest';
 import { PerspectiveCamera, Vector3 } from 'three';
 import { GroupCamera } from './GroupCamera';
@@ -5,7 +7,8 @@ import { GroupCamera } from './GroupCamera';
 test('framing keeps separated and falling fighters visible across portrait and landscape screens', () => {
   for (const aspect of [0.55, 1, 1.8]) {
     const camera = new PerspectiveCamera(45, aspect, 0.1, 150);
-    const group = new GroupCamera();
+    const rig: RigDefinition = JSON.parse(readFileSync(new URL('../../../config/character.json',import.meta.url),'utf8'));
+    const group = new GroupCamera(rig.bodies);
     for (const shift of [0, 3, 8, -9]) {
       const players = [-1, 1].map(side => {
         const state = new Float32Array(210);
@@ -26,7 +29,7 @@ test('framing keeps separated and falling fighters visible across portrait and l
 });
 
 test('held movement follows the displayed orbit through eight smooth turns independently of other views', () => {
-  const group = new GroupCamera(), other = new GroupCamera();
+  const group = new GroupCamera([]), other = new GroupCamera([]);
   const camera = new PerspectiveCamera(45, 1, 0.1, 150);
   const start = other.movement(0,-1);
   group.update(camera, [], true, 0);

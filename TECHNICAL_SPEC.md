@@ -805,6 +805,8 @@ Weighted center: `center = Σ(weight_i × position_i) / Σ(weight_i)`. Give the 
 
 Remove eliminated players. Continue framing a falling player while recovery remains possible, with a smooth reduction once they pass the unrecoverable region. Do not let debris or an already eliminated body pull the camera away. Handle zero tracked players with the map overview. Retarget smoothly when a player leaves.
 
+Skyline weights the active online player at 1.35 and each peer at 1. Local shared-screen matches and spectators use equal weights. Full limb bounding spheres must clear the inset planes at the current orbit and aspect ratio. [Framing geometry and verification](docs/slices/12e-skyline-framing.md)
+
 ### 16.3 Dynamic zoom
 
 For a centered bounding sphere of radius `r`, a basic fit is `distance ≥ r / sin(limiting_FOV/2)`. Derive horizontal FOV from vertical FOV and aspect ratio. Account for the inset by using an effective half-angle `atan(usable_fraction × tan(half_FOV))`.

@@ -21,7 +21,7 @@ it('samples focused controls from network publications even when window timers n
     feed.receive(world);
   };
   const down = (code: string) => canvas.dispatchEvent(Object.assign(new Event('keydown'), {code}));
-  const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed, new GroupCamera());
+  const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed, new GroupCamera([]));
   try {
     publish(1n, 1);
     down('KeyW');
@@ -49,7 +49,7 @@ it('lets a spectator turn the view without sending fighter inputs and releases i
   vi.stubGlobal('document', {hidden:false});
   const transmit = vi.fn();
   const feed = new MatchFeed(Uint8Array.of(23,1,255,0,0,1,65,1,1,1,66), transmit);
-  const camera = new GroupCamera();
+  const camera = new GroupCamera([]);
   const turn = vi.spyOn(camera,'turn');
   const stop = bindRemoteControls(canvas as unknown as HTMLCanvasElement, feed, camera);
   const key = (code: string, repeat = false) => canvas.dispatchEvent(Object.assign(new Event('keydown'), {code,repeat}));

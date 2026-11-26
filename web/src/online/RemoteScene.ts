@@ -46,7 +46,7 @@ export function startRemoteScene(container: HTMLElement, content: SkylineContent
         }
         if (sample.status !== previousStatus) { status(sample.status); previousStatus = sample.status; }
       }
-      if (match) scene.renderSkyline(bodies, objects, match, (now-priorTime)/1000);
+      if (match) scene.renderSkyline(bodies, objects, match, (now-priorTime)/1000, feed.own === null ? undefined : bodies[feed.own]);
       priorTime = now;
       animation = requestAnimationFrame(render);
     }
