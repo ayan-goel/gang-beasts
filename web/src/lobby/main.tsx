@@ -1,3 +1,4 @@
+import { SkylineSound, MuteButton } from '../audio/SkylineSound';
 import { createRoot } from 'react-dom/client';
 import { useEffect, useState } from 'react';
 import { bootstrap, errorText, isCode } from './api';
@@ -33,7 +34,7 @@ function PrivateRooms() {
   }, [attempt, requested]);
   return <main className="rooms">
     <header><a className="brand" href="/play/"><span aria-hidden="true">▰</span> Skyline Melee</a>
-      <a href="/play/">Local match ↗</a></header>
+      <MuteButton /><a href="/play/">Local match ↗</a></header>
     <div className="room-layout">
       <div className="room-console">{!ready ? <section className="room-panel"><h1>Private rooms</h1>
         {error ? <><p role="alert">{error}</p><button className="room-primary" onClick={() => setAttempt(a => a + 1)}>Retry connection</button></>
@@ -50,4 +51,4 @@ function PrivateRooms() {
     </div>
   </main>;
 }
-createRoot(document.getElementById('app')!).render(<PrivateRooms />);
+createRoot(document.getElementById('app')!).render(<SkylineSound><PrivateRooms /></SkylineSound>);

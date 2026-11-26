@@ -79,6 +79,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 16 | Private sessions and lobby | Link/code, ready/start, auth, reconnect, host transfer, late joining |
 | 17a — hazard warnings | Show the current walkway and wind warnings during online play | Shared text, server timing, reconnect and round cleanup |
 | 17b — skinned fighters | Drive the original Roof Crew GLB from local or online body poses | Independent skeletons, per-vertex deformation, model loading and retry |
+| 17c — hazard audio | Four original warning cues in local and online Skyline | Real audio unlock, bounded PCM, mute persistence and reconnect deduplication |
 | 17 | Original presentation and audio | Original skinned characters, effects, warnings, licensed asset manifest |
 | 18 | Settings, accessibility and product flows | Input isolation, keyboard navigation, loading/errors, quality/audio settings |
 | 19 | Performance and endurance | Declared hardware measurements, 60-minute soak, 100 resets, eight-player stress |

@@ -1,3 +1,4 @@
+import { useHazardSound } from '../audio/SkylineSound';
 import { useEffect, useRef, useState } from 'react';
 import { colors } from '../lobby/api';
 import { hazardWarnings } from '../game/skylineHazards';
@@ -25,6 +26,7 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
     });
     return () => { cancelAnimationFrame(frame); clearTimeout(timer); stop?.(); };
   }, [feed, content]);
+  useHazardSound(match, status === 'live' || status === 'estimating');
   const winner = match.winner == null ? 'Draw' : feed.fighters[match.winner]!.name + ' wins';
   return <section className="online-match" aria-label="Online Skyline arena">
     <div className="online-header"><h1>{feed.own === null ? 'Spectating Skyline' : 'Playing as ' + feed.fighters[feed.own]!.name}</h1><button onClick={exit}>Leave room</button></div>

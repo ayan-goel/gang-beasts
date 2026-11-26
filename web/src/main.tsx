@@ -1,3 +1,4 @@
+import { SkylineSound } from './audio/SkylineSound';
 import { createRoot } from 'react-dom/client';
 import { StrictMode } from 'react';
 import init from './generated/wasm/brawler_wasm';
@@ -10,7 +11,7 @@ if (play) document.title = 'Skyline Melee · Local multiplayer';
 const root = createRoot(document.querySelector<HTMLElement>('#app')!);
 let disposed = false;
 void init().then(() => {
-  if (!disposed) root.render(<StrictMode>{play ? <SkylineGame /> : <App />}</StrictMode>);
+  if (!disposed) root.render(<StrictMode>{play ? <SkylineSound><SkylineGame /></SkylineSound> : <App />}</StrictMode>);
 }).catch(error => {
   if (!disposed) root.render(<p role="alert">Unable to load WebAssembly. {String(error)}</p>);
 });

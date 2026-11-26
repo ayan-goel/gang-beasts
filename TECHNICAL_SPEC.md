@@ -1158,6 +1158,8 @@ Unique event IDs prevent duplicate playback after resync/prediction. Discard sta
 
 Use Web Audio spatial position and attenuation with a clearly chosen listener policy aligned to the game camera. Avoid making crucial warnings inaudible merely because the group camera zooms out. Unlock audio on an explicit player interaction and handle suspended contexts on tab return.
 
+Skyline’s [hazard audio](docs/slices/17c-hazard-audio.md) uses four original synthesized cues, centered and independent of camera distance. Each live stage transition can play once per round. The initial snapshot, reconnect and return from a pause establish the current stage silently. Local and online play share a persistent mute preference and retain their visual warnings.
+
 Provide master, music and effects sliders, mute and persistence of settings. Full game adds adaptive music and refined occlusion. Visual warning alternatives must remain available for players who mute sound.
 
 ## 22. Game modes

@@ -10,7 +10,7 @@ The online arena shows the current walkway or wind warning in the lower-left cor
 | 9,000 | 150 s | High winds approaching |
 | 10,800 | 180 s | Sudden death · Crosswind |
 
-The local and online views share the warning text. The online warning uses a persistent polite status region and allows pointer input through to the arena. Audio cues remain open.
+The local and online views share the warning text. The online warning uses a persistent polite status region and allows pointer input through to the arena. The [hazard audio slice](17c-hazard-audio.md) adds a distinct sound for each transition.
 
 ## Verification
 

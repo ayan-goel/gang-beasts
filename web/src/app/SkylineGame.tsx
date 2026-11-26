@@ -1,3 +1,4 @@
+import { MuteButton, useHazardSound } from '../audio/SkylineSound';
 import { useEffect, useRef, useState } from 'react';
 import { loadFighterModel } from '../rendering/fighter/loadFighterModel';
 import { startDuel, type DuelState } from '../game/startDuel';
@@ -27,6 +28,7 @@ export function SkylineGame() {
   const match = state?.match;
   const complete = match?.phase === 'match_results';
   const menu = !started || state?.paused || complete;
+  useHazardSound(match, started && !menu);
   const winner = match?.winner == null ? 'Draw' : `${names[match.winner]} wins the ${complete ? 'match' : 'round'}`;
   const start = () => {
     if (complete) runtime.current?.reset();
@@ -36,7 +38,7 @@ export function SkylineGame() {
   return <main className="skyline-shell">
     <header className="skyline-header">
       <a className="roof-brand" href="/play/"><span aria-hidden="true" className="roof-mark">▰</span> Skyline Melee</a>
-      <span>Local multiplayer</span><a href="/rooms/">Private rooms</a><a href="/">Physics playground ↗</a>
+      <span>Local multiplayer</span><MuteButton /><a href="/rooms/">Private rooms</a><a href="/">Physics playground ↗</a>
     </header>
     <div className={menu ? 'skyline-layout has-menu' : 'skyline-layout'}>
       {menu && <section className="skyline-menu">
