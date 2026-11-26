@@ -117,6 +117,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 19e — graphics presets | Change Skyline resolution and shadows during play | Live GPU allocation, persistent preference, software fallback and independent clients |
 | 19f — eight-fighter browser rendering | Replay the native combat workload through the private-room page | Validate eight skins, current input ticks, frame intervals and callback costs on each preset |
 | [19g — graphics recovery](slices/19g-graphics-recovery.md) | Restore local play or reconnect to a live private arena after a graphics interruption | Real context loss, neutral controls, frozen local clock, live remote scores and startup retries |
+| [19h — live endurance](verification/live-endurance.md) | Exercise eight authenticated clients in one real-time server process | Per-seat activity, physical ring-outs, rematches, recovery, grip integrity and server RSS |
 | 19 | Performance and endurance | Declared hardware measurements, 60-minute soak, 100 resets, eight-player stress |
 | 20 | Deployment and release audit | CI, container, compatibility manifest, real two-client smoke and all §33 gates |
 

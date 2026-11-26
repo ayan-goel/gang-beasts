@@ -1607,7 +1607,7 @@ Test jitter candidates 0/10/30 ms and loss 0/1/3/5% using a network proxy or OS 
 
 Build clients that create/join, ready, send seeded combat/movement, reconnect, finish matches and collect metrics. Include both random stress inputs and scripted realistic fights. Headless load does not measure GPU/browser performance.
 
-Proposed MVP endurance gate: eight active players for 60 minutes across repeated rounds, no server crash, nonfinite state or stale grips; memory reaches a bounded plateau. Run at least 100 consecutive reset cycles. Multi-room soak determines capacity with peak hazards active, not all characters asleep. The [native reset endurance run](docs/verification/reset-endurance.md) covers 100 consecutive round rebuilds across eight-fighter matches.
+Proposed MVP endurance gate: eight active players for 60 minutes across repeated rounds, no server crash, nonfinite state or stale grips; memory reaches a bounded plateau. Run at least 100 consecutive reset cycles. Multi-room soak determines capacity with peak hazards active, not all characters asleep. The [native reset endurance run](docs/verification/reset-endurance.md) covers 100 consecutive round rebuilds across eight-fighter matches. The [live endurance workload](docs/verification/live-endurance.md) drives eight authenticated clients through combat, physical ring-outs, reconnect and rematches while measuring the dedicated server’s resident memory.
 
 ### 29.4 Browser end-to-end tests
 

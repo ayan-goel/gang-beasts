@@ -1,0 +1,5 @@
+{"seconds":90,"cpu":"Apple M3 Pro","platform":"darwin","release":"25.6.0","browser":"159.0.8154.6","engine":"2fed9f7d990be5b20360402ec1b29e7557da0e91fb942a9a9a39a7526e335255","map":"5a7b22f8def2fe29714c1616a8cc8bddd8d9555f630bc854acc834ab5fc48da5"}
+{"elapsedS":0,"rssKiB":7904,"frames":[93,89,89,89,89,89,89,89],"applied":[1,1,1,1,1,1,1,1],"inputs":[1,1,1,1,1,1,1,1],"rounds":1,"matches":1,"scored":0,"gripFrames":0,"damageFrames":0,"gustFrames":0,"bytes":297879,"maxGapMs":312,"resumes":0}
+{"elapsedS":60.273,"rssKiB":9584,"frames":[1901,1897,1897,1897,1897,1897,1897,1888],"applied":[444,358,422,351,364,426,321,394],"inputs":[445,359,422,351,364,426,321,395],"rounds":3,"matches":1,"scored":2,"gripFrames":327,"damageFrames":1026,"gustFrames":0,"bytes":6080715,"maxGapMs":334,"resumes":1}
+{"elapsedS":90.012,"rssKiB":10608,"frames":[2789,2785,2785,2785,2785,2785,2785,2776],"applied":[655,569,612,541,554,616,511,584],"inputs":[656,570,613,542,555,617,512,586],"rounds":4,"matches":2,"scored":3,"gripFrames":839,"damageFrames":1549,"gustFrames":0,"bytes":8920195,"maxGapMs":334,"resumes":1}
+{"result":"passed","seconds":90}

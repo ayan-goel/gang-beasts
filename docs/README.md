@@ -30,6 +30,7 @@
 - [Online hand actions](slices/09e-online-hand-actions.md) covers grip targets, free-hand strikes and reconnect verification.
 - [Round and match scoring](verification/round-scoring.md) covers same-tick falls, eight-player agreement and duplicate result delivery.
 - [Skyline round restoration](verification/skyline-round-restoration.md) covers visible walkway loss, restored crate and walkway poses, and round-two play in a private room.
+- [Live eight-player endurance](verification/live-endurance.md) describes the real-time workload, recovery, memory measurements and reproduction commands.
 - [Eight-player reset endurance](verification/reset-endurance.md) covers repeated Skyline fights, score continuity, clean spawns and timed hazards.
 - [Playable match rig](verification/match-rig.md) records solver masses, joint endpoints and live motor effort for two and eight fighters.
 - [Rooftop footsteps](slices/17j-footsteps.md) covers walking and running contacts, stereo levels and multiplayer delivery.
