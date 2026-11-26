@@ -27,11 +27,16 @@ export async function gripMatch(host: Page, browser: Browser, run: (guest: Page,
   }
 }
 
-export async function approachOpponent(page: Page, hand: 0 | 1) {
+export async function approachOpponent(page: Page, hand: 0 | 1, onConnection?: (disconnect: () => void) => void) {
   let steering = true;
   // Steer toward the opponent using the latest server positions. Hand buttons still come from the keyboard.
   await page.routeWebSocket(url => url.pathname === '/ws', client => {
     const server = client.connectToServer();
+    onConnection?.(() => {
+      // Close the network link with the canvas still focused and the physical key still down.
+      server.close({code:1000});
+      client.close({code:4012,reason:'Temporary outage'});
+    });
     let latest: Snapshot | undefined;
     server.onMessage(message => {
       if (Buffer.isBuffer(message) && message[0] === 2) latest = decodeSnapshot(message);

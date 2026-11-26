@@ -80,6 +80,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 16c — authenticated ready controls | Connect, welcome, roster changes and per-seat readiness | Toggle, cancel, disconnect, socket replacement, explicit reconnect and stale-seat fencing |
 | 16d — map loading | Load the renderer and validate the engine and map before ready | Failed WASM download, successful retry, mismatched hashes and new socket checks |
 | 16e — disconnect grace | Reserve an offline seat for 20 seconds and reclaim abandoned rooms | Reconnect, batch forfeits, stable scoring and host transfer |
+| 16e.1 — disconnect grip verification | Check the holder and the target independently | Native stale-input and forfeit cases, physical separation and two-client recovery with a held key |
 | 16f — online rematch | Replay a completed match in the same room | Host-only return, fresh serial, scores and ready roster |
 | 16g — automatic match reconnect | Reclaim an interrupted fighter from the same tab | Failed retry, full snapshot, neutral controls and newer-tab ownership |
 | 16h — silent match outages | Detect missing snapshots and unanswered WebSocket probes | Separate upstream and downstream TCP interruptions with two live fighters |

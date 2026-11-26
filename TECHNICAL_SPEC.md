@@ -1705,7 +1705,7 @@ Retain all 18 original completion checks, with explicit evidence expectations:
 - [ ] **Authority:** Client packet manipulation cannot dictate transforms, hits or scores.
 - [ ] **Smooth multiplayer:** Interpolation is stable and action latency meets the playability gate at the regional test profile.
 - [x] **Round/match scoring:** All clients agree; simultaneous elimination and duplicate events score correctly. [Same-tick falls, duplicate results, eight-client agreement and first-to-three matches](docs/verification/round-scoring.md)
-- [ ] **Disconnects:** Stale input, grace expiry, host transfer and reconnect work without orphan grips.
+- [x] **Disconnects:** Stale input, grace expiry, host transfer and reconnect work without orphan grips. [Held-key reconnect, timed release, incoming forfeit cleanup and host transfer](docs/verification/disconnected-grips.md)
 - [x] **Rematch:** Repeated rounds/rematches do not require refresh or leak stale physics/network state. [Two consecutive online rematches](docs/slices/16f-online-rematch.md#verification)
 - [ ] **Performance:** Eight-player server/client budgets are measured on declared hardware; optimized traffic target is separately measured.
 - [ ] **Stability:** Endurance and worst-case tests reveal no game-breaking explosions, persistent invalid states or unbounded memory growth.
