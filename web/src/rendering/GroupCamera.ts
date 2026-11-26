@@ -1,10 +1,15 @@
 import { PerspectiveCamera, Vector3 } from 'three';
 
+import { CameraFit } from './CameraFit';
+import type { CameraObstacles } from './CameraObstacles';
 import type { RigDefinition } from '../game/rigDefinition';
 
 const defaultDirection = new Vector3(0.18, 0.85, 1).normalize();
 const vertical = new Vector3(0, 1, 0);
 const increment = Math.PI / 4;
+
+const normalPitch = Math.asin(defaultDirection.y);
+const alternativePitches = [50,30,60,20,70,12,80].map(degrees => degrees * Math.PI / 180);
 
 export class GroupCamera {
   private readonly direction = defaultDirection.clone();
@@ -12,16 +17,19 @@ export class GroupCamera {
   private readonly up = new Vector3().crossVectors(defaultDirection, this.right);
   private angle = 0;
   private preset = 0;
-  private readonly radii: number[];
+  private readonly fit: CameraFit;
+  private readonly pivot = new Vector3();
+  private pitch = normalPitch;
+  private lift = 0;
 
-  constructor(bodies: RigDefinition['bodies'], visualRadii?: number[]) {
-    this.radii = visualRadii ?? bodies.map(({shape}) => {
+  constructor(bodies: RigDefinition['bodies'], visualRadii?: number[], private readonly obstacles?: CameraObstacles) {
+    this.fit = new CameraFit(visualRadii ?? bodies.map(({shape}) => {
       switch (shape.kind) {
         case 'sphere': return shape.radius;
         case 'capsule': return shape.half_height + shape.radius;
         case 'rounded_box': return Math.hypot(...shape.half_extents) + shape.border_radius;
       }
-    });
+    }));
   }
 
   turn(direction: -1 | 1) {
@@ -38,14 +46,14 @@ export class GroupCamera {
   private distance = 0;
   update(camera: PerspectiveCamera, players: Float32Array[], overview: boolean, dt: number, owner?: Float32Array) {
     const previousAngle = this.angle;
+    const frameTime = Math.min(.12,Math.max(0,dt));
     const target = this.preset * increment;
     const delta = Math.atan2(Math.sin(target - this.angle), Math.cos(target - this.angle));
     this.angle = Math.abs(delta) < 0.00001 ? target
-      : this.angle + delta * (1 - Math.exp(-8 * Math.min(Math.max(0,dt),0.12)));
+      : this.angle + delta * (1 - Math.exp(-8 * frameTime));
     const {direction, right, up} = this;
     direction.copy(defaultDirection).applyAxisAngle(vertical, this.angle);
     right.crossVectors(vertical, direction).normalize();
-    up.crossVectors(direction, right);
     this.desired.set(0, 0, 0);
     if (!overview && players.length) {
       let total = 0;
@@ -57,33 +65,53 @@ export class GroupCamera {
       this.desired.divideScalar(total);
       this.desired.y = Math.max(0.8, this.desired.y);
     }
-    const weight = this.distance === 0 ? 1 : 1 - Math.exp(-6 * Math.min(dt, 0.12));
+    const weight = this.distance === 0 ? 1 : 1 - Math.exp(-6 * frameTime);
     this.focus.lerp(this.desired, weight);
-    const verticalSlope = Math.tan(camera.fov * Math.PI / 360) * 0.70;
-    const horizontalSlope = verticalSlope * camera.aspect;
-    const horizontalPlane = Math.hypot(1,1/horizontalSlope);
-    const verticalPlane = Math.hypot(1,1/verticalSlope);
-    let required = 4.5, furthestBehind = 0;
-    const include = (x: number, y: number, z: number, radius: number) => {
-      const p = this.point.set(x,y,z).sub(this.focus);
-      const depth = p.dot(direction);
-      // Each inset plane must clear the whole limb sphere, including its extent toward the camera.
-      required = Math.max(required, depth + Math.max(
-        Math.abs(p.dot(right))/horizontalSlope + radius*horizontalPlane,
-        Math.abs(p.dot(up))/verticalSlope + radius*verticalPlane));
-      furthestBehind = Math.max(furthestBehind, radius-depth);
+    const tangent = Math.tan(camera.fov * Math.PI / 360);
+    const verticalSlope = tangent * .70;
+    const radius = Math.max(.15,camera.near * Math.hypot(1,tangent,tangent*camera.aspect));
+    this.pivot.copy(this.focus);
+    this.pivot.y += this.lift*(1-weight);
+    let blockedTop = -Infinity, inside = false;
+    const tryView = (pitch: number) => {
+      const horizontal = Math.cos(pitch);
+      direction.set(-right.z*horizontal,Math.sin(pitch),right.x*horizontal);
+      up.crossVectors(direction,right);
+      this.fit.measure(this.pivot,direction,right,up,verticalSlope,camera.aspect,players,overview);
+      const required = this.fit.distance;
+      let distance = Math.max(required,this.distance+(required-this.distance)*weight);
+      const hit = this.obstacles?.cast(this.pivot,direction,distance,radius);
+      if (hit && hit.top !== -Infinity) {
+        blockedTop = hit.top;
+        inside = hit.distance === 0;
+        distance = hit.distance - .01;
+        if (distance < required) return false;
+      }
+      this.pitch = pitch;
+      this.distance = distance;
+      return true;
     };
-    if (overview || !players.length) {
-      for (const x of [-12, 12]) for (const z of [-10, 10]) include(x, 0, z, 0.2);
-    } else for (const player of players) {
-      for (let i = 0; i < player.length; i += 14) include(player[i]!, player[i + 1]!, player[i + 2]!, this.radii[i/14]!);
+    const relaxed = this.pitch + (normalPitch-this.pitch)*weight;
+    while (!tryView(relaxed)) {
+      // Keep the last clear aim when easing down would dip back into the same obstacle.
+      if (this.pivot.y < this.focus.y+this.lift) {
+        this.pivot.y = this.focus.y+this.lift;
+        if (tryView(relaxed)) break;
+      }
+      const lowObstacle = blockedTop + .01 <= this.focus.y + .65;
+      if (!inside && !lowObstacle) {
+        if (relaxed !== this.pitch && tryView(this.pitch)) break;
+        if (alternativePitches.some(tryView)) break;
+      }
+      // Above the expanded top, every permitted upward ray clears this solid. Each retry clears another.
+      this.pivot.y = blockedTop + .01;
+      inside = false;
     }
-    // Expand immediately to keep separated players in frame. Zoom back in gradually.
-    this.distance = Math.max(required, this.distance + (required - this.distance) * weight);
-    const far = Math.ceil(this.distance + furthestBehind + 1);
+    this.lift = this.pivot.y-this.focus.y;
+    const far = Math.ceil(this.distance + this.fit.behind + 1);
     if (far > camera.far) { camera.far = far; camera.updateProjectionMatrix(); }
-    camera.position.copy(this.focus).addScaledVector(direction, this.distance);
-    camera.lookAt(this.focus);
+    camera.position.copy(this.pivot).addScaledVector(direction, this.distance);
+    camera.lookAt(this.pivot);
     return previousAngle !== this.angle;
   }
 }

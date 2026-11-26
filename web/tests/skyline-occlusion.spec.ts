@@ -25,12 +25,17 @@ test('a moving crate reveals only the covered parts of a live fighter', async ({
       for (const [i, body] of rig.bodies.entries()) {
         pose.set([...body.position, 0, 0, 0, 1], i * 14);
       }
+      // The crate hides one fighter while the center of the group remains clear.
+      // A crate across the central camera ray now selects an unobstructed view.
+      scene.addOpponent(rig,'#64b7dd',1);
+      const peer = pose.slice();
+      for (let i=0; i<peer.length; i+=14) peer[i] -= 4;
       const renderer = scene;
       const gl = stage.querySelector('canvas')!.getContext('webgl2')!;
       function draw(x: number, z: number, crateVisible: boolean, fighterVisible = true) {
-        match.visible = [fighterVisible];
+        match.visible = [fighterVisible,true];
         const crate = new Float32Array([x, 1.75, z, 0, 0, 0, 1, Number(crateVisible)]);
-        renderer.renderSkyline([pose], crate, match, 1/60);
+        renderer.renderSkyline([pose,peer], crate, match, 1/60);
         const image = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 4);
         gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGBA, gl.UNSIGNED_BYTE, image);
         let count = 0;
@@ -40,7 +45,7 @@ test('a moving crate reveals only the covered parts of a live fighter', async ({
         return count;
       }
       return {
-        behind: draw(0, -2, true), covered: draw(.2, 1.1, true), partial: draw(1.45, 1.1, true),
+        behind: draw(0, -2, true), covered: draw(.2, 1.1, true), partial: draw(1.15, 1.1, true),
         retired: draw(.2, 1.1, false), eliminated: draw(.2, 1.1, true, false),
       };
     } finally {

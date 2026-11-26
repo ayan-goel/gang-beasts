@@ -2,6 +2,7 @@ import {readFileSync} from 'node:fs';
 import {PerspectiveCamera, Quaternion, Vector3} from 'three';
 import {expect, test} from 'vitest';
 import type {RigDefinition} from '../game/rigDefinition';
+import {CameraObstacles} from './CameraObstacles';
 import {GroupCamera} from './GroupCamera';
 import {geometryForBody} from './RagdollView';
 
@@ -17,7 +18,9 @@ function fighter(x: number, y: number, z: number) {
 }
 
 test('the complete drawn rigs fit the central 70 percent throughout turns and a viewport resize', () => {
-  const group = new GroupCamera(rig.bodies);
+  const obstacles = new CameraObstacles();
+  obstacles.fixed([.25,2.5,2.5],[2.5,2.5,.4]);
+  const group = new GroupCamera(rig.bodies,undefined,obstacles);
   const camera = new PerspectiveCamera(45,.5,.1,150);
   const players = [fighter(-10,-7,-6),fighter(10,1,8)];
   const vertices = rig.bodies.map(({shape}) => {

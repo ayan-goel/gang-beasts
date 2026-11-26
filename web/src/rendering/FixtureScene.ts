@@ -87,7 +87,7 @@ export class FixtureScene {
       if (map) {
         this.skyline = new SkylineView(map);
         if (!definition) throw new Error('Skyline framing requires fighter geometry');
-        this.groupCamera = new GroupCamera(definition.bodies, this.rig instanceof FighterSkin ? this.rig.radii : undefined);
+        this.groupCamera = new GroupCamera(definition.bodies, this.rig instanceof FighterSkin ? this.rig.radii : undefined, this.skyline.obstacles);
         this.scene.add(this.skyline.root);
         this.renderer.setClearColor(0xb8cfce);
         this.scene.fog = new THREE.FogExp2(0xb8cfce,0.013);

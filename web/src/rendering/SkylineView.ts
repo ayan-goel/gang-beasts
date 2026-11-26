@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { CameraObstacles } from './CameraObstacles';
 import { SkylineDetails } from './SkylineDetails';
 
 type Kind = 'deck' | 'vent' | 'crate' | 'panel';
@@ -20,12 +21,15 @@ const box = (width: number, height: number, depth: number, color: number) => {
   return mesh;
 };
 export class SkylineView {
+  readonly obstacles = new CameraObstacles();
   readonly root = new THREE.Group();
   private readonly objects: THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>[];
   private readonly panels: { id: number; material: THREE.MeshStandardMaterial }[] = [];
   constructor(map: SkylineMap) {
+    this.obstacles.fixed(map.foundation.center,map.foundation.half);
     this.objects = map.objects.map(({ kind, half: [x, y, z], center, id }) => {
       const mesh = box(2 * x, 2 * y, 2 * z, palette[kind]);
+      this.obstacles.add([x,y,z],mesh);
       mesh.name = `${kind}-${id}`;
       mesh.position.set(...center); this.root.add(mesh);
       const details = new SkylineDetails();
@@ -56,6 +60,8 @@ export class SkylineView {
     const buildings = [[-25, -22, 7, 21], [-12, -31, 6, 16], [0, -38, 8, 24], [14, -30, 6, 19], [29, -25, 8, 28], [-31, -4, 6, 18], [34, -4, 6, 15], [-34, 15, 9, 22], [33, 22, 8, 16], [-20, 35, 7, 20]];
     const exterior = new SkylineDetails();
     for (const [x, z, w, h] of buildings as [number, number, number, number][]) {
+      this.obstacles.fixed([x,-24+h/2,z],[w/2,h/2,w/2]);
+      this.obstacles.fixed([x,-24+h+.75,z],[w*.19,.75,w*.19]);
       exterior.add([w, h, w], [x, -24 + h / 2, z], 0x647c8a);
       for (let row = 1; row < h / 2; row += 2) exterior.add([w + 0.05, 0.28, w + 0.05], [x, -24 + h - row * 1.6, z], 0x849da3);
       exterior.add([w * 0.38, 1.5, w * 0.38], [x, -24 + h + 0.75, z], 0x718997);

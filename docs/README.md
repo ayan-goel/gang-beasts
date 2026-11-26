@@ -7,6 +7,7 @@
 - [Compact match snapshots](slices/19b-compact-snapshots.md) records the rotation codec, compatibility tests and eight-player traffic.
 - [Eight-fighter browser rendering](verification/eight-player-rendering.md) records the shared combat capture, graphics presets and browser frame timings.
 - [Eight-player room performance](verification/eight-player-room.md) records native tick times, the combat workload and per-player snapshot traffic.
+- [Skyline camera clearance](slices/12i-camera-clearance.md) records the physical vent approach, alternative views and full-body framing.
 - [Skyline occlusion](slices/12f-skyline-occlusion.md) covers the view of a fighter behind the roof or a moving prop.
 - [Disconnects during a grip](verification/disconnected-grips.md) covers stale hands, incoming and outgoing grips, forfeits and neutral control after recovery.
 - [Game entry](slices/16k-game-entry.md) records the public menu, cold download and direct routes.

@@ -831,6 +831,8 @@ Use authored camera collision geometry and permitted orbit/bounds. Sphere-cast f
 
 Use subtle silhouettes/markers or fading of designated foreground meshes when geometry partially hides a character. Do not make arbitrary gameplay obstacles invisible. Test overhead platforms, glass, walls, moving machinery and surviving players at opposite corners.
 
+Skyline queries the live rendered object boxes and authored building volumes with a conservative lens-sphere sweep. It can shorten distance, raise the aim over a low obstruction, or select a different pitch while preserving group framing and control heading. [Camera clearance and verification](docs/slices/12i-camera-clearance.md)
+
 On Skyline, opaque scenery covers the ordinary suit and reveals a striped team-color silhouette of the concealed limbs. Exposed limbs retain their normal suit and lighting. The silhouette follows the same fifteen-body pose in local and online play and disappears with the fighter on elimination. [Skyline occlusion and verification](docs/slices/12f-skyline-occlusion.md)
 
 ### 16.6 Camera-relative input
