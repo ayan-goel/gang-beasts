@@ -1692,7 +1692,7 @@ Retain all 18 original completion checks, with explicit evidence expectations:
 - [x] **Lifts/throws:** Opponents can be physically lifted/thrown with momentum and counterplay. [Airborne online release, physical counter-grip and rooftop ring-out](docs/slices/10d-skyline-throws.md#verification)
 - [x] **Knockout/recovery:** Consciousness changes do not eliminate automatically or snap poses. [Per-limb continuity, score preservation and post-recovery control](docs/slices/17d-fighter-condition.md#verification)
 - [ ] **Ledge recovery:** Standard Skyline rescue cases pass and feel intentional.
-- [ ] **Arena mechanics:** Falling, crates and breakable perimeter work and reset correctly.
+- [x] **Arena mechanics:** Falling, crates and breakable perimeter work and reset correctly. [Native fall and crate checks, two-client walkway loss and round restoration](docs/verification/skyline-round-restoration.md)
 - [ ] **Camera:** Surviving/recoverable players remain readable across supported aspect ratios and map situations.
 - [ ] **Authority:** Client packet manipulation cannot dictate transforms, hits or scores.
 - [ ] **Smooth multiplayer:** Interpolation is stable and action latency meets the playability gate at the regional test profile.
