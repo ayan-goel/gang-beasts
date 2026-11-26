@@ -2,6 +2,7 @@
 
 [Technical specification](../TECHNICAL_SPEC.md) is the canonical product and architecture contract. These documents record implementation choices and evidence; they do not redefine acceptance.
 
+- [The arena tour](slices/21-arena-tour.md) lists the 22 playable maps, water controls and private series rules.
 - [The gang bbeasts visual overhaul](slices/20a-gang-bbeasts-art.md) covers the new fighters, Skyline art and title screen.
 - [Deploy from GitHub](deployment.md) covers Vercel, Railway and the two production environment variables.
 - [Snapshot delivery](slices/19c-snapshot-delivery.md) covers worker notifications, slow readers and measured eight-client cadence.

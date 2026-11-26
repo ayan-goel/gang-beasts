@@ -1,7 +1,7 @@
 import { socketTicket } from './api';
 
 export async function openRoomSocket(signal: AbortSignal): Promise<WebSocket> {
-  const url = new URL('/ws?resume=1&lineups=1&compact=1&landings=1&footsteps=1&timing=1',
+  const url = new URL('/ws?resume=1&lineups=1&compact=1&landings=1&footsteps=1&timing=1&tour=1',
     import.meta.env.VITE_BACKEND_URL || location.origin);
   const remote = url.origin !== location.origin;
   url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';

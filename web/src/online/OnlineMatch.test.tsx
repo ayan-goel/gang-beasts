@@ -19,7 +19,7 @@ function screen(feed: MatchFeed) {
     fighter:JSON.parse(fromRoot('config/character.json').toString()),
     engineHash:'', mapHash:'', model:new Group(),
   };
-  return renderToStaticMarkup(<OnlineMatch feed={feed} content={content} exit={() => {}} rematch={undefined}/>);
+  return renderToStaticMarkup(<OnlineMatch feed={feed} content={content} exit={() => {}}/>);
 }
 
 it('renders the acknowledged round and scores in the first screen, before WebGL starts', () => {
@@ -31,11 +31,11 @@ it('renders the acknowledged round and scores in the first screen, before WebGL 
 });
 
 it.each([
-  [2, null, 'Round drawn. No point awarded.'],
+  [2, null, 'Round drawn'],
   [2, 1, 'B wins the round'],
-  [3, 0, 'A wins the match'],
+  [3, 0, 'A wins the series!'],
 ] as const)('announces the authoritative phase %s outcome for winner %s', (phase, winner, label) => {
   const feed = fixtureFeed();
   feed.latest = { ...feed.latest!, phase, winner };
-  expect(screen(feed)).toContain(`role="status">${label}</span>`);
+  expect(screen(feed)).toContain(`role="status"><h2>${label}</h2>`);
 });

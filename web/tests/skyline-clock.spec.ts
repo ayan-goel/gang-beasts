@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 
 test('a slow visible renderer preserves local countdown and results durations', async ({page}) => {
   await page.addInitScript(() => {

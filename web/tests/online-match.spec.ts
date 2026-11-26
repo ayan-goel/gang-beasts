@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
-import { verifyOnlineRematch } from './support/rematchScenario';
+import { verifyOnlineSeries } from './support/seriesScenario';
 import { verifyDisconnectGrace } from './support/disconnectScenario';
 import { releaseRoom } from './support/releaseRoom';
 import { observeMatch } from './support/onlineTrace';
@@ -40,7 +40,7 @@ test('only the host can start and both ready browsers see the live rooftop and r
       await player.bringToFront();
       await expect(player.getByLabel('Round number')).toHaveText('Round ' + (round - 1));
       await expect(player.getByLabel('Round phase')).toHaveText('Playing');
-      await player.getByLabel('Online Skyline arena').locator('canvas').focus();
+      await player.locator('.online-scene canvas').focus();
       await player.keyboard.down('ShiftLeft');
       await player.keyboard.down(key);
       try {
@@ -127,4 +127,4 @@ test('the arena reports a five-second stalled stream and resumes after ordered s
 
 test('an online seat reconnects before grace and spectates after expiry, then survivors return to the lobby', verifyDisconnectGrace);
 
-test('the host and guest can play two rematches in the same room without refreshing', verifyOnlineRematch);
+test('three distinct arenas share scores and return both players home after the championship', verifyOnlineSeries);

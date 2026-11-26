@@ -1,9 +1,10 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 
 test('Skyline starts a local match, scores a physical ring-out and starts the next round', async ({ page }, testInfo) => {
   await page.goto('/play');
   await expect(page.getByRole('heading', { name: 'gang bbeasts' })).toBeVisible({ timeout: 2000 });
   await expect(page.getByRole('button', { name: 'Start match' })).toBeEnabled();
+  await page.getByLabel('Series length').selectOption('5');
   await page.screenshot({ path: testInfo.outputPath('skyline-menu.png') });
   await page.getByRole('button', { name: 'Start match' }).click();
   await expect(page.getByLabel('Round phase')).toHaveText('Countdown');
@@ -16,8 +17,10 @@ test('Skyline starts a local match, scores a physical ring-out and starts the ne
   await page.keyboard.up('ShiftLeft');
   await expect(page.getByLabel('Blue score')).toHaveText('1');
   await expect(page.getByText('Blue wins the round')).toBeVisible();
+  await expect(page.getByLabel('Series standings')).toContainText('First to 5');
   await expect(page.getByLabel('Round number')).toHaveText('Round 2', { timeout: 18000 });
   await expect(page.getByLabel('Blue score')).toHaveText('1');
+  await expect(page.getByLabel('Arena',{exact:true})).toHaveText('Express Lifts');
   await expect(page.locator('canvas')).toHaveCount(1);
 });
 
@@ -57,7 +60,7 @@ test('WASM detaches each real walkway at its deadline and rematch restores the o
   expect(observations.match.scores).toEqual([0, 0]);
 });
 
-test('a match-winning round offers a rematch without a page reload', async ({ page }) => {
+test('the shuffled series announces the champion then returns to the main menu', async ({ page }) => {
   await page.goto('/play/');
   await expect(page.getByRole('button', { name: 'Start match' })).toBeEnabled();
   await page.evaluate(async () => {
@@ -72,18 +75,16 @@ test('a match-winning round offers a rematch without a page reload', async ({ pa
   for (let i = 1; i <= 3; i++) {
     await expect(page.getByLabel('Round number')).toHaveText(`Round ${i}`);
     await expect(page.getByLabel('Round phase')).toHaveText('Playing');
+    await expect(page.getByLabel('Arena',{exact:true})).toHaveText(['Skyline','Express Lifts','Rolling Stock'][i-1]!);
     await page.keyboard.down('ShiftLeft');
     await page.keyboard.down('KeyA');
     await expect(page.getByLabel('Blue score')).toHaveText(String(i), { timeout: 10000 });
     await page.keyboard.up('KeyA');
     await page.keyboard.up('ShiftLeft');
   }
-  await expect(page.getByRole('heading', { name: 'Blue wins the match' })).toBeVisible();
-  const nav = await page.evaluate(() => performance.timeOrigin);
-  await page.getByRole('button', { name: 'Rematch' }).click();
-  await expect(page.getByLabel('Blue score')).toHaveText('0');
-  await expect(page.getByLabel('Round number')).toHaveText('Round 1');
-  expect(await page.evaluate(() => performance.timeOrigin)).toBe(nav);
+  await expect(page.getByText('Blue wins the series!')).toBeVisible();
+  await expect(page.getByRole('link', {name:'Host a room'})).toBeVisible({timeout:7500});
+  expect(new URL(page.url()).pathname).toBe('/');
 });
 
 test('small screens keep the start button reachable and the roof visible', async ({ page }, testInfo) => {

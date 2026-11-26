@@ -2,6 +2,7 @@
 
 | Content | Authoring source | Current use |
 | --- | --- | --- |
+| Tour arenas, moving hazards and water | [Authored layouts](../tools/tour/build.py), [original deck prints and panoramas](../tools/skyline/tour_art.py), [props and water rendering](../web/src/rendering/tour) | 21 additional stages share the physical manifests between Rust and WASM |
 | Skyline footprint, spawn layout, crates, ventilation units, breakaway walkways and schedule | [Original map manifest](../assets/maps/skyline/map.json) | Shared collision and gameplay data |
 | Rooftop trim, vent grilles, crate bands, exterior buildings and materials | [Original procedural scene](../web/src/rendering/SkylineView.ts) | Geometry generated locally at scene creation |
 | Broadcast bean fighters, raised eyes, mitten hands and coded wristbands | [Original mesh authoring source](../tools/fighter/model.py) and [exported GLB](../assets/fighters/roof-crew.glb) | Local and online Skyline fighters. Skin weights and joint pivots follow the physical rig |

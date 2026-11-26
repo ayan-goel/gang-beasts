@@ -56,6 +56,8 @@ pub struct Duel {
     landings: [Option<(u64, u8)>; 8],
     physics: PhysicsConfig,
     tick: u64,
+    tour_seed: Option<u32>,
+    swimmers: [water::Swimmer; 8],
 }
 
 impl Duel {
@@ -69,14 +71,23 @@ impl Duel {
         &FighterId::ALL[..self.fighters.len()]
     }
     fn create(physics: PhysicsConfig, skyline: bool, count: usize) -> Result<Self, CharacterError> {
+        let map = skyline.then(crate::MapDefinition::skyline).transpose()?;
+        Self::on_map(physics, count, map, None)
+    }
+    fn on_map(
+        physics: PhysicsConfig,
+        count: usize,
+        map: Option<crate::MapDefinition>,
+        tour_seed: Option<u32>,
+    ) -> Result<Self, CharacterError> {
         if !(2..=FighterId::ALL.len()).contains(&count) {
             return Err(CharacterError::Invalid("Skyline requires 2 to 8 fighters"));
         }
         physics.validate()?;
         let definition = CharacterDefinition::bundled()?;
         let mut world = PhysicsWorld::new(&physics);
-        let arena = if skyline {
-            Some(crate::arena::Skyline::insert(&mut world)?)
+        let arena = if let Some(map) = map {
+            Some(crate::arena::Skyline::from_map(&mut world, map)?)
         } else {
             world
                 .colliders
@@ -124,6 +135,8 @@ impl Duel {
             grips: super::duel_grips::Grips::new(count)?,
             physics,
             tick: 0,
+            tour_seed,
+            swimmers: Default::default(),
         })
     }
     pub fn hits(&self) -> &[super::StrikeHit] {
@@ -208,6 +221,7 @@ impl Duel {
                 .linvel()
                 .y;
         }
+        self.apply_water();
         self.world.step();
         self.tick += 1;
         self.record_landings(&approach);
@@ -276,6 +290,17 @@ impl Duel {
             .sum()
     }
     pub fn reset(&mut self) {
+        if let Some(seed) = self.tour_seed {
+            let m = self.melee.as_ref().expect("tour has scoring");
+            *self = Self::tour_match(
+                self.physics.clone(),
+                self.fighters.len(),
+                (u64::from(seed) << 32) | 1,
+                m.wins(),
+            )
+            .expect("validated tour");
+            return;
+        }
         let melee = self
             .melee
             .as_ref()
@@ -296,6 +321,9 @@ mod lift_tests;
 
 #[path = "duel_landings.rs"]
 mod landings;
+
+#[path = "duel_water.rs"]
+mod water;
 
 #[path = "duel_health.rs"]
 mod health;

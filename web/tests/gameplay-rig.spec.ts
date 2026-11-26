@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 import { observeSkinDraws } from './support/skinDraws';
 
 interface RigSample { tick: number; masses: number[]; pelvisX: number; finite: boolean }

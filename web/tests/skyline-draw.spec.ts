@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 import type { LocalDuel } from '../src/generated/wasm/brawler_wasm';
 import { observeWarningAudio, roundPitches } from './support/warningAudio';
 
@@ -21,7 +21,7 @@ test('two same-tick Skyline falls display a draw and carry zero points into roun
     };
   });
   await start.click();
-  await expect(page.getByText('Round drawn. No point awarded.', {exact:true})).toBeVisible({timeout:35_000});
+  await expect(page.getByText('Round drawn', {exact:true})).toBeVisible({timeout:35_000});
   await expect.poll(() => roundPitches(page)).toEqual([440,440,660,294]);
   for (const phase of ['Round results', 'Countdown']) {
     await expect(page.getByLabel('Round phase')).toHaveText(phase, {timeout:10_000});

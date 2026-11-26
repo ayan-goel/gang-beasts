@@ -24,29 +24,6 @@ pub(super) fn welcome(players: &[Participant], fighter: Option<FighterId>) -> Ve
 }
 
 impl Directory {
-    pub fn request_rematch(&mut self, code: &str, owner: Connection, game: &Arc<Match>) -> bool {
-        if self.live_state(code, owner, None).is_none() {
-            return false;
-        }
-        let Some(room) = self.rooms.get_mut(code) else {
-            return false;
-        };
-        if room.host != owner.slot
-            || !room
-                .game
-                .as_ref()
-                .is_some_and(|current| Arc::ptr_eq(current, game))
-            || !game
-                .client
-                .latest()
-                .is_some_and(|frame| frame.match_finished)
-        {
-            return false;
-        }
-        room.return_to_lobby();
-        true
-    }
-
     fn starters(&mut self, code: &str, owner: Connection) -> Option<Vec<Participant>> {
         self.live_state(code, owner, None)?;
         let room = self.rooms.get(code)?;
@@ -65,23 +42,42 @@ impl Directory {
     }
 }
 
+fn series_seed() -> Result<u32, u8> {
+    // Browser physics regressions need a reproducible opening roof. Production binaries omit the override.
+    #[cfg(feature = "browser-fixtures")]
+    if let Ok(value) = std::env::var("BRAWLER_TEST_TOUR_SEED") {
+        return value
+            .parse::<std::num::NonZeroU32>()
+            .map(|seed| seed.get())
+            .map_err(|_| 2);
+    }
+    Ok(u32::from_le_bytes(super::sessions::entropy().map_err(|_| 2u8)?).max(1))
+}
+
 pub(super) async fn start(state: &Admission, code: &str, owner: Connection) -> Result<(), u8> {
-    let (ticket, serial) = {
+    let (ticket, serial, wins) = {
         let mut dir = state.directory.lock().unwrap();
         let players = dir.starters(code, owner).ok_or(1u8)?;
-        (players, dir.rooms[code].matches_started)
+        (
+            players,
+            dir.rooms[code].matches_started,
+            dir.rooms[code].wins,
+        )
     };
     let next = serial.checked_add(1).ok_or(2u8)?;
     let pool = Arc::clone(&state.pool);
     let lineup = Arc::new(Mutex::new(Lineup::new(ticket.clone())));
     let worker_lineup = lineup.clone();
-    let client = tokio::task::spawn_blocking(move || pool.open_hosted(serial, worker_lineup))
+    // Each private series gets an independent shuffle. Zero is reserved for Skyline fixtures.
+    let seed = series_seed()?;
+    let client = tokio::task::spawn_blocking(move || pool.open_hosted(seed, wins, worker_lineup))
         .await
         .map_err(|_| 2u8)?
         .map_err(|_| 2u8)?;
     // Worker initialization can overlap a leave or socket replacement. Commit only the exact ready roster.
     let mut dir = state.directory.lock().unwrap();
     if dir.starters(code, owner).as_ref() != Some(&ticket)
+        || dir.rooms[code].wins != wins
         || dir.rooms[code].matches_started != serial
     {
         return Err(1);
@@ -112,6 +108,7 @@ mod tests {
                     request_id: "c".repeat(32),
                     name: "A".into(),
                     capacity: 8,
+                    wins: 3,
                     color: Some(7),
                 },
             )

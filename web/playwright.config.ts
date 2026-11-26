@@ -16,9 +16,9 @@ export default defineConfig({
   use: { baseURL: site, ignoreHTTPSErrors: tls, viewport: { width: 1440, height: 900 } },
   webServer: [
     {
-      command: 'cargo run --quiet --release --locked -p brawler-server',
+      command: 'cargo run --quiet --release --locked -p brawler-server --features browser-fixtures',
       url: server + '/healthz',
-      env: { BRAWLER_LISTEN: '127.0.0.1:5181', BRAWLER_ORIGIN: site },
+      env: { BRAWLER_TEST_TOUR_SEED: '4', BRAWLER_LISTEN: '127.0.0.1:5181', BRAWLER_ORIGIN: site },
       timeout: 120_000,
     },
     {

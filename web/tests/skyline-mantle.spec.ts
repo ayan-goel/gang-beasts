@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 import { silhouettePixels } from './support/silhouettePixels';
 
 test('Space pulls Coral from the collapsed walkway back into the same live round', async ({ page }) => {
@@ -39,17 +39,18 @@ test('Space pulls Coral from the collapsed walkway back into the same live round
   await expect(page.getByLabel('Coral grips')).toContainText('Hold Space to pull up');
   const canvas = page.locator('canvas');
   const hanging = await canvas.screenshot({path: test.info().outputPath('west-edge-hang.png')});
-  const concealed = await silhouettePixels(page, hanging, [245, 132, 101]);
+  const coral = [255, 80, 71], blue = [36, 174, 235];
+  const concealed = await silhouettePixels(page, hanging, coral);
   expect(concealed.count).toBeGreaterThan(40);
   expect(concealed.height).toBeGreaterThan(8);
-  expect((await silhouettePixels(page, hanging, [85, 158, 216])).count).toBe(0);
+  expect((await silhouettePixels(page, hanging, blue)).count).toBe(0);
   await page.setViewportSize({width: 390, height: 844});
   const portrait = await canvas.screenshot({path: test.info().outputPath('west-edge-portrait.png')});
-  expect((await silhouettePixels(page, portrait, [245, 132, 101])).height).toBeGreaterThan(6);
+  expect((await silhouettePixels(page, portrait, coral)).height).toBeGreaterThan(6);
   await page.setViewportSize({width: 1440, height: 900});
   await page.keyboard.press('KeyZ');
   await page.keyboard.press('KeyZ');
-  await expect.poll(async () => (await silhouettePixels(page, await canvas.screenshot(), [245, 132, 101])).count)
+  await expect.poll(async () => (await silhouettePixels(page, await canvas.screenshot(), coral)).count)
     .toBeLessThan(concealed.count / 10);
   await page.keyboard.down('Space');
   await expect.poll(() => page.evaluate(() => {

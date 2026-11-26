@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLiveRoom } from './liveRoom';
-import { colors, errorText, leave, roster, RoomRequestError, type Roster } from './api';
+import { colors, errorText, leave, roster, RoomRequestError, type Roster, winTargets } from './api';
 
 
 export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => void }) {
   const [fallback, setFallback] = useState<Roster | null>(null);
   const [error, setError] = useState('');
   const [lostAccess, setLostAccess] = useState<'seat' | 'room' | null>(null);
-  const {connection, disconnected, reconnecting, game, highLatency, canRematch, requestRematch, start, startError, load, setReady, reconnect} = useLiveRoom(code);
+  const {connection, disconnected, reconnecting, game, highLatency, setWins, start, startError, load, setReady, reconnect} = useLiveRoom(code);
   const state = connection ?? (disconnected ? fallback : null);
   const mySlot = connection?.slot ?? fallback?.you;
   const myReady = !!(connection && (connection.ready & (1 << connection.slot)));
@@ -24,6 +24,10 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
         if (!controller.signal.aborted) { setFallback(next); setError(''); }
       } catch (err) {
         if (controller.signal.aborted) return;
+        if (err instanceof RoomRequestError && err.code === 'series_complete') {
+          location.replace('/');
+          return;
+        }
         setError(errorText(err));
         if (err instanceof RoomRequestError && ['not_a_member', 'session_required', 'room_not_found'].includes(err.code)) {
           setFallback(null);
@@ -48,7 +52,7 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
   </section>;
   if (game) {
     const {View, feed, content, graphics} = game;
-    return <><View key={feed.assignmentRound?.toString() ?? 'start'} feed={feed} graphics={graphics} highLatency={highLatency} content={content} exit={exit} rematch={canRematch ? requestRematch : undefined}/>
+    return <><View key={feed.assignmentRound?.toString() ?? 'start'} feed={feed} graphics={graphics} highLatency={highLatency} content={content} exit={exit} wins={state?.wins ?? 3}/>
       {error && <p role="alert">{error}</p>}</>;
   }
   if (lostAccess && disconnected) return <section className="room-panel">
@@ -65,6 +69,11 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
       try { await navigator.clipboard.writeText(url.href); setCopied(true); }
       catch { setError('Select the invite link above and copy it.'); }
     }}>{copied ? 'Link copied' : 'Copy invite link'}</button>
+    {connection && connection.host === mySlot
+      ? <label>Series target<select value={connection.wins} onChange={e => setWins(Number(e.target.value))}>
+        {winTargets.map(target => <option key={target} value={target}>First to {target} wins</option>)}
+      </select></label>
+      : state && <p>First to {state.wins} wins</p>}
     <h2>Players <small>{state ? state.players.length + ' / ' + state.capacity : ''}</small></h2>
     {state ? <ul className="room-roster" aria-label="Players">{state.players.map(p => <li key={p.slot}>
       <i className={'swatch color-' + p.color} aria-label={colors[p.color]} />
@@ -73,7 +82,7 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
     </li>)}</ul> : <p role="status">Loading players…</p>}
     {disconnected ? <div><p role="status">Ready connection closed.</p><button className="room-secondary" onClick={reconnect}>Reconnect</button></div>
       : <button className="room-primary" disabled={!connection || load.loading} onClick={() => setReady(!myReady)}>
-        {load.loading ? 'Loading Skyline…' : myReady ? 'Cancel ready' : 'Ready up'}
+        {load.loading ? 'Loading arenas…' : myReady ? 'Cancel ready' : 'Ready up'}
       </button>}
     {connection?.host === mySlot && connection && <>
       <button className="room-primary" disabled={!canStart} onClick={start}>Start match</button>

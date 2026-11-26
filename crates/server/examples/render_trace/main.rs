@@ -10,7 +10,7 @@ fn main() -> io::Result<()> {
     let mut room = Room::skyline_with_players(8).unwrap();
     let mut drivers = combat::Drivers::default();
     let mut out = BufWriter::new(io::stdout().lock());
-    write!(out, "{ENGINE_HASH}{}", MapDefinition::skyline_hash())?;
+    write!(out, "{ENGINE_HASH}{}", MapDefinition::tour_hash())?;
     let mut hits = 0;
     for _ in 0..(151 * 60) {
         if let Some(frames) = drivers.inputs(&room) {

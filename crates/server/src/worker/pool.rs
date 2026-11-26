@@ -91,22 +91,24 @@ impl WorkerPool {
         count: usize,
         match_serial: u32,
     ) -> Result<RoomClient, DispatchError> {
-        self.reserve(count, match_serial, None)
+        self.reserve(count, match_serial, 3, None)
     }
 
     pub(crate) fn open_hosted(
         &self,
         serial: u32,
+        wins: u8,
         lineup: super::HostedLineup,
     ) -> Result<RoomClient, DispatchError> {
         let count = lineup.lock().unwrap().active.len();
-        self.reserve(count, serial, Some(lineup))
+        self.reserve(count, serial, wins, Some(lineup))
     }
 
     fn reserve(
         &self,
         count: usize,
         match_serial: u32,
+        wins: u8,
         lineup: Option<super::HostedLineup>,
     ) -> Result<RoomClient, DispatchError> {
         if !(2..=brawler_engine::FighterId::ALL.len()).contains(&count) {
@@ -130,6 +132,7 @@ impl WorkerPool {
             count,
             lineup,
             match_serial,
+            wins,
             shared: Arc::clone(&client.shared),
             incoming,
             ready,

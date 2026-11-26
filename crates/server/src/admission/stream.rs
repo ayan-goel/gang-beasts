@@ -36,7 +36,6 @@ pub(super) async fn play(
     let mut acknowledged = None;
     let mut since = Instant::now();
     let mut received = 0;
-    let mut rematch_permission = None;
     let mut heartbeat = Heartbeat::new(Instant::now());
     loop {
         tokio::select! {
@@ -54,9 +53,6 @@ pub(super) async fn play(
                         [18,1,1] => (),
                         [36, 1, a, b, c, d] if capabilities.timing => {
                             if !send(socket, vec![37, 1, *a, *b, *c, *d]).await { return; }
-                        },
-                        [30,1] => {
-                            if state.directory.lock().unwrap().request_rematch(code, owner, &game) { return; }
                         },
                         [24,1, epoch @ ..] if epoch.len()==8 => {
                             let claimed = u64::from_le_bytes(epoch.try_into().unwrap());
@@ -87,10 +83,10 @@ pub(super) async fn play(
                 }
             }
         }
-        let Some(host) = binding.host(&mut state.directory.lock().unwrap(), false) else {
+        let Some(_) = binding.host(&mut state.directory.lock().unwrap(), false) else {
             return;
         };
-        if game.client.returning_to_lobby() {
+        if game.client.series_complete() || game.client.returning_to_lobby() {
             return;
         }
         let Some(frame) = frames.borrow_and_update().clone() else {
@@ -110,12 +106,6 @@ pub(super) async fn play(
             }
             Ok(None) => (),
             Err(()) => return,
-        }
-        if frame.match_finished && rematch_permission != Some(host) {
-            if !send(socket, vec![29, 1, u8::from(host)]).await {
-                return;
-            }
-            rematch_permission = Some(host);
         }
         if tick == Some(frame.tick()) {
             continue;

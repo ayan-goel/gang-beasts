@@ -4,11 +4,22 @@ import { dressDistrict } from './StationDistrict';
 import { SkylineDetails } from './SkylineDetails';
 
 type Kind = 'deck' | 'vent' | 'crate' | 'panel';
+export type ArenaPoint = [number, number, number];
+export interface ArenaObject {
+  id: number; kind: Kind; art?: string; center: ArenaPoint; half: ArenaPoint;
+}
+export interface ArenaTour {
+  name: string; theme: string; twist: string; water?: number | null;
+  motions: { object: number; kind: 'slide' | 'roll' | 'sink' | 'sweep' | 'heave'; axis: ArenaPoint; amplitude: number; period: number; start: number }[];
+}
 export interface SkylineMap {
+  id?: string;
+  tour?: ArenaTour | null;
   foundation: { center: [number, number, number]; half: [number, number, number] };
-  objects: { id: number; kind: Kind; center: [number, number, number]; half: [number, number, number] }[];
+  objects: ArenaObject[];
 }
 export interface MatchView {
+  mapId?: string; wins?: number; arenaTick?: number;
   phase: 'countdown' | 'playing' | 'round_results' | 'match_results';
   round: number; epoch: string; remaining: number; scores: number[]; winner: number | null;
   timeLeft: number; visible: boolean[];

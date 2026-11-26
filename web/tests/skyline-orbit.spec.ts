@@ -1,4 +1,4 @@
-import {expect, test} from '@playwright/test';
+import {expect, test} from './support/skylineTest';
 import {releaseRoom} from './support/releaseRoom';
 
 test('both local fighters follow the rotating view while holding forward', async ({page}) => {

@@ -5,6 +5,7 @@ import type { SkylineMap } from '../rendering/SkylineView';
 
 export interface SkylineContent {
   map: SkylineMap & { schedule: { warn_tick: number; west_tick: number; east_tick: number; gust_tick: number; end_tick: number } };
+  mapForRound?: (seed:number, round:number) => SkylineContent['map'];
   fighter: RigDefinition;
   model: Group;
   engineHash: string;
@@ -25,7 +26,13 @@ export async function loadSkyline(signal: AbortSignal): Promise<SkylineContent> 
   if (!digest.test(content.engineHash) || !digest.test(content.mapHash) || content.fighter.bodies.length !== 15) {
     throw new Error('Invalid Skyline build');
   }
-  cached = {...content, model};
+  let last: {seed:number; round:number; map:SkylineContent['map']} | undefined;
+  cached = {...content, model, mapForRound(seed, round) {
+    if (!last || last.seed !== seed || last.round !== round) {
+      last = {seed, round, map:JSON.parse(wasm.tour_map(seed, round))};
+    }
+    return last.map;
+  }};
   return cached;
 }
 

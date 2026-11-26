@@ -6,7 +6,7 @@ test('a failed fighter build download keeps the seat waiting and ready can retry
   await page.getByRole('button', {name: 'Create room', exact: true}).click();
   await page.route(/\.wasm(?:\?|$)/, route => route.abort());
   await page.getByRole('button', {name: 'Ready up'}).click();
-  await expect(page.getByRole('alert')).toContainText('Could not load Skyline');
+  await expect(page.getByRole('alert')).toContainText('Could not load the arenas');
   await expect(page.getByRole('listitem')).toContainText('Waiting');
   await page.unroute(/\.wasm(?:\?|$)/);
   await page.getByRole('button', {name: 'Ready up'}).click();
@@ -43,7 +43,7 @@ test('readiness waits for the online arena module to load', async ({page}) => {
   let requested = false;
   let release!: () => void;
   const gate = new Promise<void>(resolve => { release = resolve; });
-  await page.route('**/online/OnlineMatch.tsx*', async route => {
+  await page.route(/\/OnlineMatch(?:\.tsx|-[\w-]+\.js)(?:\?|$)/, async route => {
     requested = true;
     await gate;
     await route.continue();
@@ -55,7 +55,7 @@ test('readiness waits for the online arena module to load', async ({page}) => {
     expect(requested).toBe(false);
     await page.getByRole('button',{name:'Ready up'}).click();
     await expect.poll(() => requested).toBe(true);
-    await expect(page.getByRole('button',{name:'Loading Skyline…'})).toBeDisabled();
+    await expect(page.getByRole('button',{name:'Loading arenas…'})).toBeDisabled();
     await expect(page.getByRole('listitem')).toContainText('Waiting');
   } finally { release(); }
   await expect(page.getByRole('button',{name:'Cancel ready'})).toBeVisible();

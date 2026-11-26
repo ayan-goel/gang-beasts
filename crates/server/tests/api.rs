@@ -15,7 +15,7 @@ async fn get(app: &axum::Router, path: &str) -> (StatusCode, Value) {
         .unwrap();
     let status = response.status();
     assert_eq!(response.headers()["content-type"], "application/json");
-    let bytes = to_bytes(response.into_body(), 4096).await.unwrap();
+    let bytes = to_bytes(response.into_body(), 16384).await.unwrap();
     (status, serde_json::from_slice(&bytes).unwrap())
 }
 
@@ -37,11 +37,24 @@ async fn a_full_pool_stops_admission_and_keeps_serving_liveness_and_map_metadata
         (StatusCode::OK, json!({"status":"ok"}))
     );
     let (code, body) = get(&app, "/api/maps").await;
-    let map = brawler_engine::MapDefinition::skyline().unwrap();
+    let maps = brawler_engine::MapDefinition::tour_catalog().unwrap();
     assert_eq!(code, StatusCode::OK);
+    assert_eq!(body["engineHash"], brawler_engine::ENGINE_HASH);
     assert_eq!(
-        body,
-        json!({"protocolVersion":brawler_protocol::VERSION,"engineHash": brawler_engine::ENGINE_HASH,
-        "maps":[{"id":map.id,"displayName":"Skyline","contentVersion":map.content_version,"contentHash":brawler_engine::MapDefinition::skyline_hash()}]})
+        body["catalogHash"],
+        brawler_engine::MapDefinition::tour_hash()
     );
+    let listed = body["maps"].as_array().unwrap();
+    assert_eq!(listed.len(), maps.len());
+    for (map, entry) in maps.iter().zip(listed) {
+        assert_eq!(entry["id"], map.id);
+        assert_eq!(
+            entry["displayName"],
+            map.tour
+                .as_ref()
+                .map_or("Skyline", |stage| stage.name.as_str())
+        );
+        assert_eq!(entry["contentVersion"], map.content_version);
+        assert_eq!(entry["contentHash"].as_str().unwrap().len(), 64);
+    }
 }

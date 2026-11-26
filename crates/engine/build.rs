@@ -30,6 +30,7 @@ fn main() {
         root.join("config/headbutt.json"),
         root.join("config/grip.json"),
         root.join("assets/maps/skyline/map.json"),
+        root.join("assets/maps/tour.json"),
         root.join("config/impact.json"),
         root.join("config/consciousness.json"),
         root.join("config/locomotion-motors.json"),

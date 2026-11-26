@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 import { gripMatch } from './support/gripMatch';
 import { landingCount, observeWarningAudio } from './support/warningAudio';
 import { decodeSnapshot } from '../src/net/snapshot';

@@ -8,7 +8,6 @@ pub struct RoomFrame {
     pub(crate) lineup: Option<std::sync::Arc<[crate::lineup::Participant]>>,
     tick: u64,
     pub(crate) round: u64,
-    pub(crate) match_finished: bool,
     world: SharedSnapshot,
     applied: [Option<u32>; FighterId::ALL.len()],
 }
@@ -89,7 +88,6 @@ impl Room {
             lineup: None,
             tick: self.tick(),
             round: self.epoch(),
-            match_finished: m.phase == MeleePhase::MatchResults,
             world: snapshot.encode_shared()?,
             applied: FighterId::ALL.map(|id| self.applied(id)),
         })

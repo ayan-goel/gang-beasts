@@ -86,6 +86,9 @@ impl WalkingController {
             state: LocomotionState::default(),
         }
     }
+    pub(super) fn movement_intent(&self) -> Vector<Real> {
+        self.intent
+    }
     pub fn has_movement_input(&self) -> bool {
         self.intent.norm_squared() > 0.
     }

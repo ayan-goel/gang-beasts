@@ -107,7 +107,7 @@ async fn creates_retry_safely_and_admits_only_the_requested_number_of_friends() 
     let (_, metadata, _) = request(&app, &path, None, "", ORIGIN).await;
     assert_eq!(
         metadata,
-        json!({"code":code,"capacity":2,"players":2,"phase":"lobby"})
+        json!({"code":code,"capacity":2,"players":2,"phase":"lobby","wins":3})
     );
 }
 
@@ -153,6 +153,16 @@ async fn rejects_foreign_origins_unissued_credentials_and_invalid_request_fields
             .0,
         StatusCode::UNPROCESSABLE_ENTITY
     );
+    for wins in [0, 1, 4, 8, 255] {
+        let mut invalid = create();
+        invalid["wins"] = json!(wins);
+        assert_eq!(
+            request(&app, "/api/rooms", Some(invalid), &member, ORIGIN)
+                .await
+                .0,
+            StatusCode::UNPROCESSABLE_ENTITY
+        );
+    }
     let mut extra = create();
     extra["score"] = json!(42);
     assert_eq!(

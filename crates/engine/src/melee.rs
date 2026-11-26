@@ -21,6 +21,7 @@ pub struct MeleeState {
     pub round_number: u32,
     pub remaining_ticks: u16,
     pub winner: Option<u8>,
+    wins: u8,
     scores: Vec<u8>,
 }
 
@@ -33,15 +34,30 @@ impl MeleeState {
             round_number: 1,
             remaining_ticks: COUNTDOWN,
             winner: None,
+            wins: WINS,
             scores: vec![0; count],
         }
+    }
+    pub(crate) fn series(count: usize, round_id: u64, wins: u8) -> Result<Self, CharacterError> {
+        if !matches!(wins, 3 | 5 | 7) {
+            return Err(CharacterError::Invalid(
+                "series target must be 3, 5 or 7 wins",
+            ));
+        }
+        Ok(Self {
+            wins,
+            ..Self::new(count, round_id)
+        })
+    }
+    pub fn wins(&self) -> u8 {
+        self.wins
     }
     pub fn scores(&self) -> &[u8] {
         &self.scores
     }
     fn match_won(&self) -> bool {
         self.winner
-            .is_some_and(|id| self.scores[id as usize] >= WINS)
+            .is_some_and(|id| self.scores[id as usize] >= self.wins)
     }
     pub fn next_round_due(&self) -> bool {
         self.phase == MeleePhase::RoundResults && self.remaining_ticks == 1 && !self.match_won()

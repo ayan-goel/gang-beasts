@@ -12,6 +12,13 @@ describe('lobby control protocol v1', () => {
     expect(decodeLobbyState(update, current)).toEqual({...current, ready: 1});
   });
 
+  it('retains the series target across ready-only updates', () => {
+    const full = Uint8Array.from([...welcome, 7]);
+    const room = decodeLobbyState(full, null);
+    expect(room.wins).toBe(7);
+    expect(decodeLobbyState(update, room).wins).toBe(7);
+  });
+
   it('rejects an update before welcome, a second welcome and invalid ownership or lengths', () => {
     const current = decodeLobbyState(welcome, null);
     expect(() => decodeLobbyState(update, null)).toThrow();

@@ -13,18 +13,20 @@ import { followedFighter, type CameraChoice } from './spectatorCamera';
 const colors = ['#ff5047','#24aeeb','#ffbd24','#45d894','#a77aee','#f982b6','#aacd39','#98a6cd'];
 const phases = ['countdown','playing','round_results','match_results'] as const;
 
-type RemoteMatch = MatchView & MatchAudioState & { conditions: FighterPhase[]; gripTargets: [number,number][]; stamina: number[]};
+type RemoteMatch = MatchView & MatchAudioState & { arena:SkylineContent['map']; conditions: FighterPhase[]; gripTargets: [number,number][]; stamina: number[]};
 
 export function matchView(frame: Snapshot, content: SkylineContent): RemoteMatch {
   const t = frame.arenaTick;
-  const s = content.map.schedule;
-  return {phase: phases[frame.phase]!, round: frame.number, epoch: String(frame.round), remaining: frame.remaining,
+  const seed = Number(frame.round >> 32n);
+  const arena = seed && content.mapForRound ? content.mapForRound(seed, frame.number) : content.map;
+  const s = arena.schedule;
+  return {arena, mapId:arena.id, arenaTick:t, phase: phases[frame.phase]!, round: frame.number, epoch: String(frame.round), remaining: frame.remaining,
     scores: frame.fighters.map(f => f.score), winner: frame.winner,
     gripTargets: frame.fighters.map(f => f.grips),
     stamina: frame.fighters.map(f => f.stamina),
     conditions: frame.fighters.map(f => fighterPhases[f.consciousness]!),
     visible: frame.fighters.map(f => f.consciousness !== 3),
-    timeLeft: Math.max(0, (t < s.gust_tick ? s.gust_tick : s.end_tick) - t),
+    timeLeft: Math.max(0, (!arena.tour && t < s.gust_tick ? s.gust_tick : s.end_tick) - t),
     hazard: t >= s.gust_tick ? 'gust' : t >= s.east_tick ? 'gust_warning' : t >= s.west_tick ? 'east_warning' : t >= s.warn_tick ? 'west_warning' : 'quiet'};
 }
 
@@ -32,7 +34,8 @@ export function startRemoteScene(container: HTMLElement, content: SkylineContent
   const kit = feed.fighters[0]!.color;
   const scene = prepared ?? new FixtureScene(container, content.fighter, {online:true, map:content.map, model:content.model, kit, color:colors[kit]});
   const bodies = feed.fighters.map(() => new Float32Array(15*14));
-  const objects = new Float32Array(8*content.map.objects.length);
+  let arena = content.map;
+  let objects = new Float32Array(8*arena.objects.length);
   let animation = 0, priorTime = performance.now(), prior: Snapshot | null = null, match: RemoteMatch | null = null;
   let previousStatus: StreamStatus | undefined;
   let unbind: (() => void) | undefined;
@@ -46,16 +49,23 @@ export function startRemoteScene(container: HTMLElement, content: SkylineContent
         for (const [slot, buffer] of bodies.entries()) {
           for (let i = 0; i < 15; i++) writePose(sample, 1 + slot*16 + i, buffer, i*14);
         }
-        content.map.objects.forEach(({id}, i) => {
+        if (sample.state !== prior) {
+          match = matchView(sample.state, content);
+          if (arena.id !== match.arena.id) {
+            arena = match.arena;
+            scene.setArena(arena);
+            objects = new Float32Array(8*arena.objects.length);
+          }
+        }
+        arena.objects.forEach(({id}, i) => {
           objects[i*8+7] = Number(writePose(sample, 65536+id, objects, i*8));
         });
-        if (sample.state !== prior) match = matchView(sample.state, content);
         if (sample.status !== previousStatus) { status(sample.status); previousStatus = sample.status; }
       }
       if (match) scene.renderSkyline(bodies, objects, match, (now-priorTime)/1000,
         feed.own === null ? undefined : bodies[feed.own], followedFighter(match, feed.own, choice.current));
       if (sample && match && sample.state !== prior) {
-        match.breakaway = scene.breakawaySource(content.map, sample.state.arenaTick);
+        match.breakaway = arena.tour ? undefined : scene.breakawaySource(arena, sample.state.arenaTick);
         match.impacts = scene.impactSources(sample.state.fighters, sample.state.arenaTick);
         update(match);
         prior = sample.state;

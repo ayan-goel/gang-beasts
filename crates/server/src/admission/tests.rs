@@ -36,6 +36,7 @@ fn idle_session_expires_host_moves_and_empty_lobby_retires() {
         name: "Coral".into(),
         color: None,
         capacity: 2,
+        wins: 3,
     };
     let (_, seat) = d.create(a, make).ok().unwrap();
     let join = || Join {
@@ -91,6 +92,7 @@ fn replacing_a_connection_or_reusing_a_seat_fences_late_messages_and_disconnects
                 name: "Coral".into(),
                 color: None,
                 capacity: 2,
+                wins: 3,
             },
         )
         .ok()
@@ -155,6 +157,7 @@ async fn only_a_ready_host_can_allocate_one_worker_for_the_current_roster() {
                     name: "Mint".into(),
                     color: None,
                     capacity: 8,
+                    wins: 3,
                 },
             )
             .ok()
@@ -183,6 +186,14 @@ async fn only_a_ready_host_can_allocate_one_worker_for_the_current_roster() {
         .live_state(&code, guest, Some(true))
         .unwrap();
     assert_eq!(super::matches::start(&state, &code, guest).await, Err(1));
+    {
+        let mut dir = state.directory.lock().unwrap();
+        dir.set_wins(&code, guest, 7);
+        dir.set_wins(&code, host, 4);
+        assert_eq!(dir.roster(host.session, &code).ok().unwrap().wins, 3);
+        dir.set_wins(&code, host, 5);
+        assert_eq!(dir.roster(guest.session, &code).ok().unwrap().wins, 5);
+    }
     let busy = pool.open().unwrap();
     assert_eq!(super::matches::start(&state, &code, host).await, Err(2));
     drop(busy);
@@ -197,10 +208,20 @@ async fn only_a_ready_host_can_allocate_one_worker_for_the_current_roster() {
     assert_eq!(super::matches::start(&state, &code, host).await, Err(1));
     let mut d = state.directory.lock().unwrap();
     assert_eq!(d.metadata(&code).ok().unwrap().phase, "match");
-    let game = d.rooms[&code].game.clone().unwrap();
-    assert!(!d.request_rematch(&code, host, &game));
-    assert!(!d.request_rematch(&code, guest, &game));
-    drop(game);
+    d.set_wins(&code, host, 7);
+    assert_eq!(d.metadata(&code).ok().unwrap().wins, 5);
+    assert_ne!(
+        d.rooms[&code]
+            .game
+            .as_ref()
+            .unwrap()
+            .client
+            .latest()
+            .unwrap()
+            .round
+            >> 32,
+        0
+    );
     d.leave(host.session, &code, now).ok().unwrap();
     d.leave(guest.session, &code, now).ok().unwrap();
     assert_eq!(d.metadata(&code).ok().unwrap().phase, "lobby");

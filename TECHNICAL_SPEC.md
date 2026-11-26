@@ -6,7 +6,7 @@
 **Target platform:** Desktop web browsers  
 **Core:** Rust + Rapier 3D, compiled natively and to WebAssembly  
 **Presentation:** Three.js + TypeScript  
-**Status:** Two-player Skyline melee is playable locally in the browser. Private online matches support two through eight fighters on a shared authoritative rooftop. Native and Chromium/WASM fixtures cover combat, knockout recovery, rooftop hazards, elimination, scoring and rematch. The online MVP, performance measurements and human playtests remain incomplete. See `docs/verification/acceptance.md`.
+**Status:** Local and private series draw from a shared [22-arena tour](docs/slices/21-arena-tour.md). Rooms support two through eight fighters and first-to-3, 5 or 7 scoring. The original Skyline fixtures remain available for physics regression checks. Broader release and human-playtest criteria are tracked in [acceptance](docs/verification/acceptance.md).
 **Intended location:** `TECHNICAL_SPEC.md` at the project root.
 
 Build a browser multiplayer brawler that feels as close to Gang Beasts as practicable: persistent physical characters, independent hands, struggling grips, momentum-driven throws, recoverable knockouts, precarious climbing, hazardous arenas and a readable group camera. Friends should open a link and play. Use original branding, characters, models, sounds, music and level layouts. Gameplay fidelity is the product goal; the MVP is a milestone toward the full game, not permission to replace physical interaction with a generic animated fighter.
@@ -1015,9 +1015,7 @@ Use a monotonic scheduler and fixed accumulator. Allow at most four catch-up tic
 
 ### 18.4 Match state machine and reset
 
-`Lobby → Loading → Countdown → Playing → RoundResults → Loading` for another round; after the match-winning score, `MatchResults → Lobby` or rematch. `Draining/Closed` are lifecycle states, not game modes.
-
-After online MatchResults, the current host can [return everyone to the same lobby for a rematch](docs/slices/16f-online-rematch.md). The room retains its code and seats. Starting again requires fresh readiness and uses a new match serial in the network round epoch.
+`Lobby → Loading → Countdown → Playing → RoundResults → Countdown` for the next shuffled arena. After the winning score, `MatchResults → Main menu`. The server retires the completed private room and clears seats after the champion display. The tour deck is derived from a server-owned seed and round number. [Series and stage behavior](docs/slices/21-arena-tour.md)
 
 | Transition | Guard / action |
 | --- | --- |
@@ -1025,7 +1023,7 @@ After online MatchResults, the current host can [return everyone to the same lob
 | Loading → Countdown | Required players loaded compatible map; timeout policy applied |
 | Countdown → Playing | Scheduled start tick reached |
 | Playing → RoundResults | Winner/draw determined after all tick eliminations |
-| RoundResults → Loading | Next-round delay elapsed and enough players remain |
+| RoundResults → Countdown | Standings delay elapsed, next arena installed and enough players remain |
 | RoundResults → MatchResults | Win threshold reached |
 | Any → Closed | Empty expiry, controlled shutdown or unrecoverable room failure |
 
@@ -1041,7 +1039,7 @@ Elimination cancels input, motors and all affected gameplay grips. It is permane
 
 ### 19.1 User flow
 
-Open site → create private room → share link/code → friends join → choose name/color → ready → host starts → play rounds → results → rematch. No required account, installation, command line or exposed implementation settings.
+Open site → create private room → share link/code → friends join → choose name/color → ready → host starts → play shuffled rounds → champion → main menu. No required account, installation, command line or exposed implementation settings.
 
 The site root opens the [gang bbeasts main menu](docs/slices/20a-gang-bbeasts-art.md). Hosting or joining opens the private-room form. Local match opens `/play/`, and the simulation inspector is available at `/playground/`. The menu uses static HTML and an original illustrated poster, so visitors can choose a destination before loading a simulation or opening a room session.
 
@@ -1219,7 +1217,7 @@ The [match mixer](docs/slices/17i-arena-mix.md) provides persistent master, musi
 
 ### 22.1 Melee — MVP
 
-2–8 players, individual survival, last survivor wins, default first to three round wins. Draws award no point. Process all eliminations before scoring; award each round once using a unique round ID. Use automatic next rounds, configurable map rotation and rematch without refresh.
+2–8 players, individual survival, last survivor wins, default first to three round wins. Draws award no point. Process all eliminations before scoring; award each round once using a unique round ID. Use automatic map rotation, inter-round standings, and a champion display before returning to the main menu.
 
 The local and private-room result banners name the winner of the round or match. A drawn round explains that no point was awarded. [Scoring verification](docs/verification/round-scoring.md)
 
@@ -1620,7 +1618,7 @@ Proposed MVP endurance gate: eight active players for 60 minutes across repeated
 
 ### 29.4 Browser end-to-end tests
 
-Playwright uses multiple contexts to test room creation, share-link joining, colors/readiness, content loading, synchronized countdown, knockout/round transitions, scores, host transfer, disconnect/reconnect, late-join spectating and rematch. Test focus loss, menu input isolation, resize, audio unlock and missing WebGL/WASM capabilities.
+Playwright uses multiple contexts to test room creation, share-link joining, colors/readiness, content loading, synchronized countdown, knockout/round transitions, scores, host transfer, disconnect/reconnect, late-join spectating and series completion. Test focus loss, menu input isolation, resize, audio unlock and missing WebGL/WASM capabilities.
 
 Use real-browser manual tests for gamepads, sustained rendering, perceived latency and mobile/unsupported-device messaging; a DOM test alone cannot certify those. Cover current supported Chromium, Firefox and Safari versions at release and record exact versions.
 

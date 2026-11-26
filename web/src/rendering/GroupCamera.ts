@@ -1,6 +1,7 @@
 import { PerspectiveCamera, Vector3 } from 'three';
 
 import { CameraFit } from './CameraFit';
+import type { SkylineMap } from './SkylineView';
 import type { CameraObstacles } from './CameraObstacles';
 import type { RigDefinition } from '../game/rigDefinition';
 
@@ -17,13 +18,15 @@ export class GroupCamera {
   private readonly right = new Vector3().crossVectors(vertical, defaultDirection).normalize();
   private readonly up = new Vector3().crossVectors(defaultDirection, this.right);
   private angle = 0;
+  private touring = false;
+  private headingChanged = false;
   private preset = 0;
   private readonly fit: CameraFit;
   private readonly pivot = new Vector3();
   private pitch = normalPitch;
   private lift = 0;
 
-  constructor(bodies: RigDefinition['bodies'], visualRadii?: number[], private readonly obstacles?: CameraObstacles) {
+  constructor(bodies: RigDefinition['bodies'], visualRadii?: number[], private obstacles?: CameraObstacles) {
     this.fit = new CameraFit(visualRadii ?? bodies.map(({shape}) => {
       switch (shape.kind) {
         case 'sphere': return shape.radius;
@@ -31,6 +34,24 @@ export class GroupCamera {
         case 'rounded_box': return Math.hypot(...shape.half_extents) + shape.border_radius;
       }
     }));
+  }
+
+  setArena(obstacles: CameraObstacles, map: SkylineMap) {
+    this.obstacles = obstacles;
+    this.headingChanged = this.touring !== !!map.tour;
+    this.touring = !!map.tour;
+    const decks = map.objects.filter(obj => obj.kind === 'deck' || obj.kind === 'panel');
+    if (decks.length && map.tour) {
+      this.fit.overviewBounds = [
+        Math.min(...decks.map(obj => obj.center[0]-obj.half[0])),
+        Math.max(...decks.map(obj => obj.center[0]+obj.half[0])),
+        Math.min(...decks.map(obj => obj.center[2]-obj.half[2])),
+        Math.max(...decks.map(obj => obj.center[2]+obj.half[2])),
+      ];
+    } else this.fit.overviewBounds = [-12,12,-10,10];
+    // Keep the controller's orbit reference while snapping away from the previous map's collision volumes.
+    this.distance = this.lift = 0;
+    this.pitch = this.touring ? Math.PI / 9 : normalPitch;
   }
 
   turn(direction: -1 | 1) {
@@ -53,7 +74,7 @@ export class GroupCamera {
     this.angle = this.reducedMotion || Math.abs(delta) < 0.00001 ? target
       : this.angle + delta * (1 - Math.exp(-8 * frameTime));
     const {direction, right, up} = this;
-    direction.copy(defaultDirection).applyAxisAngle(vertical, this.angle);
+    direction.copy(defaultDirection).applyAxisAngle(vertical, this.angle + (this.touring ? .4 : 0));
     right.crossVectors(vertical, direction).normalize();
     this.desired.set(0, 0, 0);
     if (!overview && players.length) {
@@ -101,7 +122,8 @@ export class GroupCamera {
       this.distance = distance;
       return true;
     };
-    const relaxed = this.pitch + (normalPitch-this.pitch)*weight;
+    const restingPitch = this.touring ? (overview ? 20 : 32) * Math.PI/180 : normalPitch;
+    const relaxed = this.pitch + (restingPitch-this.pitch)*weight;
     while (!tryView(relaxed)) {
       // Keep the last clear aim when easing down would dip back into the same obstacle.
       if (this.pivot.y < this.focus.y+this.lift) {
@@ -122,7 +144,9 @@ export class GroupCamera {
     if (far > camera.far) { camera.far = far; camera.updateProjectionMatrix(); }
     camera.position.copy(this.pivot).addScaledVector(direction, this.distance);
     camera.lookAt(this.pivot);
-    return previousAngle !== this.angle;
+    const turned = this.headingChanged || previousAngle !== this.angle;
+    this.headingChanged = false;
+    return turned;
   }
 
   private framingDistance(required: number, weight: number) {

@@ -6,6 +6,7 @@ pub enum Command<'a> {
     Connect(&'a [u8; 6]),
     Resume(&'a [u8; 6], u64),
     SetReady(bool),
+    SetWins(u8),
     StartMatch,
     MapLoaded(&'a [u8; 128]),
 }
@@ -21,6 +22,7 @@ impl<'a> Command<'a> {
                     u64::from_le_bytes(ticket.try_into().ok()?),
                 ))
             }
+            [39, VERSION, wins @ (3 | 5 | 7)] => Some(Self::SetWins(*wins)),
             [22, VERSION] => Some(Self::StartMatch),
             [20, VERSION, hashes @ ..] => Some(Self::MapLoaded(hashes.try_into().ok()?)),
             [18, VERSION, value @ 0..=1] => Some(Self::SetReady(*value == 1)),

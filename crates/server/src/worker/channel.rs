@@ -35,6 +35,7 @@ pub(super) struct Shared {
     pub closed: AtomicBool,
     pub rejected: AtomicU64,
     pub return_to_lobby: AtomicBool,
+    pub(super) series_complete: AtomicBool,
     pub owners: [AtomicU64; FighterId::ALL.len()],
     pub delayed: AtomicU64,
 }
@@ -52,6 +53,7 @@ impl RoomClient {
             closed: AtomicBool::new(false),
             owners: Default::default(),
             return_to_lobby: AtomicBool::new(false),
+            series_complete: AtomicBool::new(false),
             rejected: AtomicU64::new(0),
             delayed: AtomicU64::new(0),
         });
@@ -78,6 +80,10 @@ impl RoomClient {
 
     pub fn input(&self, id: FighterId, round: u64, bytes: &[u8]) -> Result<(), DispatchError> {
         self.input_for_slot(id as usize, 0, round, bytes)
+    }
+
+    pub(crate) fn series_complete(&self) -> bool {
+        self.shared.series_complete.load(Ordering::Acquire)
     }
 
     pub(crate) fn returning_to_lobby(&self) -> bool {

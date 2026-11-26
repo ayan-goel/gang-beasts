@@ -20,6 +20,7 @@ fn only_the_current_generation_starts_grace_and_exact_expiry_releases_the_host_s
                 name: "Host".into(),
                 color: None,
                 capacity: 2,
+                wins: 3,
             },
         )
         .ok()
@@ -95,6 +96,7 @@ async fn maintenance_releases_an_abandoned_worker_and_retires_the_empty_room_wit
                     name: "A".into(),
                     color: None,
                     capacity: 2,
+                    wins: 3,
                 },
             )
             .ok()

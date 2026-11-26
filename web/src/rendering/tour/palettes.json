@@ -1,0 +1,23 @@
+{
+  "squall-island": {"land":"atoll","deck":"#91ba67","edge":"#bc8252","accent":"#ffdc65","ink":"#3e5347","sky":"#516f99","haze":"#ddd5bb","distance":"#666e8a","water":"#1e8d98"},
+  "cloud-courier": {"land":"flight","deck":"#f2e8c7","edge":"#cc5947","accent":"#e48846","ink":"#345269","sky":"#4386ad","haze":"#ffdebb","distance":"#b98c93","water":"#538eac"},
+  "ice-radio": {"land":"polar","deck":"#cbefec","edge":"#548aa3","accent":"#f4a447","ink":"#426481","sky":"#374e7a","haze":"#b5dfe3","distance":"#819ab8","water":"#386e88"},
+  "night-trawler": {"land":"harbor","deck":"#bf8664","edge":"#486276","accent":"#ffbc5e","ink":"#353853","sky":"#152a47","haze":"#977887","distance":"#504967","water":"#355c75"},
+  "express-lifts": {"land":"towers","deck":"#acc1b5","edge":"#64637c","accent":"#ffbd66","ink":"#444256","sky":"#684f7b","haze":"#ffc399","distance":"#8c6375","water":"#62878a"},
+  "freight-ferry": {"land":"port","deck":"#599a96","edge":"#b95849","accent":"#efe0a2","ink":"#3b5161","sky":"#7b9fb7","haze":"#f4cdab","distance":"#998795","water":"#48868d"},
+  "tidal-turbine": {"land":"windfarm","deck":"#9fcbb9","edge":"#557989","accent":"#f9b453","ink":"#345663","sky":"#6d9fa7","haze":"#e2e7b8","distance":"#819b89","water":"#329290"},
+  "metro-splice": {"land":"metro","deck":"#b1aaa0","edge":"#626b77","accent":"#f9b754","ink":"#384658","sky":"#29374a","haze":"#887f8d","distance":"#534f67","water":"#4b6c78"},
+  "kiln-line": {"land":"kiln","deck":"#9d8175","edge":"#673d45","accent":"#ffad47","ink":"#453741","sky":"#654b64","haze":"#e2a078","distance":"#8e696e","water":"#a05d4a"},
+  "parade-floats": {"land":"parade","deck":"#f4b481","edge":"#cf588b","accent":"#ffe176","ink":"#624459","sky":"#6bacc4","haze":"#ffe0b1","distance":"#cb91a2","water":"#659c99"},
+  "orbital-dock": {"land":"space","deck":"#a5b5c1","edge":"#585a83","accent":"#54e2c5","ink":"#384665","sky":"#1d1c39","haze":"#5a5079","distance":"#6a628f","water":"#546f95"},
+  "crane-yard": {"land":"works","deck":"#dba14f","edge":"#7a6a68","accent":"#fff092","ink":"#544d59","sky":"#829eac","haze":"#f3d4ac","distance":"#9d8790","water":"#578696"},
+  "monsoon-dam": {"land":"reservoir","deck":"#a4aea8","edge":"#667c80","accent":"#ffc265","ink":"#3e535f","sky":"#527289","haze":"#bdc6aa","distance":"#7e9593","water":"#477e88"},
+  "carnival-wheel": {"land":"pier","deck":"#89caba","edge":"#e0696c","accent":"#ffda74","ink":"#524263","sky":"#8870a0","haze":"#ffd8ab","distance":"#aa829a","water":"#548595"},
+  "high-wire": {"land":"circus","deck":"#bb7380","edge":"#466a87","accent":"#ffe292","ink":"#493d56","sky":"#606c98","haze":"#e0bba9","distance":"#927e9b","water":"#688195"},
+  "rolling-stock": {"land":"railway","deck":"#769984","edge":"#925c4c","accent":"#ffd58c","ink":"#414e52","sky":"#8db5bd","haze":"#efd8b4","distance":"#9c9688","water":"#628a87"},
+  "signal-dish": {"land":"observatory","deck":"#cdc4b0","edge":"#847c91","accent":"#ffae69","ink":"#50506b","sky":"#343857","haze":"#d4969a","distance":"#816e91","water":"#5e7791"},
+  "foundry-press": {"land":"steel","deck":"#889897","edge":"#685561","accent":"#fc9853","ink":"#3d4652","sky":"#4b5865","haze":"#c6a297","distance":"#7c7280","water":"#865f62"},
+  "orchard-mill": {"land":"orchard","deck":"#bea47b","edge":"#8e6255","accent":"#e37e56","ink":"#475545","sky":"#81afba","haze":"#f6d9a8","distance":"#97a28d","water":"#5d9690"},
+  "summit-rescue": {"land":"alpine","deck":"#dee4d7","edge":"#72909a","accent":"#f48650","ink":"#54647a","sky":"#7699b2","haze":"#f1d9bd","distance":"#a6a5b4","water":"#7a9ca7"},
+  "drum-machine": {"land":"concert","deck":"#9e81ae","edge":"#654e82","accent":"#86f0c0","ink":"#413455","sky":"#29253e","haze":"#885c8b","distance":"#594369","water":"#715b90"}
+}

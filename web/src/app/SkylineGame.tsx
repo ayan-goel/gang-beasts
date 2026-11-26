@@ -4,7 +4,7 @@ import { pullHint } from '../game/ledgeHint';
 import { DisplaySettings } from './DisplaySettings';
 import { MatchMenu, openMenuFromArena } from './MatchMenu';
 import { Scoreboard } from './Scoreboard';
-import { meleeResult } from '../game/meleeResult';
+import { arenaName, SeriesCard, stageWarning } from './SeriesCard';
 import { GripNotices } from './GripNotices';
 import { StaminaMeter } from './StaminaMeter';
 import { FighterNotices } from './FighterNotices';
@@ -25,6 +25,8 @@ export function SkylineGame() {
   const [started, setStarted] = useState(false);
   const [error, setError] = useState<{message: string; retry: string}>();
   const [attempt, setAttempt] = useState(0);
+  const [wins, setWins] = useState(3);
+  const [seed] = useState(() => crypto.getRandomValues(new Uint32Array(1))[0]!);
   useEffect(() => {
     const controller = new AbortController();
     const timer = window.setTimeout(() => setError({
@@ -32,30 +34,35 @@ export function SkylineGame() {
       retry:'Retry loading fighters',
     }), assetWaitMs);
     setError(undefined);
+    setState(undefined);
     void loadFighterModel(controller.signal).then(model => {
       if (controller.signal.aborted) return;
       setError(undefined);
-      try { runtime.current = startDuel(viewport.current!, setState, model); }
+      try { runtime.current = startDuel(viewport.current!, setState, model, undefined, {seed, wins}); }
       catch (e) { setError({message:e instanceof GraphicsUnavailable ? e.message : String(e), retry:'Retry graphics'}); }
     }).catch(() => { if (!controller.signal.aborted) setError({message:'Could not load the fighters. Check your connection and try again.', retry:'Retry loading fighters'}); }).finally(() => clearTimeout(timer));
     return () => { clearTimeout(timer); controller.abort(); runtime.current?.dispose(); runtime.current = null; };
-  }, [attempt]);
+  }, [attempt, seed, wins]);
   const match = state?.match;
   const complete = match?.phase === 'match_results';
   const menu = !started || state?.paused || complete;
   const conditions = state?.conditions.map(c => c.phase) ?? [];
   useMatchSound(match, started && !state?.paused, conditions, state);
-  const winner = match && meleeResult(match, names);
+  useEffect(() => {
+    if (!complete) return;
+    const timer = window.setTimeout(() => location.replace('/'), 4500);
+    return () => clearTimeout(timer);
+  }, [complete]);
   const start = () => {
-    if (complete) runtime.current?.reset();
     setStarted(true); runtime.current?.toggle();
   };
   const clock = Math.ceil((match?.timeLeft ?? 10800) / 60);
-  const showIntro = !started || complete;
+  const showIntro = !started;
+  const warning = match ? stageWarning(state?.map, match, hazardWarnings[match.hazard]) : '';
   const controls = <div className="skyline-bindings">
     <h2><i className="dot coral" />Coral</h2><p>WASD move · Left Shift run · Space jump / pull up<br />J / K punch or grab · E lift · Q headbutt</p>
     <h2><i className="dot blue" />Blue</h2><p>Arrows move · Right Shift run · Enter jump / pull up<br />Comma / period punch or grab · Slash lift · M headbutt</p>
-    <p>Hold a hand button to grab a fighter, crate, vent or roof edge. Release during a lift or swing to throw. While hanging, hold jump to pull up. Z / X turns the shared camera. Tab shows the scoreboard. Escape pauses the match from the arena.</p>
+    <p>Hold a hand button to grab a fighter, prop or ledge. In water, steer and hold jump to swim up. Grab a low edge and keep jump held to climb. A swim stroke also breaks a shark’s hold. Release during a lift or swing to throw. While hanging, hold jump to pull up. Z / X turns the shared camera. Tab shows the scoreboard. Escape pauses the match from the arena.</p>
   </div>;
   return <main className="skyline-shell">
     <header className="skyline-header">
@@ -65,19 +72,21 @@ export function SkylineGame() {
     {started && !complete && state?.paused && <MatchMenu local resume={start}>{controls}</MatchMenu>}
     <div className={showIntro ? 'skyline-layout has-menu' : 'skyline-layout'}>
       {showIntro && <section className="skyline-menu">
-        <div><p className="skyline-kicker">{complete ? 'Match results' : 'Two players · One keyboard'}</p>
-          <h1>{complete ? winner : 'gang bbeasts'}</h1>
-          <p>Stay on the rooftop. The last fighter standing takes the round. First to three wins.</p></div>
-        <button className="skyline-start" disabled={!match} onClick={start}>{complete ? 'Rematch' : 'Start match'} <span aria-hidden="true">→</span></button>
+        <div><p className="skyline-kicker">Two players · One keyboard</p>
+          <h1>gang bbeasts</h1>
+          <p>Last fighter standing scores. Each round takes you to another arena.</p></div>
+        <label className="series-goal">Series length <select value={wins} onChange={e => setWins(Number(e.target.value))}>
+          {[3,5,7].map(n => <option key={n} value={n}>First to {n}</option>)}</select></label>
+        <button className="skyline-start" disabled={!match} onClick={start}>Start match <span aria-hidden="true">→</span></button>
         <details className="local-controls"><summary>Keyboard controls</summary>{controls}</details>
         {error && <div><p role="alert">{error.message}</p><button onClick={() => setAttempt(n => n + 1)}>{error.retry}</button></div>}
       </section>}
-      <section className="skyline-stage" aria-label="Skyline arena">
+      <section className="skyline-stage" aria-label={arenaName(state?.map) + ' arena'}>
         <div className="scene-canvas" ref={viewport}
           onKeyDown={event => { if (!menu) openMenuFromArena(event, () => runtime.current?.toggle()); }} />
         {match && <div className="match-hud">
           <Scoreboard className="local-scoreboard" viewport={viewport}>
-            <div className="match-round"><span aria-label="Round number">Round {match.round}</span><strong aria-label="Round time remaining">{Math.floor(clock / 60)}:{String(clock % 60).padStart(2, '0')}</strong></div>
+            <div className="match-round"><span aria-label="Arena">{arenaName(state?.map)}</span><span aria-label="Round number">Round {match.round}</span><strong aria-label="Round time remaining">{Math.floor(clock / 60)}:{String(clock % 60).padStart(2, '0')}</strong></div>
             <div className="match-score">{names.map((name, id) => <div key={name}>
               <span className="fighter-score"><i className={`dot ${name.toLowerCase()}`} />{name}<b aria-label={`${name} score`}>{match.scores[id]}</b></span>
               {!menu && match.phase === 'playing' && state && match.visible[id] &&
@@ -87,10 +96,10 @@ export function SkylineGame() {
           {!menu && <button className="match-pause" aria-keyshortcuts="Escape" onClick={() => runtime.current?.toggle()}>Pause</button>}
         </div>}
         <span className="visually-hidden" aria-label="Round phase">{match && phases[match.phase]}</span>
-        {started && !menu && match && <div className="match-callout" aria-live="polite">
-          {match.phase === 'countdown' && <strong>{Math.max(1, Math.ceil(match.remaining / 60))}</strong>}
-          {match.phase === 'round_results' && <strong>{winner}</strong>}
-          {match.phase === 'playing' && hazardWarnings[match.hazard] && <span>{hazardWarnings[match.hazard]}</span>}
+        {started && (!menu || complete) && match && <div className="match-callout" aria-live="polite">
+          <SeriesCard match={match} map={state?.map} names={names} wins={wins} />
+          {match.phase === 'playing' && warning &&
+            <span>{warning}</span>}
           {match.phase === 'playing' && <FighterNotices names={names} phases={conditions} />}
         </div>}
         {started && !menu && match?.phase === 'playing' && <div className="match-grips">

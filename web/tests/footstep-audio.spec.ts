@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Page } from './support/skylineTest';
 import { decodeSnapshot } from '../src/net/snapshot';
 import { gripMatch } from './support/gripMatch';
 import { footstepCount, observeWarningAudio } from './support/warningAudio';

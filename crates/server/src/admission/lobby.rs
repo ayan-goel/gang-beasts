@@ -21,6 +21,8 @@ pub(super) struct Lobby {
     pub request: String,
     pub creator: SessionId,
     pub capacity: u8,
+    pub wins: u8,
+    original_wins: u8,
     pub members: Vec<Option<Member>>,
     pub host: usize,
     pub revision: u32,
@@ -36,6 +38,7 @@ impl Lobby {
         request: String,
         session: SessionId,
         capacity: u8,
+        wins: u8,
         name: &str,
         color: Option<u8>,
     ) -> Self {
@@ -56,6 +59,8 @@ impl Lobby {
             request,
             creator: session,
             capacity,
+            wins,
+            original_wins: wins,
             members,
             host: 0,
             revision: 1,
@@ -65,8 +70,11 @@ impl Lobby {
             original_color: color,
         }
     }
-    pub fn same_request(&self, capacity: u8, name: &str, color: Option<u8>) -> bool {
-        self.capacity == capacity && self.original_name == name && self.original_color == color
+    pub fn same_request(&self, capacity: u8, wins: u8, name: &str, color: Option<u8>) -> bool {
+        self.capacity == capacity
+            && self.original_wins == wins
+            && self.original_name == name
+            && self.original_color == color
     }
     pub fn metadata(&self) -> PublicRoom {
         PublicRoom {
@@ -77,6 +85,7 @@ impl Lobby {
                 "lobby"
             },
             capacity: self.capacity,
+            wins: self.wins,
             players: self.members.iter().flatten().count(),
         }
     }

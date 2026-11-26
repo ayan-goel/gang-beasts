@@ -1,7 +1,9 @@
+import { isWinTarget } from './api';
+
 interface Player { slot: number; name: string; color: number; host: boolean }
 export interface LiveRoom {
   revision: number; slot: number; occupied: number; ready: number; host: number;
-  capacity: number; players: Player[];
+  wins: number; capacity: number; players: Player[];
 }
 
 export function decodeLobbyState(bytes: Uint8Array, previous: LiveRoom | null): LiveRoom {
@@ -33,6 +35,7 @@ export function decodeLobbyState(bytes: Uint8Array, previous: LiveRoom | null): 
     players.push({slot: i, name, color, host: host === i});
     cursor += size;
   }
-  if (cursor !== bytes.length) throw new RangeError('Invalid roster length');
-  return {slot, occupied, ready, host, revision, capacity, players};
+  const wins = cursor === bytes.length ? 3 : bytes[cursor++];
+  if (!isWinTarget(wins) || cursor !== bytes.length) throw new RangeError('Invalid roster length');
+  return {slot, occupied, ready, host, revision, wins, capacity, players};
 }

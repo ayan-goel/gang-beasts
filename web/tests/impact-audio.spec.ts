@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 import { impactCount, observeWarningAudio } from './support/warningAudio';
 
 test('damaging contacts produce a short stereo thud with bounded strength and distance falloff', async ({page}) => {

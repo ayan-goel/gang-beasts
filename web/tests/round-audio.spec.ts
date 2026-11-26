@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 import { gripMatch } from './support/gripMatch';
 import { observeWarningAudio, roundPitches } from './support/warningAudio';
 
@@ -15,7 +15,7 @@ test('the local countdown, ring-outs and match result sound once through a first
     try { await expect(page.getByLabel('Blue score')).toHaveText(String(round),{timeout:25000}); }
     finally { await page.keyboard.up('KeyA'); await page.keyboard.up('ShiftLeft'); }
   }
-  await expect(page.getByRole('heading',{name:'Blue wins the match'})).toBeVisible({timeout:15000});
+  await expect(page.getByRole('heading',{name:'Blue wins the series!'})).toBeVisible({timeout:15000});
   await expect.poll(() => roundPitches(page)).toEqual([
     440,440,660,554, 440,440,440,660,554, 440,440,440,660,554,784,
   ]);

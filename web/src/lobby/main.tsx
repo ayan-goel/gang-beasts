@@ -24,8 +24,9 @@ function PrivateRooms() {
   useEffect(() => {
     let active = true;
     setError('');
-    void bootstrap().then(existing => {
+    void bootstrap().then(({room:existing, completed}) => {
       if (!active) return;
+      if (requested && completed === requested && !existing) { location.replace('/'); return; }
       if (existing) {
         if (isCode(requested) && requested !== existing) setRoom(existing);
         else enterRoom(existing);
@@ -49,7 +50,7 @@ function PrivateRooms() {
           }} />
         </> : <RoomForm invite={invite} joinByCode={new URLSearchParams(location.search).get('action') === 'join'} onEnter={enterRoom} />}</div>
       <figure><img src={arena} alt="Skyline’s rooftop arena with crates and breakaway walkways" />
-        <figcaption><small>Studio 08 · Arena</small><strong>Skyline</strong><span>Melee · First to three</span></figcaption></figure>
+        <figcaption><small>Studio 08 · Arena</small><strong>Skyline</strong><span>Melee · Shuffled arenas</span></figcaption></figure>
     </div>
   </main>;
 }

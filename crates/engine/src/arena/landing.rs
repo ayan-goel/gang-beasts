@@ -21,9 +21,11 @@ impl Skyline {
         let surface = &world.bodies[body];
         // Controllers execute before the hazard transition in the same tick.
         if !self.is_lip(object)
-            || !surface.is_fixed()
+            || !(surface.is_fixed()
+                || (surface.is_kinematic() && (surface.rotation() * Vector::y()).y > 0.72))
             || !surface.is_enabled()
-            || self.panel_deadlines().contains(&(object, next_tick))
+            || (self.definition.tour.is_none()
+                && self.panel_deadlines().contains(&(object, next_tick)))
         {
             return None;
         }

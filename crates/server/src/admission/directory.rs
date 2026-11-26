@@ -16,6 +16,7 @@ pub(super) struct Directory {
     pub tickets: super::socket_ticket::Tickets,
     pub(super) next_connection: u64,
     pub(super) rooms: HashMap<String, Lobby>,
+    completed: HashMap<SessionId, String>,
     traffic: HashMap<IpAddr, (Instant, u16)>,
     last_sweep: Option<Instant>,
 }
@@ -46,7 +47,19 @@ impl Directory {
         self.traffic
             .retain(|_, (t, _)| now.duration_since(*t) < Duration::from_secs(60));
         self.sessions.0.retain(|_, t| now.duration_since(*t) < IDLE);
+        self.completed
+            .retain(|id, _| self.sessions.0.contains_key(id));
         self.rooms.retain(|_, r| {
+            // Retire every seat together when the champion display ends, including disconnected seats.
+            if r.game
+                .as_ref()
+                .is_some_and(|game| game.client.series_complete())
+            {
+                for member in r.members.iter().flatten() {
+                    self.completed.insert(member.session, r.code.clone());
+                }
+                return false;
+            }
             let mut released = 0;
             for (slot, member) in r.members.iter().enumerate() {
                 if member.as_ref().is_some_and(|m| {
@@ -66,6 +79,7 @@ impl Directory {
     pub fn create(&mut self, session: SessionId, req: Create) -> Result<(StatusCode, Seat), Fault> {
         let name = player(&req.name, req.color)?;
         if !(2..=8).contains(&req.capacity)
+            || !matches!(req.wins, 3 | 5 | 7)
             || req.request_id.len() != 32
             || !req.request_id.bytes().all(|b| b.is_ascii_hexdigit())
         {
@@ -81,7 +95,7 @@ impl Directory {
             if let Some(slot) = room.slot(session) {
                 if room.creator == session
                     && room.request == req.request_id
-                    && room.same_request(req.capacity, name, req.color)
+                    && room.same_request(req.capacity, req.wins, name, req.color)
                 {
                     return Ok((StatusCode::OK, room.seat(slot)));
                 }
@@ -105,6 +119,7 @@ impl Directory {
                 req.request_id,
                 session,
                 req.capacity,
+                req.wins,
                 name,
                 req.color,
             );
@@ -129,6 +144,13 @@ impl Directory {
             .ok_or(Fault::MISSING)?
             .join(session, name, req.color)
     }
+    pub fn last_completed(&self, session: SessionId) -> Option<String> {
+        self.completed
+            .get(&session)
+            .filter(|code| !self.rooms.contains_key(*code))
+            .cloned()
+    }
+
     pub fn current(&self, session: SessionId) -> Option<String> {
         self.rooms
             .values()
@@ -137,13 +159,24 @@ impl Directory {
     }
 
     pub fn roster(&self, session: SessionId, code: &str) -> Result<super::types::Roster, Fault> {
-        let r = self.rooms.get(code).ok_or(Fault::MISSING)?;
+        let r = self.rooms.get(code).ok_or_else(|| {
+            if self
+                .completed
+                .get(&session)
+                .is_some_and(|finished| finished == code)
+            {
+                Fault(StatusCode::GONE, "series_complete")
+            } else {
+                Fault::MISSING
+            }
+        })?;
         let you = r
             .slot(session)
             .ok_or(Fault(StatusCode::FORBIDDEN, "not_a_member"))?;
         Ok(super::types::Roster {
             code: r.code.clone(),
             capacity: r.capacity,
+            wins: r.wins,
             you: you as u8,
             revision: r.revision,
             players: r

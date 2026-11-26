@@ -15,7 +15,6 @@ export function useLiveRoom(code: string) {
   const [game, setGame] = useState<(LoadedArena & {feed: MatchFeed}) | null>(null);
   const [startError, setStartError] = useState('');
   const [highLatency, setHighLatency] = useState(false);
-  const [canRematch, setCanRematch] = useState(false);
   const [load, setLoad] = useState<LoadState>({loading: false, error: ''});
   const handshake = useRef<ContentHandshake | null>(null);
   const transport = useRef<WebSocket | null>(null);
@@ -70,7 +69,6 @@ export function useLiveRoom(code: string) {
         recovery.closed(feed !== null, code);
       }
       setGame(null);
-      setCanRematch(false);
       setStartError('');
       socket.onopen = () => {
         socket.send(recovery.connectPacket());
@@ -92,8 +90,11 @@ export function useLiveRoom(code: string) {
             recovery.restored();
             return;
           }
-          if (bytes.length === 3 && bytes[0] === 29 && bytes[1] === 1 && bytes[2]! <= 1 && feed) {
-            setCanRematch(bytes[2] === 1);
+          if (bytes.length === 2 && bytes[0] === 38 && bytes[1] === 1 && last) {
+            // The server has retired every seat. Returning here cannot reconnect a finished series.
+            recovery.dispose();
+            cleanup();
+            window.location.replace('/');
             return;
           }
           if (bytes.length === 2 && bytes[1] === 1 && bytes[0] === 28 && last && !feed) {
@@ -167,8 +168,10 @@ export function useLiveRoom(code: string) {
     setStartError('');
     if (transport.current?.readyState === WebSocket.OPEN) transport.current.send(Uint8Array.of(22, 1));
   }
-  function requestRematch() {
-    if (canRematch) game?.feed.transmit(Uint8Array.of(30, 1));
+  function setWins(wins: number) {
+    if (connection && connection.host === connection.slot && transport.current?.readyState === WebSocket.OPEN) {
+      transport.current.send(Uint8Array.of(39, 1, wins));
+    }
   }
-  return {connection, disconnected: link === 'disconnected', reconnecting: link === 'recovering', game, highLatency, canRematch, requestRematch, start, startError, load, setReady, reconnect: () => setAttempt(n => n + 1)};
+  return {connection, disconnected: link === 'disconnected', reconnecting: link === 'recovering', game, highLatency, setWins, start, startError, load, setReady, reconnect: () => setAttempt(n => n + 1)};
 }

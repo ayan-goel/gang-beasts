@@ -5,7 +5,7 @@ const arenaNames = {deck:'roof edge', panel:'walkway edge', crate:'crate', vent:
 export function arenaGripName(map: SkylineMap | undefined, id: number | undefined) {
   if (id === undefined) return undefined;
   const object = map?.objects.find(o => o.id === id);
-  return object ? arenaNames[object.kind] : 'arena object';
+  return object?.art?.replaceAll('-', ' ') ?? (object ? arenaNames[object.kind] : 'arena object');
 }
 
 export function fighterGripName(fighter: string, part: string) {

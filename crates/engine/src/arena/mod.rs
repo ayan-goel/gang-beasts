@@ -2,6 +2,7 @@ mod definition;
 mod grip;
 mod landing;
 mod lip;
+mod tour;
 use crate::{CharacterError, TICK_SECONDS, physics::PhysicsWorld};
 pub use definition::{ArenaKind, MapDefinition};
 pub(crate) use landing::Landing;
@@ -31,8 +32,14 @@ pub(crate) struct Skyline {
     pub fall_sensor: ColliderHandle,
 }
 
-fn insert_object(world: &mut PhysicsWorld, obj: &definition::ArenaObject) -> RigidBodyHandle {
-    let builder = if obj.kind == ArenaKind::Crate {
+fn insert_object(
+    world: &mut PhysicsWorld,
+    obj: &definition::ArenaObject,
+    moving: bool,
+) -> RigidBodyHandle {
+    let builder = if moving {
+        RigidBodyBuilder::kinematic_position_based()
+    } else if obj.kind == ArenaKind::Crate {
         RigidBodyBuilder::dynamic()
     } else {
         RigidBodyBuilder::fixed()
@@ -53,21 +60,38 @@ fn insert_object(world: &mut PhysicsWorld, obj: &definition::ArenaObject) -> Rig
 }
 
 impl Skyline {
+    #[cfg(test)]
     pub fn insert(world: &mut PhysicsWorld) -> Result<Self, CharacterError> {
         let definition = MapDefinition::skyline()?;
+        Self::from_map(world, definition)
+    }
+    pub fn from_map(
+        world: &mut PhysicsWorld,
+        definition: MapDefinition,
+    ) -> Result<Self, CharacterError> {
         let bodies: Vec<_> = definition
             .objects
             .iter()
-            .map(|obj| insert_object(world, obj))
+            .map(|obj| {
+                insert_object(
+                    world,
+                    obj,
+                    definition.tour.as_ref().is_some_and(|s| {
+                        obj.parent.is_some() || s.motions.iter().any(|m| m.object == obj.id)
+                    }),
+                )
+            })
             .collect();
-        let core = &definition.foundation;
-        let [x, y, z] = core.half;
-        let local = Vector::from(core.center) - Vector::from(definition.objects[0].center);
-        world.colliders.insert_with_parent(
-            ColliderBuilder::cuboid(x, y, z).translation(local),
-            bodies[0],
-            &mut world.bodies,
-        );
+        if definition.tour.is_none() {
+            let core = &definition.foundation;
+            let [x, y, z] = core.half;
+            let local = Vector::from(core.center) - Vector::from(definition.objects[0].center);
+            world.colliders.insert_with_parent(
+                ColliderBuilder::cuboid(x, y, z).translation(local),
+                bodies[0],
+                &mut world.bodies,
+            );
+        }
         let fall_sensor = world.colliders.insert(
             ColliderBuilder::cuboid(40., 2., 40.)
                 .translation(vector![0., definition.fall_y - 2., 0.])
@@ -96,10 +120,18 @@ impl Skyline {
             .clone();
         obj.id = u16::try_from(self.bodies.len() + 1).unwrap();
         obj.center = center;
-        let body = insert_object(world, &obj);
+        let body = insert_object(world, &obj, false);
         self.bodies.push(body);
         self.definition.objects.push(obj);
         body
+    }
+
+    pub(crate) fn crate_bodies(&self) -> impl Iterator<Item = RigidBodyHandle> + '_ {
+        self.definition
+            .objects
+            .iter()
+            .zip(&self.bodies)
+            .filter_map(|(o, &h)| (o.kind == ArenaKind::Crate).then_some(h))
     }
 
     fn panel_deadlines(&self) -> [(u16, u64); 2] {
@@ -108,30 +140,34 @@ impl Skyline {
     }
     pub fn step(&mut self, world: &mut PhysicsWorld, tick: u64) {
         self.events.clear();
-        let s = &self.definition.schedule;
-        if tick == u64::from(s.warn_tick) {
-            self.events.push(SkylineEvent::EdgeWarning);
-        }
-        for (id, deadline) in self.panel_deadlines() {
-            if tick == deadline {
-                // Keep the body and its local anchors alive when the roof connection fails.
-                world.bodies[self.bodies[usize::from(id - 1)]]
-                    .set_body_type(RigidBodyType::Dynamic, true);
-                self.events.push(SkylineEvent::PanelDetached(id));
+        if self.definition.tour.is_some() {
+            self.move_stage(world, tick);
+        } else {
+            let s = &self.definition.schedule;
+            if tick == u64::from(s.warn_tick) {
+                self.events.push(SkylineEvent::EdgeWarning);
             }
-        }
-        if tick == u64::from(s.gust_tick) {
-            self.events.push(SkylineEvent::GustStarted);
-        }
-        let gust_ticks = tick.saturating_sub(s.gust_tick.into());
-        if gust_ticks > 0 {
-            let dv = (gust_ticks.min(180) as f32 / 180.) * s.gust_acceleration * TICK_SECONDS;
-            for (_, body) in world
-                .bodies
-                .iter_mut()
-                .filter(|(_, b)| b.is_dynamic() && b.is_enabled())
-            {
-                body.apply_impulse(Vector::x() * (body.mass() * dv), true);
+            for (id, deadline) in self.panel_deadlines() {
+                if tick == deadline {
+                    // Keep the body and its local anchors alive when the roof connection fails.
+                    world.bodies[self.bodies[usize::from(id - 1)]]
+                        .set_body_type(RigidBodyType::Dynamic, true);
+                    self.events.push(SkylineEvent::PanelDetached(id));
+                }
+            }
+            if tick == u64::from(s.gust_tick) {
+                self.events.push(SkylineEvent::GustStarted);
+            }
+            let gust_ticks = tick.saturating_sub(s.gust_tick.into());
+            if gust_ticks > 0 {
+                let dv = (gust_ticks.min(180) as f32 / 180.) * s.gust_acceleration * TICK_SECONDS;
+                for (_, body) in world
+                    .bodies
+                    .iter_mut()
+                    .filter(|(_, b)| b.is_dynamic() && b.is_enabled())
+                {
+                    body.apply_impulse(Vector::x() * (body.mass() * dv), true);
+                }
             }
         }
         for &handle in &self.bodies {

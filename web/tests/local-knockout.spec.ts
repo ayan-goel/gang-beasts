@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 import { impactCount, observeWarningAudio, warningSamples } from './support/warningAudio';
 
 for (const muted of [false, true]) test('shared-keyboard combat shows the knockout with game audio ' + (muted ? 'muted' : 'enabled'), async ({page}) => {

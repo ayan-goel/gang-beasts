@@ -99,6 +99,17 @@ impl Directory {
         Some(room.state())
     }
 
+    pub fn set_wins(&mut self, code: &str, owner: Connection, wins: u8) {
+        if !matches!(wins, 3 | 5 | 7) || self.live_state(code, owner, None).is_none() {
+            return;
+        }
+        let room = self.rooms.get_mut(code).expect("live membership owns room");
+        if room.host == owner.slot && room.game.is_none() && room.wins != wins {
+            room.wins = wins;
+            room.revision = room.revision.wrapping_add(1);
+        }
+    }
+
     pub fn disconnect(&mut self, code: &str, owner: Connection) {
         self.disconnect_at(code, owner, Instant::now());
     }

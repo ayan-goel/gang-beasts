@@ -25,14 +25,19 @@ struct Job {
     count: usize,
     lineup: Option<HostedLineup>,
     match_serial: u32,
+    wins: u8,
     shared: Arc<Shared>,
     incoming: Vec<Receiver<Command>>,
     ready: SyncSender<Result<(), DispatchError>>,
 }
 
 fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), DispatchError> {
-    let mut room = Room::skyline_in_match(job.count, job.match_serial)
-        .map_err(|_| DispatchError::Initialization)?;
+    let mut room = if job.lineup.is_some() {
+        Room::tour(job.count, job.match_serial, job.wins)
+    } else {
+        Room::skyline_in_match(job.count, job.match_serial)
+    }
+    .map_err(|_| DispatchError::Initialization)?;
     let mut lineup = job
         .lineup
         .as_ref()
@@ -47,6 +52,7 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
     job.ready.send(Ok(())).map_err(|_| DispatchError::Closed)?;
     let origin = Instant::now();
     let mut clock = Cadence::default();
+    let mut champion_since = None;
     let mut accepted = [None; FighterId::ALL.len()];
     let mut owners = [Some(0u64); FighterId::ALL.len()];
     while !stop.load(Ordering::Acquire) && !job.shared.closed.load(Ordering::Acquire) {
@@ -95,7 +101,18 @@ fn run(job: &Job, stop: &AtomicBool, overloaded: &AtomicBool) -> Result<(), Disp
             if !advanced {
                 room.step_with_forfeits(forfeits);
             }
-            if room.finished_for_lack_of_players() {
+            if job.lineup.is_some()
+                && room.game().match_state().unwrap().phase
+                    == brawler_engine::MeleePhase::MatchResults
+            {
+                // Publish the winner for five seconds before retiring the whole series.
+                if champion_since.get_or_insert_with(Instant::now).elapsed()
+                    >= Duration::from_secs(5)
+                {
+                    job.shared.series_complete.store(true, Ordering::Release);
+                    return Ok(());
+                }
+            } else if room.finished_for_lack_of_players() {
                 job.shared.return_to_lobby.store(true, Ordering::Release);
                 return Ok(());
             }

@@ -1,3 +1,5 @@
+import { TourView } from './tour/TourView';
+import { stagePalette } from './tour/palette';
 import stationSkyUrl from './art/station-sky.webp';
 import deckPrintUrl from './art/studio-deck.webp';
 import { recentBreakawayMount } from '../audio/breakawaySound';
@@ -52,7 +54,9 @@ export class FixtureScene {
   private readonly unsubscribeMotion?: () => void;
   private readonly unsubscribeGraphics?: () => void;
   private readonly opponents: (RagdollView | FighterSkin)[] = [];
-  private skyline?: SkylineView;
+  private skyline?: SkylineView | TourView;
+  private arenaId?: string;
+  private arenaName = 'Skyline rooftop';
   private deckPrint?: THREE.Texture;
   private stationSky?: THREE.Texture;
   readonly groupCamera?: GroupCamera;
@@ -101,20 +105,10 @@ export class FixtureScene {
       this.cube.castShadow = true;
       this.scene.add(this.cube);
       if (map) {
-        this.deckPrint = new THREE.TextureLoader().load(deckPrintUrl);
-        this.deckPrint.colorSpace = THREE.SRGBColorSpace;
-        this.deckPrint.anisotropy = Math.min(4,this.renderer.capabilities.getMaxAnisotropy());
-        this.skyline = new SkylineView(map, this.deckPrint);
-        if (!definition) throw new Error('Skyline framing requires fighter geometry');
-        this.groupCamera = new GroupCamera(definition.bodies, this.rig instanceof FighterSkin ? this.rig.radii : undefined, this.skyline.obstacles);
+        if (!definition) throw new Error('Arena framing requires fighter geometry');
+        this.groupCamera = new GroupCamera(definition.bodies, this.rig instanceof FighterSkin ? this.rig.radii : undefined);
+        this.setArena(map);
         this.unsubscribeMotion = observeCameraMotion(reduced => { this.groupCamera!.reducedMotion = reduced; });
-        this.scene.add(this.skyline.root);
-        this.stationSky = new THREE.TextureLoader().load(stationSkyUrl);
-        this.stationSky.colorSpace = THREE.SRGBColorSpace;
-        this.stationSky.mapping = THREE.EquirectangularReflectionMapping;
-        this.scene.background = this.stationSky;
-        this.renderer.setClearColor(0xffc6a3);
-        this.scene.fog = new THREE.FogExp2(0xffc6a3,0.015);
       } else this.scene.add(fixtureTerrain(terrainBoxes));
       this.colliders.frustumCulled = false;
       this.colliders.renderOrder = 1;
@@ -155,6 +149,50 @@ export class FixtureScene {
     }
   }
 
+  setArena(map: SkylineMap) {
+    const id = map.id ?? 'skyline';
+    if (this.arenaId === id) return;
+    const loader = new THREE.TextureLoader();
+    const isTour = !!map.tour;
+    const haze = isTour ? stagePalette(id).haze : '#ffc6a3';
+    const floor = loader.load(isTour ? new URL(`./tour/art/${id}-floor.webp`,import.meta.url).href : deckPrintUrl);
+    floor.colorSpace = THREE.SRGBColorSpace;
+    floor.anisotropy = Math.min(4,this.renderer.capabilities.getMaxAnisotropy());
+    if (isTour) floor.wrapS = floor.wrapT = THREE.RepeatWrapping;
+    let next: SkylineView | TourView;
+    try {
+      next = isTour ? new TourView(map,floor) : new SkylineView(map,floor);
+    } catch (error) { floor.dispose(); throw error; }
+    if (this.skyline) {
+      this.skyline.root.removeFromParent();
+      disposeMeshes(this.skyline.root);
+    }
+    this.skyline = next;
+    this.scene.add(next.root);
+    this.arenaId = id;
+    this.arenaName = map.tour?.name ?? 'Skyline rooftop';
+    this.groupCamera?.setArena(next.obstacles,map);
+    this.deckPrint?.dispose();
+    this.deckPrint = floor;
+    this.scene.background = new THREE.Color(haze);
+    this.stationSky?.dispose();
+    this.stationSky = loader.load(isTour ? new URL(`./tour/art/${id}-sky.webp`,import.meta.url).href : stationSkyUrl, sky => {
+      // A slow image from the last round must never replace the current arena's sky.
+      if (this.stationSky === sky) this.scene.background = sky;
+    });
+    this.stationSky.colorSpace = THREE.SRGBColorSpace;
+    this.stationSky.mapping = THREE.EquirectangularReflectionMapping;
+    this.renderer.setClearColor(haze);
+    this.scene.fog = new THREE.FogExp2(haze,isTour ? .017 : .015);
+    this.updateArenaLabel();
+  }
+
+  private updateArenaLabel() {
+    const count = this.opponents.length + 1;
+    const arena = this.skyline ? this.arenaName : 'local sparring platform';
+    this.renderer.domElement.setAttribute('aria-label',(count === 2 ? 'Two' : count) + ' fighters on the ' + arena);
+  }
+
   async prepareSkyline(signal: AbortSignal) {
     // A detached lobby canvas has no layout size. A small real draw also loads the shadow and skin programs.
     this.renderer.setSize(16, 16, false);
@@ -188,15 +226,14 @@ export class FixtureScene {
     const opponent = this.model ? new FighterSkin(this.model, definition, color, kit) : new RagdollView(definition, color);
     this.opponents.push(opponent);
     this.scene.add(opponent.root);
-    const count = this.opponents.length + 1;
-    const arena = this.skyline ? 'Skyline rooftop' : 'local sparring platform';
-    this.renderer.domElement.setAttribute('aria-label', (count === 2 ? 'Two' : count) + ' fighters on the ' + arena);
+    this.updateArenaLabel();
   }
 
   private playerPoses: Float32Array[] = [];
   private readonly soundPoint = new THREE.Vector3();
 
   breakawaySource(map: SkylineContent['map'], tick: number) {
+    if (map.tour) return;
     const mount = recentBreakawayMount(map, tick);
     return mount && this.audioPosition(this.soundPoint.fromArray(mount));
   }
@@ -218,7 +255,7 @@ export class FixtureScene {
 
   renderSkyline(players: Float32Array[], props: Float32Array, match: MatchView, dt: number, owner?: Float32Array, follow?: number | null): boolean {
     this.playerPoses = players;
-    this.skyline!.update(props, match.hazard);
+    this.skyline!.update(props, match.hazard, dt, players, match);
     this.rig!.root.visible = match.visible[0]!;
     this.opponents.forEach((rig, i) => {
       rig.root.visible = match.visible[i + 1]!;
@@ -282,16 +319,13 @@ export class FixtureScene {
         fighter.dispose();
       }
     }
+    disposeMeshes(this.scene);
     this.scene.traverse(object => {
-      if (object instanceof THREE.Mesh || object instanceof THREE.LineSegments || object instanceof THREE.Points) {
-        object.geometry.dispose();
-        const materials = Array.isArray(object.material) ? object.material : [object.material];
-        for (const material of materials) material.dispose();
-      }
       if (object instanceof THREE.DirectionalLight) object.shadow.dispose();
     });
     this.deckPrint?.dispose();
     this.stationSky?.dispose();
+    this.stationSky = undefined;
     this.renderer.dispose();
     // Scene changes construct another renderer. Release this context explicitly
     // so repeated inspection cannot exhaust the browser's active-context limit.
@@ -306,4 +340,14 @@ export class FixtureScene {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
   }
+}
+
+
+function disposeMeshes(root: THREE.Object3D) {
+  root.traverse(object => {
+    if (object instanceof THREE.Mesh || object instanceof THREE.LineSegments || object instanceof THREE.Points) {
+      object.geometry.dispose();
+      for (const material of Array.isArray(object.material) ? object.material : [object.material]) material.dispose();
+    }
+  });
 }

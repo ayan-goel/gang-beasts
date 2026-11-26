@@ -16,6 +16,7 @@ const INBOUND_BYTES: usize = 4096;
 #[derive(Clone, Copy)]
 pub(super) struct Capabilities {
     resume: bool,
+    tour: bool,
     pub(super) lineups: bool,
     pub(super) compact: bool,
     pub(super) footsteps: bool,
@@ -60,6 +61,7 @@ pub(super) async fn upgrade(
             .any(|part| part == field)
     };
     let capabilities = Capabilities {
+        tour: has("tour=1"),
         resume: has("resume=1"),
         lineups: has("lineups=1"),
         compact: has("compact=1"),
@@ -164,6 +166,10 @@ async fn exchange(
                             }
                             None
                         }
+                        Some(Command::SetWins(wins)) if capabilities.tour => {
+                            state.directory.lock().unwrap().set_wins(code, owner, wins);
+                            None
+                        }
                         Some(Command::SetReady(value)) => Some(value),
                         _ => return,
                     },
@@ -182,6 +188,11 @@ async fn exchange(
             };
             if let Some(game) = game {
                 super::stream::play(socket, state, code, owner, game.clone(), capabilities).await;
+                if game.client.series_complete() {
+                    state.directory.lock().unwrap().prune(Instant::now());
+                    send(socket, vec![38, 1]).await;
+                    return;
+                }
                 let returned = {
                     let mut dir = state.directory.lock().unwrap();
                     dir.prune(Instant::now());
@@ -215,6 +226,9 @@ async fn exchange(
                 for seat in roster.players {
                     bytes.extend([seat.color, seat.name.len() as u8]);
                     bytes.extend(seat.name.as_bytes());
+                }
+                if capabilities.tour {
+                    bytes.push(roster.wins);
                 }
             }
             (

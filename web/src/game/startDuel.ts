@@ -30,6 +30,7 @@ export interface FighterCondition {
 }
 export interface DuelState {
   match?: MatchView;
+  map?: SkylineContent['map'];
   impacts: ImpactSource[];
   breakaway?: CameraPosition;
   conditions: [FighterCondition, FighterCondition];
@@ -43,9 +44,9 @@ export interface DuelState {
   latest?: DuelHit;
 }
 
-export function startDuel(container: HTMLElement, publish: (snapshot: DuelState) => void, model?: Object3D, practice?: LedgePractice) {
+export function startDuel(container: HTMLElement, publish: (snapshot: DuelState) => void, model?: Object3D, practice?: LedgePractice, series?: {seed:number; wins:number}) {
   const skyline = model !== undefined;
-  const duel = practice?.duel ?? (skyline ? LocalDuel.skyline_match(configuration) : new LocalDuel(configuration));
+  const duel = practice?.duel ?? (series ? LocalDuel.tour_match(configuration, series.seed, series.wins) : skyline ? LocalDuel.skyline_match(configuration) : new LocalDuel(configuration));
   const clock = new FixedClock();
   let frame = 0;
   let scene: FixtureScene | undefined;
@@ -68,7 +69,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
   };
   try {
     const definition: RigDefinition = JSON.parse(duel.definition_json());
-    const map: SkylineContent['map'] | undefined = skyline ? JSON.parse(duel.map_json()!) : undefined;
+    let map: SkylineContent['map'] | undefined = skyline ? JSON.parse(duel.map_json()!) : undefined;
     scene = new FixtureScene(container, definition, { map, model });
     scene.addOpponent(definition);
     const renderer = scene;
@@ -104,7 +105,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
         if (!map || !match) return undefined;
         const target = duel.arena_grip(owner, side);
         if (target !== undefined) targets[side] = 65536 + target;
-        onLedge ||= fixedLedge(target, match.hazard);
+        onLedge ||= fixedLedge(target, match.hazard, map);
         return arenaGripName(map, target);
       });
       return {labels, onLedge, targets};
@@ -113,11 +114,11 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
       const first = readGrips(0), second = readGrips(1);
       const conditions: [FighterCondition, FighterCondition] = [JSON.parse(duel.condition_json(0)), JSON.parse(duel.condition_json(1))];
       publish({
-        match, tick: duel.tick().toString(), hits: [...hits], latest, paused,
+        match, map, tick: duel.tick().toString(), hits: [...hits], latest, paused,
         gripTargets: [first.targets, second.targets],
         grips: [first.labels, second.labels], fixedLedge: [first.onLedge, second.onLedge],
         stamina: [duel.stamina(0), duel.stamina(1)],
-        breakaway: map && renderer.breakawaySource(map, Number(duel.tick())),
+        breakaway: map && !map.tour ? renderer.breakawaySource(map, Number(duel.tick())) : undefined,
         conditions, impacts: renderer.impactSources(conditions, Number(duel.tick())),
       });
     };
@@ -163,6 +164,10 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
       if (skyline && !paused) {
         const next: MatchView = JSON.parse(duel.match_json()!);
         if (match?.phase === 'playing' && next.phase !== 'playing') inputs.forEach(input => input.clear());
+        if (next.epoch !== match?.epoch) {
+          map = JSON.parse(duel.map_json()!);
+          renderer.setArena(map!);
+        }
         match = next;
       }
       render((now - previous) / 1000);

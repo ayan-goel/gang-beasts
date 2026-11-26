@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 
 test('Coral can grab a rooftop crate with the keyboard and release it during a lift', async ({ page }) => {
   await page.goto('/play/');

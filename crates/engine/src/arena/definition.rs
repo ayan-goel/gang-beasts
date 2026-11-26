@@ -21,6 +21,10 @@ pub struct ArenaObject {
     pub center: [f32; 3],
     pub half: [f32; 3],
     pub mass: f32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub art: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent: Option<u16>,
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
@@ -44,6 +48,8 @@ pub struct Schedule {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MapDefinition {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tour: Option<super::tour::TourStage>,
     pub foundation: Foundation,
     pub schema_version: u8,
     pub content_version: u32,
@@ -77,7 +83,10 @@ impl MapDefinition {
         m.validate()?;
         Ok(m)
     }
-    fn validate(&self) -> Result<(), CharacterError> {
+    pub(super) fn validate(&self) -> Result<(), CharacterError> {
+        if let Some(stage) = &self.tour {
+            return stage.validate(self);
+        }
         let s = &self.schedule;
         if self.schema_version != 1
             || self.content_version == 0
@@ -113,6 +122,7 @@ impl MapDefinition {
         for (i, (o, role)) in self.objects.iter().zip(roles).enumerate() {
             let dynamic = matches!(role, ArenaKind::Crate | ArenaKind::Panel);
             if o.id != i as u16 + 1
+                || o.parent.is_some()
                 || o.kind != role
                 || !o.center.iter().all(|v| v.is_finite() && v.abs() <= 32.)
                 || !o.half.iter().all(|v| (0.05..=15.).contains(v))

@@ -13,7 +13,7 @@ import { canSpectate, followedFighter, type CameraChoice } from './spectatorCame
 import { SpectatorControls } from './SpectatorControls';
 import { colors } from '../lobby/api';
 import { hazardWarnings } from '../game/skylineHazards';
-import { meleeResult } from '../game/meleeResult';
+import { arenaName, SeriesCard, stageWarning } from '../app/SeriesCard';
 import type { SkylineContent } from '../lobby/content';
 import type { StreamStatus } from './SnapshotTimeline';
 import { matchView, startRemoteScene } from './RemoteScene';
@@ -23,7 +23,7 @@ import './match.css';
 export { PreparedArena } from './preparedArena';
 
 const phaseNames = {countdown:'Countdown', playing:'Playing', round_results:'Round results', match_results:'Match results'};
-export default function OnlineMatch({feed, content, graphics, exit, rematch, highLatency}: {feed: MatchFeed; graphics?: PreparedArena; highLatency?: boolean; content: SkylineContent; exit: () => void; rematch: (() => void) | undefined}) {
+export default function OnlineMatch({feed, content, graphics, exit, wins = 3, highLatency}: {feed: MatchFeed; graphics?: PreparedArena; highLatency?: boolean; content: SkylineContent; exit: () => void; wins?: number}) {
   const container = useRef<HTMLDivElement>(null);
   const [match, setMatch] = useState(() => matchView(feed.latest!, content));
   const [status, setStatus] = useState<StreamStatus>('buffering');
@@ -56,11 +56,11 @@ export default function OnlineMatch({feed, content, graphics, exit, rematch, hig
   useMatchSound(match, status === 'live' || status === 'estimating', match.conditions, match);
   const names = feed.fighters.map(f => f.name);
   const spectator = canSpectate(match, feed.own);
-  const winner = meleeResult(match, names);
+  const name = arenaName(match.arena);
   const hint = feed.own !== null && match.phase === 'playing' && match.conditions[feed.own] === 'active'
-    ? gripHint(feed.own, match.gripTargets, match.hazard) : '';
-  return <section className="online-match" aria-label="Online Skyline arena">
-    <div className="online-header"><h1>{feed.own === null ? 'Spectating Skyline' : 'Playing as ' + feed.fighters[feed.own]!.name}</h1>
+    ? gripHint(feed.own, match.gripTargets, match.hazard, match.arena) : '';
+  return <section className="online-match" aria-label={'Online ' + name + ' arena'}>
+    <div className="online-header"><h1>{feed.own === null ? 'Spectating ' + name : 'Playing as ' + feed.fighters[feed.own]!.name}</h1>
       <button aria-keyshortcuts="Escape" onClick={() => setMenuOpen(true)}>Match menu</button><button onClick={exit}>Leave room</button></div>
     {menuOpen && <MatchMenu resume={() => {
       setMenuOpen(false);
@@ -71,7 +71,7 @@ export default function OnlineMatch({feed, content, graphics, exit, rematch, hig
       <div className="online-notices">
         {highLatency && status !== 'stalled' && <p className="online-delay" role="status">High network delay. Controls may feel delayed.</p>}
         <p className="online-hazard" role="status" aria-label="Arena hazard">
-          {match.phase === 'playing' ? hazardWarnings[match.hazard] : ''}
+          {match.phase === 'playing' ? stageWarning(match.arena, match, hazardWarnings[match.hazard]) : ''}
         </p>
         <div className="online-conditions" aria-live="polite">
           {match.phase === 'playing' && <FighterNotices names={names} phases={match.conditions} />}
@@ -79,6 +79,7 @@ export default function OnlineMatch({feed, content, graphics, exit, rematch, hig
       </div>
     </div>
     <Scoreboard className="online-score" viewport={container}>
+      <span aria-label="Arena">{name}</span>
       <span aria-label="Round number">Round {match.round}</span>
       <span aria-label="Round phase">{phaseNames[match.phase]}</span>
       <time aria-label="Round time remaining">{Math.floor(Math.ceil(match.timeLeft/60)/60)}:{String(Math.ceil(match.timeLeft/60)%60).padStart(2,'0')}</time>
@@ -93,14 +94,12 @@ export default function OnlineMatch({feed, content, graphics, exit, rematch, hig
       </div>)}
     </Scoreboard>
     {match.phase === 'playing' && <div className="online-grips" aria-live="polite">
-      <GripNotices names={names} grips={match.gripTargets.map(targets => onlineGripLabels(targets,names,content.fighter.bodies,content.map))} />
+      <GripNotices names={names} grips={match.gripTargets.map(targets => onlineGripLabels(targets,names,content.fighter.bodies,match.arena))} />
     </div>}
     {spectator && <SpectatorControls names={names} visible={match.visible} target={followedFighter(match, feed.own, choice)}
       choose={slot => setChoice(slot === null ? null : {epoch:match.epoch, slot})}/>}
-    <p className="online-controls">{hint || (spectator || feed.own === null ? 'Spectating until the next round · Z / X to turn the camera' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift · Q to headbutt · Z / X to turn the camera')}{!hint && ' · Tab for scoreboard'}</p>
-    {match.phase !== 'playing' && <div className="online-callout"><span role="status">{match.phase === 'countdown' ? Math.max(1,Math.ceil(match.remaining/60)) : winner}</span>
-      {match.phase === 'match_results' && rematch && <button className="room-primary" onClick={rematch}>Play again</button>}
-    </div>}
+    <p className="online-controls">{hint || (spectator || feed.own === null ? 'Spectating until the next round · Z / X to turn the camera' : 'WASD or arrows to move · Shift to run · Space to jump or pull up · J / K to punch or grab · E to lift · Q to headbutt · Z / X to turn the camera')}{!hint && ' · Tab for scoreboard'}{!spectator && match.arena.tour?.water != null && ' · In water, steer and hold Space to swim up. Grab a ledge and hold Space to climb.'}</p>
+    {match.phase !== 'playing' && <div className="online-callout"><SeriesCard match={match} map={match.arena} names={names} wins={wins} /></div>}
     {status === 'stalled' && <p className="online-status" role="status">Waiting for the server…</p>}
     {error && <div><p role="alert">{error}</p><button onClick={() => setGraphicsAttempt(n => n + 1)}>Retry graphics</button></div>}
   </section>;

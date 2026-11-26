@@ -25,7 +25,7 @@ export class ContentHandshake {
     const attempt = ++this.attempt;
     const pending = this.pending = new AbortController();
     this.publish({loading: true, error: ''});
-    this.timer = window.setTimeout(() => this.finish('Skyline took too long to load. Try again.'), assetWaitMs);
+    this.timer = window.setTimeout(() => this.finish('The arenas took too long to load. Try again.'), assetWaitMs);
     try {
       const [content, arena] = await Promise.all([loadSkyline(pending.signal), import('../online/OnlineMatch')]);
       if (attempt !== this.attempt || this.socket.readyState !== WebSocket.OPEN) return;
@@ -39,7 +39,7 @@ export class ContentHandshake {
       this.arena = {View: arena.default, content, graphics};
       this.socket.send(loadedPacket(content));
     } catch {
-      if (attempt === this.attempt) this.finish('Could not load Skyline. Check your connection and try again.');
+      if (attempt === this.attempt) this.finish('Could not load the arenas. Check your connection and try again.');
     }
   }
 
@@ -50,8 +50,8 @@ export class ContentHandshake {
       this.socket.send(Uint8Array.of(18, 1, 1));
       this.finish('');
     } else {
-      this.finish(bytes[2] === 1 ? 'Your Skyline build differs from the server. Reload to get the current build.'
-        : 'The server is waiting for Skyline to load. Try again.');
+      this.finish(bytes[2] === 1 ? 'Your arena catalog differs from the server. Reload to get the current build.'
+        : 'The server is waiting for the arenas to load. Try again.');
     }
   }
 

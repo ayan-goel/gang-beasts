@@ -25,15 +25,26 @@ impl Room {
         count: usize,
         match_serial: u32,
     ) -> Result<Self, CharacterError> {
-        Ok(Self {
-            game: Duel::skyline_match_with_players(PhysicsConfig::default(), count)?,
+        let game = Duel::skyline_match_with_players(PhysicsConfig::default(), count)?;
+        Ok(Self::from_game(game, count, match_serial))
+    }
+
+    pub(crate) fn tour(count: usize, seed: u32, wins: u8) -> Result<Self, CharacterError> {
+        let first_epoch = (u64::from(seed) << 32) | 1;
+        let game = Duel::tour_match(PhysicsConfig::default(), count, first_epoch, wins)?;
+        Ok(Self::from_game(game, count, seed))
+    }
+
+    fn from_game(game: Duel, count: usize, match_serial: u32) -> Self {
+        Self {
+            game,
             tick: 0,
             match_serial,
             inboxes: (0..count).map(|_| Inbox::default()).collect(),
             attached: vec![true; count],
             forfeits: 0,
             finished: false,
-        })
+        }
     }
 
     pub fn game(&self) -> &Duel {
@@ -142,7 +153,15 @@ impl Room {
         let results_over = self.melee().phase == MeleePhase::MatchResults
             || (self.melee().phase == MeleePhase::RoundResults
                 && self.melee().remaining_ticks == 1);
-        if results_over && self.attached.len() - (self.forfeits.count_ones() as usize) < 2 {
+        let champion = self
+            .melee()
+            .scores()
+            .iter()
+            .any(|score| *score >= self.melee().wins());
+        if results_over
+            && !champion
+            && self.attached.len() - (self.forfeits.count_ones() as usize) < 2
+        {
             self.finished = true;
             return;
         }

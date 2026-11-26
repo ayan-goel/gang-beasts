@@ -13,6 +13,26 @@ impl Duel {
         game.melee = Some(MeleeState::new(count, 1));
         Ok(game)
     }
+    pub fn tour_match(
+        physics: PhysicsConfig,
+        count: usize,
+        match_id: u64,
+        wins: u8,
+    ) -> Result<Self, CharacterError> {
+        let seed = (match_id >> 32) as u32;
+        let mut game = Self::on_map(
+            physics,
+            count,
+            Some(crate::MapDefinition::tour_round(seed, 1)?),
+            Some(seed),
+        )?;
+        game.melee = Some(MeleeState::series(
+            count,
+            (u64::from(seed) << 32) | 1,
+            wins,
+        )?);
+        Ok(game)
+    }
     pub fn match_state(&self) -> Option<&MeleeState> {
         self.melee.as_ref()
     }
@@ -28,7 +48,17 @@ impl Duel {
             .as_ref()
             .ok_or(CharacterError::Invalid("expected a Skyline match"))?
             .next_lineup(previous)?;
-        let mut game = Self::create(self.physics.clone(), true, previous.len())?;
+        let map = if let Some(seed) = self.tour_seed {
+            crate::MapDefinition::tour_round(seed, next.round_number)?
+        } else {
+            crate::MapDefinition::skyline()?
+        };
+        let mut game = Self::on_map(
+            self.physics.clone(),
+            previous.len(),
+            Some(map),
+            self.tour_seed,
+        )?;
         game.melee = Some(next);
         *self = game;
         Ok(())
@@ -63,7 +93,9 @@ impl Duel {
         }
         let mut alive = 0;
         for &id in self.fighter_ids() {
-            if self.fall_state(id).is_some_and(|f| f.below_plane) {
+            if self.fall_state(id).is_some_and(|f| f.below_plane)
+                || self.swimmers[id as usize].drowned()
+            {
                 self.eliminate(id);
             }
             if self.vitals(id).phase != Consciousness::Eliminated {
@@ -149,5 +181,43 @@ mod tests {
         assert_eq!(game.match_state().unwrap().phase, MeleePhase::RoundResults);
         assert_eq!(game.match_state().unwrap().winner, None);
         assert_eq!(game.match_state().unwrap().scores(), &[0, 0]);
+    }
+}
+
+#[cfg(test)]
+mod tour_series_tests {
+    use super::*;
+    use crate::MapDefinition;
+    #[test]
+    fn series_keeps_scores_across_maps_and_reaches_the_host_target() {
+        for target in [3, 5, 7] {
+            let seed = 42;
+            let mut game = Duel::tour_match(
+                PhysicsConfig::default(),
+                2,
+                (u64::from(seed) << 32) | 1,
+                target,
+            )
+            .unwrap();
+            for round in 1..=target {
+                let expected = MapDefinition::tour_round(seed, u32::from(round)).unwrap();
+                assert_eq!(game.map_definition().unwrap().id, expected.id);
+                assert_eq!(game.arena_states().len(), expected.objects.len());
+                for _ in 0..180 {
+                    game.step();
+                }
+                game.step_with_forfeits(1 << 1);
+                let state = game.match_state().unwrap();
+                assert_eq!(state.scores(), &[round, 0]);
+                assert_eq!(state.phase, MeleePhase::RoundResults);
+                for _ in 0..state.remaining_ticks {
+                    game.step();
+                }
+            }
+            let state = game.match_state().unwrap();
+            assert_eq!(state.phase, MeleePhase::MatchResults);
+            assert_eq!(state.winner, Some(0));
+            assert_eq!(state.wins(), target);
+        }
     }
 }

@@ -1,14 +1,14 @@
 # gang bbeasts
 
-A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline, the Studio 08 broadcast rooftop, is playable locally with two people on one keyboard. Two to eight friends can also play from separate browser sessions in a private room.
+A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. The 22-arena tour is playable locally with two people on one keyboard. Two to eight friends can also play from separate browser sessions in a private room.
 
 The [technical specification](TECHNICAL_SPEC.md) is canonical. See the [documentation index](docs/README.md) for implementation order, decisions, and acceptance evidence.
 
 Deploy the game from GitHub using [Vercel and Railway](docs/deployment.md).
 
-## Play Skyline
+## Play the arena tour
 
-Start the browser project using the setup below and open the printed address. Choose **Host a room**, **Join a room**, or **Local match** from the main menu. Local play also opens directly at `/play/`. The match is first to three rooftop ring-outs. A countdown starts each round, and rematch is available after the winning round. Coral uses WASD and J/K, Blue uses the arrow keys and comma/period. The start and pause screens show the full bindings.
+Start the browser project using the setup below and open the printed address. Choose **Host a room**, **Join a room**, or **Local match** from the main menu. Local play also opens directly at `/play/`. Choose first to 3, 5 or 7. Each round opens on a shuffled arena and the last surviving fighter earns one win. Read the standings between rounds. After the champion screen, everyone returns to the main menu. Coral uses WASD and J/K, Blue uses the arrow keys and comma/period. The start and pause screens show the full bindings.
 
 Press Escape with the arena focused to open graphics and audio settings. Local play pauses both fighters. In a private room the round continues and your fighter releases held controls. Press Escape again to return to play.
 
@@ -16,7 +16,9 @@ Press Tab from the arena to read the live scores and round clock. Escape returns
 
 Hold a hand control near a crate, vent or exposed roof edge to grab it. The HUD shows which hand has the grip. Use the lift control to raise movable crates.
 
-If a walkway falls, keep a hand held within reach of the main roof to catch the lip. Hold Space (Coral) or Enter (Blue) to pull onto a clear roof. Release jump to stop pulling. Releasing your last hand lets you fall. [Catch behavior](docs/slices/10c2-ledge-catch.md) and [pull-up controls](docs/slices/10c3-mantling.md).
+On water arenas, steer and hold jump to swim up. Grab a low deck with either hand and hold jump to climb. Staying immersed exhausts a fighter and keeping their head underwater drains breath. A swim stroke can shake off the Night Trawler shark. [Arena guide and gallery](docs/slices/21-arena-tour.md)
+
+On Skyline, if a walkway falls, keep a hand held within reach of the main roof to catch the lip. Hold Space (Coral) or Enter (Blue) to pull onto a clear roof. Release jump to stop pulling. Releasing your last hand lets you fall. [Catch behavior](docs/slices/10c2-ledge-catch.md) and [pull-up controls](docs/slices/10c3-mantling.md).
 
 For the production build, run `npm --prefix web run build` followed by `npm --prefix web run preview`. Open the printed local address and choose **Local match**. [Local match rules](docs/slices/12a-local-rounds.md) and [browser verification](docs/slices/12b-play-skyline.md).
 

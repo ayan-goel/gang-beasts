@@ -4,6 +4,7 @@ export class CameraFit {
   private readonly point = new Vector3();
   distance = 0;
   behind = 0;
+  overviewBounds: readonly [number, number, number, number] = [-12,12,-10,10];
 
   constructor(private readonly radii: readonly number[]) {}
 
@@ -24,7 +25,8 @@ export class CameraFit {
       this.behind = Math.max(this.behind, radius-depth);
     };
     if (overview || !players.length) {
-      for (const x of [-12,12]) for (const z of [-10,10]) include(x,0,z,.2);
+      const [left,right,back,front] = this.overviewBounds;
+      for (const x of [left,right]) for (const z of [back,front]) include(x,0,z,.2);
     } else for (const player of players) {
       for (let i=0; i<player.length; i+=14) include(player[i]!,player[i+1]!,player[i+2]!,this.radii[i/14]!);
     }

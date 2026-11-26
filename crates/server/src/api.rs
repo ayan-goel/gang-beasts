@@ -7,6 +7,7 @@ use axum::{
 };
 use brawler_engine::{CharacterError, ENGINE_HASH, MapDefinition};
 use serde::Serialize;
+use sha2::{Digest, Sha256};
 use std::sync::Arc;
 
 #[derive(Clone, Serialize)]
@@ -23,7 +24,8 @@ struct MapInfo {
 struct Catalog {
     protocol_version: u8,
     engine_hash: &'static str,
-    maps: [MapInfo; 1],
+    catalog_hash: String,
+    maps: Vec<MapInfo>,
 }
 
 #[derive(Clone)]
@@ -46,18 +48,35 @@ pub fn api(pool: Arc<WorkerPool>) -> Result<Router, CharacterError> {
 }
 
 pub fn api_for_origin(pool: Arc<WorkerPool>, origin: &str) -> Result<Router, CharacterError> {
-    let map = MapDefinition::skyline()?;
+    let maps = MapDefinition::tour_catalog()?
+        .iter()
+        .map(|map| {
+            let content_hash = if map.tour.is_none() {
+                MapDefinition::skyline_hash()
+            } else {
+                format!(
+                    "{:x}",
+                    Sha256::digest(serde_json::to_vec(map).expect("validated map serializes"))
+                )
+            };
+            MapInfo {
+                id: map.id.clone(),
+                display_name: map
+                    .tour
+                    .as_ref()
+                    .map_or("Skyline", |stage| stage.name.as_str()),
+                content_version: map.content_version,
+                content_hash,
+            }
+        })
+        .collect();
     let state = ApiState {
         pool: Arc::clone(&pool),
         catalog: Catalog {
             protocol_version: brawler_protocol::VERSION,
             engine_hash: ENGINE_HASH,
-            maps: [MapInfo {
-                id: map.id,
-                display_name: "Skyline",
-                content_version: map.content_version,
-                content_hash: MapDefinition::skyline_hash(),
-            }],
+            catalog_hash: MapDefinition::tour_hash(),
+            maps,
         },
     };
     Ok(Router::new()

@@ -47,6 +47,11 @@ pub(super) struct Create {
     pub color: Option<u8>,
     #[serde(default = "default_capacity")]
     pub capacity: u8,
+    #[serde(default = "default_wins")]
+    pub wins: u8,
+}
+fn default_wins() -> u8 {
+    3
 }
 fn default_capacity() -> u8 {
     8
@@ -76,6 +81,7 @@ pub(super) struct PublicRoom {
     pub code: String,
     pub phase: &'static str,
     pub capacity: u8,
+    pub wins: u8,
     pub players: usize,
 }
 #[derive(Serialize)]
@@ -91,6 +97,7 @@ pub(super) struct Seat {
 pub(super) struct Roster {
     pub code: String,
     pub capacity: u8,
+    pub wins: u8,
     pub you: u8,
     pub revision: u32,
     pub players: Vec<Seat>,

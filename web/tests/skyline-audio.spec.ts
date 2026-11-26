@@ -1,5 +1,5 @@
 import { breakawayPans, observeWarningAudio, warningSamples, windVoices } from './support/warningAudio';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/skylineTest';
 
 // The local warning follows 5,400 physics ticks on the render clock. Use the Mac GPU for this real-time scene.
 if (process.platform === 'darwin') test.use({launchOptions:{args:['--use-gl=angle','--use-angle=metal']}});

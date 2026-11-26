@@ -117,6 +117,8 @@ fn body<T>(result: Result<Json<T>, JsonRejection>) -> Result<T, Fault> {
 struct SessionInfo {
     active: bool,
     room: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    completed: Option<String>,
 }
 
 async fn session(
@@ -129,7 +131,13 @@ async fn session(
     let now = Instant::now();
     let current = d.sessions.authenticate(&headers, now).ok();
     let room = current.and_then(|id| d.current(id));
-    let mut res = Json(SessionInfo { active: true, room }).into_response();
+    let completed = current.and_then(|id| d.last_completed(id));
+    let mut res = Json(SessionInfo {
+        active: true,
+        room,
+        completed,
+    })
+    .into_response();
     if current.is_none() {
         let cookie = d.sessions.issue(now)?;
         res.headers_mut().insert(
