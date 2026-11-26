@@ -1,5 +1,6 @@
 import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { GripNotices } from '../app/GripNotices';
+import { MatchMenu, openMenuFromArena } from '../app/MatchMenu';
 import { StaminaMeter } from '../app/StaminaMeter';
 import { onlineGripLabels } from './gripLabels';
 import { gripHint } from './gripHint';
@@ -23,6 +24,7 @@ export default function OnlineMatch({feed, content, exit, rematch, highLatency}:
   const [match, setMatch] = useState(() => matchView(feed.latest!, content));
   const [status, setStatus] = useState<StreamStatus>('buffering');
   const [error, setError] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   const [graphicsAttempt, setGraphicsAttempt] = useState(0);
   const [choice, setChoice] = useState<CameraChoice | null>(null);
   const cameraChoice = useRef(choice);
@@ -54,9 +56,14 @@ export default function OnlineMatch({feed, content, exit, rematch, highLatency}:
   const hint = feed.own !== null && match.phase === 'playing' && match.conditions[feed.own] === 'active'
     ? gripHint(feed.own, match.gripTargets, match.hazard) : '';
   return <section className="online-match" aria-label="Online Skyline arena">
-    <div className="online-header"><h1>{feed.own === null ? 'Spectating Skyline' : 'Playing as ' + feed.fighters[feed.own]!.name}</h1><button onClick={exit}>Leave room</button></div>
+    <div className="online-header"><h1>{feed.own === null ? 'Spectating Skyline' : 'Playing as ' + feed.fighters[feed.own]!.name}</h1>
+      <button aria-keyshortcuts="Escape" onClick={() => setMenuOpen(true)}>Match menu</button><button onClick={exit}>Leave room</button></div>
+    {menuOpen && <MatchMenu resume={() => {
+      setMenuOpen(false);
+      container.current?.querySelector<HTMLCanvasElement>('canvas:not([inert])')?.focus({preventScroll:true});
+    }} />}
     <div className="online-stage">
-      <div className="online-scene" ref={container}/>
+      <div className="online-scene" ref={container} onKeyDown={event => openMenuFromArena(event, () => setMenuOpen(true))}/>
       <div className="online-notices">
         {highLatency && status !== 'stalled' && <p className="online-delay" role="status">High network delay. Controls may feel delayed.</p>}
         <p className="online-hazard" role="status" aria-label="Arena hazard">

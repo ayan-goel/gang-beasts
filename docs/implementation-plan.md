@@ -93,6 +93,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 16i — native round lineups | Carry scores and connection status across round-boundary roster changes | Two-to-eight growth, compaction, input epoch fencing and final-match protection |
 | 16j — late joins | Move connected spectators into the next playable round | Three-client spectator-to-fighter transition, score continuity, seat reuse and input ownership |
 | 16k — game entry | Open the main menu at the site root | Direct host/join/local choices, separate practice route, cold download and responsive keyboard navigation |
+| [16l — match menu](slices/16l-match-menu.md) | Change settings during a round and return to the arena with the keyboard | Frozen local simulation, live private clocks and neutral controls on menu entry |
 | 16 | Private sessions and lobby | Link/code, ready/start, auth, reconnect, host transfer, late joining |
 | 17a — hazard warnings | Show the current walkway and wind warnings during online play | Shared text, server timing, reconnect and round cleanup |
 | 17b — skinned fighters | Drive the original Roof Crew GLB from local or online body poses | Independent skeletons, per-vertex deformation, model loading and retry |

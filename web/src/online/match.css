@@ -4,7 +4,7 @@
 .online-match { background: #19313c; position: relative; color: #faf7ee; }
 .online-header, .online-score { display:flex; gap: 1rem; align-items:center; flex-wrap:wrap; padding: .7rem clamp(1rem, 3vw, 3rem); }
 .online-header { justify-content:space-between; }
-.online-header h1 { margin:0; font-size:1.5rem; }
+.online-header h1 { margin:0 auto 0 0; font-size:1.5rem; }
 .online-header button { color:inherit; background:transparent; border:1px solid #92acaf; padding:.4rem .8rem; }
 .online-scene { height:clamp(300px,65dvh,760px); width:100%; }
 .online-scene canvas { width:100%; height:100%; display:block; }

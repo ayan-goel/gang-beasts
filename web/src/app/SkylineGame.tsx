@@ -1,6 +1,7 @@
 import { GraphicsUnavailable } from '../rendering/createSceneRenderer';
 import { pullHint } from '../game/ledgeHint';
 import { GraphicsSelect } from './GraphicsSelect';
+import { MatchMenu, openMenuFromArena } from './MatchMenu';
 import { meleeResult } from '../game/meleeResult';
 import { GripNotices } from './GripNotices';
 import { StaminaMeter } from './StaminaMeter';
@@ -43,26 +44,30 @@ export function SkylineGame() {
     setStarted(true); runtime.current?.toggle();
   };
   const clock = Math.ceil((match?.timeLeft ?? 10800) / 60);
+  const showIntro = !started || complete;
+  const controls = <div className="skyline-bindings">
+    <h2><i className="dot coral" />Coral</h2><p>WASD move · Left Shift run · Space jump / pull up<br />J / K punch or grab · E lift · Q headbutt</p>
+    <h2><i className="dot blue" />Blue</h2><p>Arrows move · Right Shift run · Enter jump / pull up<br />Comma / period punch or grab · Slash lift · M headbutt</p>
+    <p>Hold a hand button to grab a fighter, crate, vent or roof edge. Release during a lift or swing to throw. While hanging, hold jump to pull up. Z / X turns the shared camera. Escape pauses the match.</p>
+  </div>;
   return <main className="skyline-shell">
     <header className="skyline-header">
       <a className="roof-brand" href="/" aria-label="Main menu"><span aria-hidden="true" className="roof-mark">▰</span> Skyline Melee</a>
       <span>Local multiplayer</span><GraphicsSelect /><MuteButton /><a href="/rooms/">Private rooms</a><a href="/playground/">Physics playground ↗</a>
     </header>
-    <div className={menu ? 'skyline-layout has-menu' : 'skyline-layout'}>
-      {menu && <section className="skyline-menu">
-        <div><p className="skyline-kicker">{complete ? 'Match results' : started ? 'Paused' : 'Two players · One keyboard'}</p>
-          <h1>{complete ? winner : started ? 'Game paused' : 'Skyline Melee'}</h1>
+    {started && !complete && state?.paused && <MatchMenu local resume={start}>{controls}</MatchMenu>}
+    <div className={showIntro ? 'skyline-layout has-menu' : 'skyline-layout'}>
+      {showIntro && <section className="skyline-menu">
+        <div><p className="skyline-kicker">{complete ? 'Match results' : 'Two players · One keyboard'}</p>
+          <h1>{complete ? winner : 'Skyline Melee'}</h1>
           <p>Stay on the rooftop. The last fighter standing takes the round. First to three wins.</p></div>
-        <div className="skyline-bindings">
-          <h2><i className="dot coral" />Coral</h2><p>WASD move · Left Shift run · Space jump / pull up<br />J / K punch or grab · E lift · Q headbutt</p>
-          <h2><i className="dot blue" />Blue</h2><p>Arrows move · Right Shift run · Enter jump / pull up<br />Comma / period punch or grab · Slash lift · M headbutt</p>
-          <p>Hold a hand button to grab a fighter, crate, vent or roof edge. Release during a lift or swing to throw. While hanging, hold jump to pull up. Z / X turns the shared camera.</p>
-        </div>
-        <button className="skyline-start" disabled={!match} onClick={start}>{complete ? 'Rematch' : started ? 'Resume match' : 'Start match'} <span aria-hidden="true">→</span></button>
+        {controls}
+        <button className="skyline-start" disabled={!match} onClick={start}>{complete ? 'Rematch' : 'Start match'} <span aria-hidden="true">→</span></button>
         {error && <div><p role="alert">{error.message}</p><button onClick={() => setAttempt(n => n + 1)}>{error.retry}</button></div>}
       </section>}
       <section className="skyline-stage" aria-label="Skyline arena">
-        <div className="scene-canvas" ref={viewport} />
+        <div className="scene-canvas" ref={viewport}
+          onKeyDown={event => { if (!menu) openMenuFromArena(event, () => runtime.current?.toggle()); }} />
         {match && <div className="match-hud">
           <div className="match-round"><span aria-label="Round number">Round {match.round}</span><strong>{Math.floor(clock / 60)}:{String(clock % 60).padStart(2, '0')}</strong></div>
           <div className="match-score">{names.map((name, id) => <div key={name}>
@@ -70,7 +75,7 @@ export function SkylineGame() {
             {!menu && match.phase === 'playing' && state && match.visible[id] &&
               <StaminaMeter name={name} points={state.stamina[id]!} holding={state.grips[id]!.length > 0} />}
           </div>)}</div>
-          {!menu && <button className="match-pause" onClick={() => runtime.current?.toggle()}>Pause</button>}
+          {!menu && <button className="match-pause" aria-keyshortcuts="Escape" onClick={() => runtime.current?.toggle()}>Pause</button>}
         </div>}
         <span className="visually-hidden" aria-label="Round phase">{match && phases[match.phase]}</span>
         {started && !menu && match && <div className="match-callout" aria-live="polite">

@@ -8,6 +8,8 @@ The [technical specification](TECHNICAL_SPEC.md) is canonical. See the [document
 
 Start the browser project using the setup below and open the printed address. Choose **Host a room**, **Join a room**, or **Local match** from the main menu. Local play also opens directly at `/play/`. The match is first to three rooftop ring-outs. A countdown starts each round, and rematch is available after the winning round. Coral uses WASD and J/K, Blue uses the arrow keys and comma/period. The start and pause screens show the full bindings.
 
+Press Escape with the arena focused to open graphics and audio settings. Local play pauses both fighters. In a private room the round continues and your fighter releases held controls. Press Escape again to return to play.
+
 Hold a hand control near a crate, vent or exposed roof edge to grab it. The HUD shows which hand has the grip. Use the lift control to raise movable crates.
 
 If a walkway falls, keep a hand held within reach of the main roof to catch the lip. Hold Space (Coral) or Enter (Blue) to pull onto a clear roof. Release jump to stop pulling. Releasing your last hand lets you fall. [Catch behavior](docs/slices/10c2-ledge-catch.md) and [pull-up controls](docs/slices/10c3-mantling.md).

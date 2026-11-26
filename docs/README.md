@@ -16,6 +16,7 @@
 - [Skyline occlusion](slices/12f-skyline-occlusion.md) covers the view of a fighter behind the roof or a moving prop.
 - [Disconnects during a grip](verification/disconnected-grips.md) covers stale hands, incoming and outgoing grips, forfeits and neutral control after recovery.
 - [Game entry](slices/16k-game-entry.md) records the public menu, cold download and direct routes.
+- [Match menu](slices/16l-match-menu.md) covers local pause, private input release, graphics and mute controls, and returning to play.
 - [Spectator camera](slices/12h-spectator-camera.md) covers following survivors, switching back to the group and returning to play.
 - [Ledge rescue practice](slices/10f-ledge-practice.md) covers the playable west walkway retry and the twenty-timing recovery test.
 - [Ledge rescue](slices/10e-ledge-rescue.md) covers fall-arrest timing, the pull-up controls and the west walkway in a private match.

@@ -1,0 +1,19 @@
+.match-menu-dialog {
+  box-sizing: border-box;
+  width: min(26rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  padding: clamp(1.25rem, 4vw, 2rem);
+  border: 1px solid #74888b;
+  border-radius: .25rem;
+  background: #f4f1e7;
+  color: #172d38;
+  font: 1rem/1.45 system-ui, sans-serif;
+}
+.match-menu-dialog::backdrop { background: rgb(12 30 40 / 60%); }
+.match-menu-dialog h2 { margin: 0 0 .75rem; }
+.match-menu-dialog p { margin: .5rem 0 1rem; }
+.match-menu-return { background: #f8c660; color: #172d38; border: 1px solid #755a25; padding: .55rem 1rem; font-weight: 700; cursor: pointer; }
+.match-menu-return:focus-visible { outline: 2px solid #286a82; outline-offset: 2px; }
+.match-menu-settings { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; margin: 1rem 0; }
+.match-menu-dialog .skyline-bindings p { font-size: .85rem; }
