@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
+import { observeSnapshotTraffic } from './support/snapshotTraffic';
 import { observeEighthFighter } from './support/onlineTrace';
 import { releaseRoom } from './support/releaseRoom';
 import { observeSkinDraws } from './support/skinDraws';
@@ -10,6 +11,7 @@ if (process.platform === 'darwin') test.use({launchOptions:{args:['--use-gl=angl
 test('eight ready browsers share the rooftop and the eighth player can run off it', async ({browser}) => {
   const contexts: BrowserContext[] = [];
   const pages: Page[] = [];
+  const traffic: ReturnType<typeof observeSnapshotTraffic>[] = [];
   const traces: ReturnType<typeof observeEighthFighter>[] = [];
   let invite = '/rooms/';
   let drawn: (() => Promise<number>) | undefined;
@@ -19,6 +21,20 @@ test('eight ready browsers share the rooftop and the eighth player can run off i
       contexts.push(context);
       const player = await context.newPage();
       pages.push(player);
+      traffic.push(observeSnapshotTraffic(player));
+      if (slot === 7) {
+        // Exercise a client that only advertises the original full snapshot format in the same match.
+        await player.addInitScript(() => {
+          const NativeSocket = window.WebSocket;
+          window.WebSocket = class extends NativeSocket {
+            constructor(url: string | URL, protocols?: string | string[]) {
+              const target = new URL(url, location.href);
+              if (target.pathname === '/ws') target.searchParams.delete('compact');
+              super(target, protocols);
+            }
+          };
+        });
+      }
       if (slot === 0) drawn = await observeSkinDraws(player, 8);
       traces.push(observeEighthFighter(player));
       await player.goto(invite);
@@ -39,6 +55,11 @@ test('eight ready browsers share the rooftop and the eighth player can run off i
     }
     await expect.poll(drawn!).toBe(8);
     await expect(eighth.getByLabel('Round phase')).toHaveText('Playing');
+    await expect.poll(() => traffic.every(sample => sample.complete), {timeout:20000}).toBe(true);
+    expect(traffic.map(sample => sample.compact)).toEqual([true,true,true,true,true,true,true,false]);
+    await test.info().attach('snapshot-traffic', {
+      body: JSON.stringify(traffic), contentType: 'application/json',
+    });
     await eighth.bringToFront();
     await eighth.locator('.online-scene canvas').focus();
     await eighth.keyboard.down('ShiftLeft');

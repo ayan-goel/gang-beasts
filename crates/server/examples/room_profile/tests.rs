@@ -18,7 +18,7 @@ fn statistics_preserve_the_tail_and_count_each_over_budget_tick() {
 
 #[test]
 fn measured_window_excludes_warmup_and_exercises_eight_fighters() {
-    let result = profile(180, 300);
+    let result = profile(180, 300, false);
     assert_eq!(result.total.samples, 300);
     assert_eq!(result.publication.samples, 150);
     assert_eq!(result.playing_ticks, 300);
@@ -26,4 +26,15 @@ fn measured_window_excludes_warmup_and_exercises_eight_fighters() {
     assert!(result.snapshot_bytes.iter().all(|b| *b > 0));
     assert_eq!(result.snapshot_bytes, [result.snapshot_bytes[0]; 8]);
     assert!(result.grip_ticks > 0 || result.hits > 0);
+}
+
+#[test]
+fn compact_snapshots_fit_the_eight_fighter_budget_at_full_publication_rate() {
+    let result = profile(180, 60, true);
+    assert_eq!(result.publication.samples, 30);
+    assert_eq!(
+        result.snapshot_bytes,
+        [30 * (20 + 129 * 23 + 24 + 8 * 24); 8]
+    );
+    assert!(result.snapshot_bytes[0] < 100_000);
 }

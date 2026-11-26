@@ -54,7 +54,7 @@ struct Report {
     snapshot_bytes: [u64; 8],
 }
 
-fn profile(warmup: usize, ticks: usize) -> Report {
+fn profile(warmup: usize, ticks: usize, compact: bool) -> Report {
     let mut room = Room::skyline_with_players(8).unwrap();
     let mut drivers = Drivers::default();
     let mut total = Vec::with_capacity(ticks);
@@ -83,7 +83,11 @@ fn profile(warmup: usize, ticks: usize) -> Report {
         if publish {
             let shared = room.capture().unwrap();
             for id in FighterId::ALL {
-                let packet = black_box(shared.for_recipient(id));
+                let packet = black_box(if compact {
+                    shared.compact_for(Some(id))
+                } else {
+                    shared.for_recipient(id)
+                });
                 if measuring {
                     snapshot_bytes[id as usize] += packet.len() as u64;
                 }
@@ -133,8 +137,13 @@ fn profile(warmup: usize, ticks: usize) -> Report {
 }
 
 fn main() {
+    let compact = match std::env::args().skip(1).collect::<Vec<_>>().as_slice() {
+        [] => false,
+        [option] if option == "--compact" => true,
+        _ => panic!("usage: room_profile [--compact]"),
+    };
     for _ in 0..5 {
-        let report = profile(30 * 60, 120 * 60);
+        let report = profile(30 * 60, 120 * 60, compact);
         assert_eq!(report.eight_survivor_playing_ticks, 7200);
         assert!(report.grip_ticks > 0 && report.hits > 0);
         println!("{}", serde_json::to_string(&report).unwrap());

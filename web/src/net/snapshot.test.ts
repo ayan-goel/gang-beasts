@@ -29,3 +29,34 @@ it('rejects invalid extents, flags, rotations, IDs, gameplay state and grip refe
     expect(() => decodeSnapshot(bytes)).toThrow();
   }
 });
+
+const compact = readFileSync(new URL('../../../tests/fixtures/protocol/compact-skyline-v1.bin', import.meta.url));
+it('decodes compact native frames with exact positions and sub-0.01 degree rotation error', () => {
+  const before = decodeSnapshot(golden);
+  const after = decodeSnapshot(compact);
+  expect({...after, bodies: undefined}).toEqual({...before, bodies: undefined});
+  const rotations = [[0,0,0,-1],[-0.5,0.5,-0.5,0.5],[0,-0.8,0,0.6],[0.6,0,0.8,0]];
+  let i = 0;
+  for (const [id, pose] of after.bodies) {
+    expect(pose.position).toEqual(before.bodies.get(id)?.position);
+    const original = rotations[i++ % 4]!;
+    const dot = pose.rotation.reduce((sum, v, j) => sum + v * original[j]!, 0);
+    expect(2 * Math.acos(Math.min(1, Math.abs(dot))) * 180 / Math.PI).toBeLessThan(0.01);
+  }
+  expect(i).toBe(31);
+});
+
+it('rejects invalid compact indices, impossible rotations, reserved integers and malformed lengths', () => {
+  for (const mutate of [
+    (b: Buffer) => { b[36] = 4; },
+    (b: Buffer) => { b.writeInt16LE(32767, 37); },
+    (b: Buffer) => { b.writeInt16LE(-32768, 39); },
+    (b: Buffer) => { b.fill(0x7f, 37, 43); },
+    (b: Buffer) => { b[2] = 3; },
+  ]) {
+    const copy = Buffer.from(compact);
+    mutate(copy);
+    expect(() => decodeSnapshot(copy)).toThrow();
+  }
+  expect(() => decodeSnapshot(compact.subarray(0,-1))).toThrow();
+});

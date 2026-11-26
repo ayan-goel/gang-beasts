@@ -35,7 +35,7 @@ export function observeEighthFighter(page: Page) {
       if (!Buffer.isBuffer(payload) || payload[0] !== 2) return;
       trace.frames++;
       trace.tick = payload.readUInt32LE(4);
-      const gameplay = 20 + payload.readUInt16LE(16) * 32;
+      const gameplay = payload.length - payload.readUInt16LE(18);
       if (payload[gameplay+3] === 8 && payload[gameplay+24*8+1] === 3) trace.eliminated = true;
     });
   });

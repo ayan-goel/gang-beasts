@@ -12,9 +12,10 @@ use std::time::{Duration, Instant};
 use tokio::time::{MissedTickBehavior, interval, timeout};
 
 #[derive(Clone, Copy)]
-struct Capabilities {
+pub(super) struct Capabilities {
     resume: bool,
-    lineups: bool,
+    pub(super) lineups: bool,
+    pub(super) compact: bool,
 }
 
 pub(super) async fn upgrade(
@@ -45,6 +46,7 @@ pub(super) async fn upgrade(
     let capabilities = Capabilities {
         resume: has("resume=1"),
         lineups: has("lineups=1"),
+        compact: has("compact=1"),
     };
     Ok(ws
         .max_frame_size(4096)
@@ -95,7 +97,7 @@ async fn serve(
             &code,
             owner,
             ticket.is_some(),
-            capabilities.lineups,
+            capabilities,
         )
         .await;
     }
@@ -108,7 +110,7 @@ async fn exchange(
     code: &str,
     owner: Connection,
     resuming: bool,
-    supports_lineups: bool,
+    capabilities: Capabilities,
 ) {
     let mut timer = interval(Duration::from_millis(150));
     timer.set_missed_tick_behavior(MissedTickBehavior::Skip);
@@ -157,8 +159,7 @@ async fn exchange(
                 dir.rooms.get(code).and_then(|r| r.game.clone())
             };
             if let Some(game) = game {
-                super::stream::play(socket, state, code, owner, game.clone(), supports_lineups)
-                    .await;
+                super::stream::play(socket, state, code, owner, game.clone(), capabilities).await;
                 let returned = {
                     let mut dir = state.directory.lock().unwrap();
                     dir.prune(Instant::now());

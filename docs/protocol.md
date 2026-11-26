@@ -16,16 +16,20 @@ Run `cargo test --locked -p brawler-protocol` and `npm --prefix web test -- --ru
 
 ## Full Skyline snapshots
 
-Kind 2, v1 uses little-endian integers and IEEE f32 values. The complete message is a 20-byte header, N consecutive 32-byte transforms, then a gameplay block. A full record replaces the previous world. All clients must have the compatible Skyline map and character definition before applying it.
+Kind 2, v1 uses little-endian integers and IEEE f32 values. The complete message is a 20-byte header, N consecutive fixed-size transforms, then a gameplay block. A full record replaces the previous world. All clients must have the compatible Skyline map and character definition before applying it.
 
 | Header offset | Value |
 | --- | --- |
 | 0, 1 | Kind and version, u8 each |
-| 2 | u16 flags, bit 0 full (required), bit 1 input acknowledgement valid |
+| 2 | u16 flags, bit 0 full (required), bit 1 input acknowledgement valid, bit 2 compact rotations. All other bits are reserved. |
 | 4, 8, 12 | Completed room tick, recipient input acknowledgement, baseline tick (u32 each). Absent acknowledgement and full baseline are encoded as zero. |
 | 16, 18 | Transform count and gameplay byte count (u16 each) |
 
-Each transform contains body ID u32 at 0, XYZ position at 4 and XYZW rotation at 16. All components must be finite and squared quaternion length within 0.002 of one. Send at most 256 transforms, in strictly increasing ID order. Fighter slot S uses IDs 1 + 16S + body index (0–14 in the shared character order). Include all 15 bodies even for an eliminated slot. Arena objects use 65536 + map object ID (1–65535). Omit retired objects. Zero denotes an empty grip. Stable IDs are scoped to the round epoch.
+The original 32-byte transform contains body ID u32 at 0, XYZ position at 4 and XYZW rotation at 16. All components must be finite and squared quaternion length within 0.002 of one. Send at most 256 transforms, in strictly increasing ID order. Fighter slot S uses IDs 1 + 16S + body index (0–14 in the shared character order). Include all 15 bodies even for an eliminated slot. Arena objects use 65536 + map object ID (1–65535). Omit retired objects. Zero denotes an empty grip. Stable IDs are scoped to the round epoch.
+
+A connection advertising `compact=1` in its WebSocket query can receive bit 2. Other clients receive the original format. Every compact transform is 23 bytes. The u32 ID and three f32 position components occupy the same first 16 bytes. At byte 16, a u8 identifies the largest absolute component of the XYZW quaternion (0–3, first index on a tie). Bytes 17–22 contain the remaining three components in XYZW order as little-endian i16s. Normalize the source, make the omitted component positive by negating the quaternion when necessary, then round each retained component times 32767 to nearest, with halves away from zero.
+
+Decode each retained component by dividing by 32767. Reject −32768, an invalid index or a negative square-root argument. Reconstruct the omitted component as the positive square root of one minus the sum of the three squares. Reject a retained absolute magnitude larger than the reconstructed component plus 3/32767, which allows near ties after rounding. The codec's orientation error target is below 0.01 degrees. Both forms use the same gameplay block, ID validation, epoch and recipient acknowledgement. A compact frame can be applied immediately after reconnect or a missed publication. [Cross-runtime compact fixture](../tests/fixtures/protocol/compact-skyline-v1.bin)
 
 | Gameplay offset | Value |
 | --- | --- |

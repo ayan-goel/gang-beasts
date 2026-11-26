@@ -1,3 +1,5 @@
+import { compactRotation } from './compactRotation';
+
 type Vec3 = [number, number, number];
 type Quat = [number, number, number, number];
 
@@ -34,9 +36,11 @@ export function decodeSnapshot(bytes: Uint8Array): Snapshot {
   const u16 = (offset: number) => data.getUint16(offset, true);
   const u32 = (offset: number) => data.getUint32(offset, true);
   const f32 = (offset: number) => data.getFloat32(offset, true);
-  const flags = u16(2), count = u16(16), gameplay = 20 + 32 * count;
-  requireField(u8(0) === 2 && u8(1) === 1 && (flags === 1 || flags === 3), 'kind or flags');
-  requireField(u32(12) === 0 && (flags === 3 || u32(8) === 0), 'baseline or acknowledgement');
+  const flags = u16(2), count = u16(16);
+  const packed = (flags & 4) !== 0, acknowledged = (flags & 2) !== 0;
+  const stride = packed ? 23 : 32, gameplay = 20 + stride * count;
+  requireField(u8(0) === 2 && u8(1) === 1 && (flags & ~6) === 1, 'kind or flags');
+  requireField(u32(12) === 0 && (acknowledged || u32(8) === 0), 'baseline or acknowledgement');
   // Check all bounds before allocating per-body state or reading the gameplay block.
   requireField(count <= 256 && u16(18) >= 24 && gameplay + u16(18) === bytes.length, 'length');
   const slots = u8(gameplay + 3), phase = u8(gameplay + 1), winner = u8(gameplay + 2);
@@ -48,11 +52,11 @@ export function decodeSnapshot(bytes: Uint8Array): Snapshot {
   const bodies = new Map<number, BodyPose>();
   let previous = 0;
   for (let i = 0; i < count; i++) {
-    const at = 20 + 32 * i, id = u32(at);
+    const at = 20 + stride * i, id = u32(at);
     const expected = 1 + 16 * Math.floor(i / 15) + i % 15;
     requireField(id > previous && (i < slots * 15 ? id === expected : id > 65536 && id <= 131071), 'body ID');
     const position: Vec3 = [f32(at + 4), f32(at + 8), f32(at + 12)];
-    const rotation: Quat = [f32(at + 16), f32(at + 20), f32(at + 24), f32(at + 28)];
+    const rotation: Quat = packed ? compactRotation(data, at + 16) : [f32(at + 16), f32(at + 20), f32(at + 24), f32(at + 28)];
     const norm = rotation.reduce((sum, v) => sum + v * v, 0);
     requireField(position.every(Number.isFinite) && norm >= 0.998 && norm <= 1.002, 'transform');
     bodies.set(id, { position, rotation });
@@ -73,7 +77,7 @@ export function decodeSnapshot(bytes: Uint8Array): Snapshot {
     fighters.push({ consciousness, score: u8(at + 2), hands, health, stamina, grips });
   }
   return {
-    tick: u32(4), applied: flags === 3 ? u32(8) : null, round, number,
+    tick: u32(4), applied: acknowledged ? u32(8) : null, round, number,
     arenaTick: u32(gameplay + 20), phase, winner: winner === 255 ? null : winner,
     remaining: u16(gameplay + 4), bodies, fighters
   };

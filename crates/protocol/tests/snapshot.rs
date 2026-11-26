@@ -63,3 +63,30 @@ fn invalid_rotation_missing_bodies_and_stale_grips_fail_before_publication() {
     s.fighters[0].grips[0] = 1;
     assert!(s.encode().is_err());
 }
+
+#[test]
+fn compact_frames_match_the_golden_record_and_keep_recipient_acks_independent() {
+    let mut s = sample();
+    let rotations = [
+        [0., 0., 0., -1.],
+        [-0.5, 0.5, -0.5, 0.5],
+        [0., -0.8, 0., 0.6],
+        [0.6, 0., 0.8, 0.],
+    ];
+    for (index, body) in s.bodies.iter_mut().enumerate() {
+        body.rotation = rotations[index % rotations.len()];
+    }
+    let shared = s.encode_shared().unwrap();
+    let packet = shared.compact_for_recipient(Some(0));
+    assert_eq!(
+        packet,
+        include_bytes!("../../../tests/fixtures/protocol/compact-skyline-v1.bin").as_slice()
+    );
+    let spectator = shared.compact_for_recipient(None);
+    assert_eq!(spectator[2], 5);
+    assert_eq!(
+        shared.compact_for_recipient(Some(42))[8..12],
+        42u32.to_le_bytes()
+    );
+    assert_eq!(packet[12..], spectator[12..]);
+}

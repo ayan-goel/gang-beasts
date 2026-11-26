@@ -19,7 +19,7 @@ pub(super) async fn play(
     code: &str,
     owner: Connection,
     game: Arc<Match>,
-    supports_lineups: bool,
+    capabilities: super::socket::Capabilities,
 ) {
     let Some(mut binding) = Binding::open(state, code, owner, &game) else {
         return;
@@ -89,7 +89,7 @@ pub(super) async fn play(
         };
         match binding.assignment(state, &frame) {
             Ok(Some(packet)) => {
-                if packet[0] == 34 && !supports_lineups {
+                if packet[0] == 34 && !capabilities.lineups {
                     // Older clients can re-enter through their existing lobby handshake and get a fresh assignment.
                     send(socket, vec![27, 1]).await;
                     return;
@@ -115,9 +115,13 @@ pub(super) async fn play(
             acknowledged = None;
         }
         published = Some(frame.round);
-        let bytes = binding
-            .fighter
-            .map_or_else(|| frame.for_spectator(), |id| frame.for_recipient(id));
+        let bytes = if capabilities.compact {
+            frame.compact_for(binding.fighter)
+        } else {
+            binding
+                .fighter
+                .map_or_else(|| frame.for_spectator(), |id| frame.for_recipient(id))
+        };
         if !send(socket, bytes).await {
             return;
         }

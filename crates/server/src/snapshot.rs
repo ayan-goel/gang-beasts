@@ -17,6 +17,10 @@ impl RoomFrame {
     pub fn tick(&self) -> u64 {
         self.tick
     }
+    pub fn compact_for(&self, fighter: Option<FighterId>) -> Vec<u8> {
+        let applied = fighter.and_then(|id| self.applied[id as usize]);
+        self.world.compact_for_recipient(applied)
+    }
     pub fn for_spectator(&self) -> Vec<u8> {
         self.world.for_recipient(None)
     }

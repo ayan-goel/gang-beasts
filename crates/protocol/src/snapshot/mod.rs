@@ -1,4 +1,5 @@
 mod encode;
+mod rotation;
 pub use encode::SharedSnapshot;
 
 pub const ARENA_BASE: u32 = 1 << 16;

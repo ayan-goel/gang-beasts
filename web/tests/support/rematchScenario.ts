@@ -12,7 +12,7 @@ export async function verifyOnlineRematch({page:host, browser}: {page:Page; brow
     socket.on('close', () => activeHostSockets--);
     socket.on('framereceived', ({payload}) => {
       if (!Buffer.isBuffer(payload) || payload[0] !== 2) return;
-      const gameplay = 20 + 32 * payload.readUInt16LE(16);
+      const gameplay = payload.length - payload.readUInt16LE(18);
       epoch = payload.readBigUInt64LE(gameplay + 8);
       tick = payload.readUInt32LE(4);
     });

@@ -1,6 +1,6 @@
 # Eight-player Skyline room baseline
 
-On an Apple M3 Pro, the median run-level p95 time to accept due inputs, advance an eight-fighter room and prepare any due snapshots was **0.955 ms**. Each player's full snapshots used **130.72 KB/s**. Full snapshots alone exceed the §28.1 optimized whole-stream target of 100 KB/s.
+On an Apple M3 Pro, the median run-level p95 time to accept due inputs, advance an eight-fighter room and prepare any due snapshots was **0.955 ms**. Each player's original 32-byte-transform snapshots used **130.72 KB/s**. That baseline motivated the [compact snapshot format](../slices/19b-compact-snapshots.md).
 
 ## Reference run
 
@@ -30,4 +30,4 @@ Across the five runs including warmup and instrumentation, macOS reported 38.42 
 
 ## Snapshot traffic
 
-The encoder produced 15,686,752 bytes per recipient across 3,600 snapshots in each run. Dividing by 120 simulated seconds gives 130,722.93 B/s per player and 1,045,783.47 B/s for eight recipients. These are decimal units. Lobby and control messages, WebSocket framing, TCP/TLS and retransmits require a separate wire measurement. The native timing and traffic results support retaining Rapier for this workload. The browser frame-time matrix, worst-case scenarios, optimized traffic and endurance gates remain open.
+The encoder produced 15,686,752 bytes per recipient across 3,600 snapshots in each run. Dividing by 120 simulated seconds gives 130,722.93 B/s per player and 1,045,783.47 B/s for eight recipients. These are decimal units. Lobby and control messages, WebSocket framing, TCP/TLS and retransmits require a separate wire measurement. The native timing and traffic results support retaining Rapier for this workload. The browser frame-time matrix, worst-case scenarios and endurance gates remain open.
