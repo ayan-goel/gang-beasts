@@ -2,6 +2,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 import { verifyOnlineRematch } from './support/rematchScenario';
 import { verifyDisconnectGrace } from './support/disconnectScenario';
+import { releaseRoom } from './support/releaseRoom';
 import { observeMatch } from './support/onlineTrace';
 
 test('only the host can start and both ready browsers see the live rooftop and round', async ({page, browser}) => {
@@ -59,7 +60,10 @@ test('only the host can start and both ready browsers see the live rooftop and r
       await player.getByRole('button',{name:'Leave room'}).click();
       await expect(player.getByLabel('Player name')).toBeVisible();
     }
-  } finally { await profile.close(); }
+  } finally {
+    try { await releaseRoom(link,[page.context(),profile]); }
+    finally { await profile.close(); }
+  }
 });
 
 test('the arena reports a stalled stream and resumes after ordered snapshots arrive', async ({page, browser}) => {
@@ -81,10 +85,11 @@ test('the arena reports a stalled stream and resumes after ordered snapshots arr
   await page.goto('/rooms/');
   await page.getByLabel('Player name').fill('Coral');
   await page.getByRole('button',{name:'Create room', exact:true}).click();
+  const link = await page.getByLabel('Invite link').inputValue();
   const profile = await browser.newContext();
   try {
     const guest = await profile.newPage();
-    await guest.goto(await page.getByLabel('Invite link').inputValue());
+    await guest.goto(link);
     await guest.getByLabel('Player name').fill('Blue');
     await guest.getByRole('button',{name:'Join room',exact:true}).click();
     for (const p of [page,guest]) await p.getByRole('button',{name:'Ready up'}).click();
@@ -101,7 +106,8 @@ test('the arena reports a stalled stream and resumes after ordered snapshots arr
     for (const p of [guest,page]) await p.getByRole('button',{name:'Leave room'}).click();
   } finally {
     resume();
-    await profile.close();
+    try { await releaseRoom(link,[page.context(),profile]); }
+    finally { await profile.close(); }
   }
 });
 
@@ -141,28 +147,19 @@ test('eight ready browsers share the rooftop and the eighth player can run off i
     await eighth.bringToFront();
     await eighth.locator('.online-scene canvas').focus();
     await eighth.keyboard.down('ShiftLeft');
-    await eighth.keyboard.down('KeyD');
+    // From the eighth spawn the south edge is clear. Running east can hit the fixed rooftop vent.
+    await eighth.keyboard.down('KeyS');
     try {
       await expect.poll(() => eliminated.size, {timeout:30000}).toBe(8);
     } finally {
-      await eighth.keyboard.up('KeyD');
+      await eighth.keyboard.up('KeyS');
       await eighth.keyboard.up('ShiftLeft');
     }
     for (const player of pages) await expect(player.getByLabel('Fighter 8 eliminated')).toHaveText('Out');
     await expect(host.getByLabel('Round phase')).toHaveText('Playing');
   } finally {
     try {
-      if (invite !== '/rooms/') {
-        const room = new URL(invite);
-        const code = room.searchParams.get('code');
-        // Closing eight sockets reserves their seats for reconnect. Explicit leaves release the shared worker.
-        await Promise.all(contexts.map(async context => {
-          const response = await context.request.post(room.origin + '/api/rooms/' + code + '/leave', {
-            headers: {Origin:room.origin}, data:{},
-          });
-          expect(response.status()).toBe(204);
-        }));
-      }
+      if (invite !== '/rooms/') await releaseRoom(invite,contexts);
     } finally {
       await Promise.all(contexts.map(context => context.close()));
     }

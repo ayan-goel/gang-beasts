@@ -1,8 +1,11 @@
 import { loadSkyline, loadedPacket } from './content';
 
+export type MatchRenderer = typeof import('../online/OnlineMatch').default;
+
 export interface LoadState { loading: boolean; error: string }
 
 export class ContentHandshake {
+  renderer?: MatchRenderer;
   private timer?: number;
   private attempt = 0;
 
@@ -14,8 +17,10 @@ export class ContentHandshake {
     this.publish({loading: true, error: ''});
     this.timer = window.setTimeout(() => this.finish('Skyline took too long to load. Try again.'), 12000);
     try {
-      const content = await loadSkyline();
-      if (attempt === this.attempt && this.socket.readyState === WebSocket.OPEN) this.socket.send(loadedPacket(content));
+      const [content, arena] = await Promise.all([loadSkyline(), import('../online/OnlineMatch')]);
+      if (attempt !== this.attempt || this.socket.readyState !== WebSocket.OPEN) return;
+      this.renderer = arena.default;
+      this.socket.send(loadedPacket(content));
     } catch {
       if (attempt === this.attempt) this.finish('Could not load Skyline. Check your connection and try again.');
     }

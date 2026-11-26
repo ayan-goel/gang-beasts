@@ -38,3 +38,25 @@ test('a new connection must load this engine and map before the server accepts r
   }, code);
   expect(replies).toEqual([[17, 1], [21, 1, 2], [21, 1, 1], [21, 1, 2]]);
 });
+
+test('readiness waits for the online arena module to load', async ({page}) => {
+  let requested = false;
+  let release!: () => void;
+  const gate = new Promise<void>(resolve => { release = resolve; });
+  await page.route('**/online/OnlineMatch.tsx*', async route => {
+    requested = true;
+    await gate;
+    await route.continue();
+  });
+  await page.goto('/rooms/');
+  await page.getByLabel('Player name').fill('Mint');
+  await page.getByRole('button',{name:'Create room',exact:true}).click();
+  try {
+    expect(requested).toBe(false);
+    await page.getByRole('button',{name:'Ready up'}).click();
+    await expect.poll(() => requested).toBe(true);
+    await expect(page.getByRole('button',{name:'Loading Skyline…'})).toBeDisabled();
+    await expect(page.getByRole('listitem')).toContainText('Waiting');
+  } finally { release(); }
+  await expect(page.getByRole('button',{name:'Cancel ready'})).toBeVisible();
+});

@@ -1,3 +1,4 @@
+import {releaseRoom} from './releaseRoom';
 import {expect, test, type Browser, type Page} from '@playwright/test';
 
 export async function verifyOnlineRematch({page:host, browser}: {page:Page; browser:Browser}) {
@@ -16,11 +17,12 @@ export async function verifyOnlineRematch({page:host, browser}: {page:Page; brow
       tick = payload.readUInt32LE(4);
     });
   });
+  let invite: string | undefined;
   try {
     await host.goto('/rooms/');
     await host.getByLabel('Player name').fill('Mint');
     await host.getByRole('button',{name:'Create room',exact:true}).click();
-    const invite = await host.getByLabel('Invite link').inputValue();
+    invite = await host.getByLabel('Invite link').inputValue();
     const guest = await profile.newPage();
     let guestRematch = () => {};
     await guest.routeWebSocket(url => url.pathname === '/ws', socket => {
@@ -79,5 +81,8 @@ export async function verifyOnlineRematch({page:host, browser}: {page:Page; brow
       await expect.poll(() => activeHostSockets).toBe(1);
     }
     for (const p of [guest,host]) await p.getByRole('button',{name:'Leave room'}).click();
-  } finally { await profile.close(); }
+  } finally {
+    try { await releaseRoom(invite,[host.context(),profile]); }
+    finally { await profile.close(); }
+  }
 }

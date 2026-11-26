@@ -1,8 +1,7 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLiveRoom } from './liveRoom';
 import { colors, errorText, leave, roster, RoomRequestError, type Roster } from './api';
 
-const OnlineMatch = lazy(() => import('../online/OnlineMatch'));
 
 export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => void }) {
   const [fallback, setFallback] = useState<Roster | null>(null);
@@ -41,7 +40,11 @@ export function RosterPanel({ code, onLeave }: { code: string; onLeave: () => vo
     setLeaving(true);
     try { await leave(code); onLeave(); } catch (err) { setError(errorText(err)); setLeaving(false); }
   }
-  if (game) return <Suspense fallback={<p role="status">Opening Skyline…</p>}><OnlineMatch feed={game} exit={exit} rematch={canRematch ? requestRematch : undefined}/>{error && <p role="alert">{error}</p>}</Suspense>;
+  if (game) {
+    const {View, feed} = game;
+    return <><View feed={feed} exit={exit} rematch={canRematch ? requestRematch : undefined}/>
+      {error && <p role="alert">{error}</p>}</>;
+  }
   if (lostAccess && disconnected) return <section className="room-panel">
     <h1>{lostAccess === 'room' ? 'Room closed' : 'Seat expired'}</h1>
     <p role="status">{lostAccess === 'room' ? 'This room is no longer available.' : 'Your seat was released while you were disconnected.'}</p>

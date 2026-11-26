@@ -67,7 +67,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 16a — verified private admission | Anonymous secure cookies, create/join and room metadata | Scoped retry, eight distinct seats, ninth rejected, real Chromium cookie isolation |
 | 16b — browser lobby | Create, join, copy invite, reload and leave | Separate browser sessions, host transfer, narrow viewport and switching rooms from an invite |
 | 16c — authenticated ready controls | Connect, welcome, roster changes and per-seat readiness | Toggle, cancel, disconnect, socket replacement, explicit reconnect and stale-seat fencing |
-| 16d — map loading | Validate loaded engine and map before ready | Failed WASM download, successful retry, mismatched hashes and new socket checks |
+| 16d — map loading | Load the renderer and validate the engine and map before ready | Failed WASM download, successful retry, mismatched hashes and new socket checks |
 | 16e — disconnect grace | Reserve an offline seat for 20 seconds and reclaim abandoned rooms | Reconnect, batch forfeits, stable scoring and host transfer |
 | 16f — online rematch | Replay a completed match in the same room | Host-only return, fresh serial, scores and ready roster |
 | 16 | Private sessions and lobby | Link/code, ready/start, auth, reconnect, host transfer, late joining |

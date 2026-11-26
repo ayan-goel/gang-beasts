@@ -1,3 +1,4 @@
+import {releaseRoom} from './support/releaseRoom';
 import { expect, test } from '@playwright/test';
 
 test('the online rooftop warns both players before each hazard and clears the warning at round end', async ({page:host, browser}) => {
@@ -32,12 +33,7 @@ test('the online rooftop warns both players before each hazard and clears the wa
     for (const notice of notices) await expect(notice).toHaveText('');
   } finally {
     try {
-      await Promise.all([host.context(),profile].map(async context => {
-        const response = await context.request.post(invite.origin + '/api/rooms/' + invite.searchParams.get('code') + '/leave', {
-          headers:{Origin:invite.origin}, data:{},
-        });
-        expect(response.status()).toBe(204);
-      }));
+      await releaseRoom(invite.href,[host.context(),profile]);
     } finally { await profile.close(); }
   }
 });

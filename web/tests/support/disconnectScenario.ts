@@ -1,12 +1,18 @@
+import {releaseRoom} from './releaseRoom';
 import {expect, type Browser, type Page} from '@playwright/test';
 
 export async function verifyDisconnectGrace({page: host, browser}: {page: Page; browser: Browser}) {
   const profiles = await Promise.all([browser.newContext(), browser.newContext()]);
+  const assignments: number[] = [];
+  host.on('websocket', socket => socket.on('framereceived', ({payload}) => {
+    if (Buffer.isBuffer(payload) && (payload[0] === 23 || payload[0] === 26)) assignments.push(payload[2]!);
+  }));
+  let invite: string | undefined;
   try {
     await host.goto('/rooms/');
     await host.getByLabel('Player name').fill('Mint');
     await host.getByRole('button',{name:'Create room', exact:true}).click();
-    const invite = await host.getByLabel('Invite link').inputValue();
+    invite = await host.getByLabel('Invite link').inputValue();
     const peers = await Promise.all(profiles.map(context => context.newPage()));
     for (const [index, peer] of peers.entries()) {
       await peer.goto(invite);
@@ -18,9 +24,11 @@ export async function verifyDisconnectGrace({page: host, browser}: {page: Page; 
     await host.getByRole('button',{name:'Start match'}).click();
     const [gold, blue] = peers as [Page, Page];
     await expect(host.getByLabel('Round phase')).toHaveText('Playing',{timeout:15000});
+    expect(assignments).toEqual([0]);
     await host.goto('about:blank');
     await host.goto(invite);
-    await expect(host.getByRole('heading',{name:'Playing as Mint'})).toBeVisible();
+    await expect.poll(() => assignments, {timeout:15_000}).toEqual([0,0]);
+    await expect(host.getByRole('heading',{name:'Playing as Mint'})).toBeVisible({timeout:15_000});
     await expect(host.getByLabel('Round number')).toHaveText('Round 1');
     await expect(host.getByLabel('Mint eliminated')).toHaveCount(0);
     const disconnected = Date.now();
@@ -44,5 +52,8 @@ export async function verifyDisconnectGrace({page: host, browser}: {page: Page; 
     await expect(gold.getByRole('button',{name:'Start match'})).toBeDisabled();
     await expect(host.getByRole('button',{name:'Start match'})).toHaveCount(0);
     for (const player of [host,gold]) await player.getByRole('button',{name:'Leave room'}).click();
-  } finally { await Promise.all(profiles.map(profile => profile.close())); }
+  } finally {
+    try { await releaseRoom(invite,[host.context(),...profiles]); }
+    finally { await Promise.all(profiles.map(profile => profile.close())); }
+  }
 }
