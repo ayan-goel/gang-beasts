@@ -1526,7 +1526,7 @@ These allocations sum to 16.67 ms but are planning limits, not simultaneous meas
 | Eight idle players | Scaling baseline |
 | Eight players in a pile | Dense contacts |
 | Eight mutually gripping players | Closed-constraint-loop stress |
-| Eight players +100 props | Broad phase, contacts and lifecycle pressure |
+| Eight players +100 props | Broad phase, contacts and lifecycle pressure. [Native stress fixture, five timed runs, physical retirement and reset](docs/verification/hundred-prop-rooftop.md) |
 | Full structure collapse | Burst spawning/breakage |
 | Multiple concurrent rooms | Scheduler and host capacity |
 | Native versus WASM | Platform/worker cost |

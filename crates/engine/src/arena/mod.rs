@@ -31,27 +31,32 @@ pub(crate) struct Skyline {
     pub fall_sensor: ColliderHandle,
 }
 
+fn insert_object(world: &mut PhysicsWorld, obj: &definition::ArenaObject) -> RigidBodyHandle {
+    let builder = if obj.kind == ArenaKind::Crate {
+        RigidBodyBuilder::dynamic()
+    } else {
+        RigidBodyBuilder::fixed()
+    };
+    let body = world.bodies.insert(builder.translation(obj.center.into()));
+    let [x, y, z] = obj.half;
+    world.colliders.insert_with_parent(
+        ColliderBuilder::cuboid(x, y, z)
+            .mass(obj.mass)
+            .friction(0.7),
+        body,
+        &mut world.bodies,
+    );
+    body
+}
+
 impl Skyline {
     pub fn insert(world: &mut PhysicsWorld) -> Result<Self, CharacterError> {
         let definition = MapDefinition::skyline()?;
-        let mut bodies = Vec::with_capacity(definition.objects.len());
-        for obj in &definition.objects {
-            let builder = if obj.kind == ArenaKind::Crate {
-                RigidBodyBuilder::dynamic()
-            } else {
-                RigidBodyBuilder::fixed()
-            };
-            let body = world.bodies.insert(builder.translation(obj.center.into()));
-            let [x, y, z] = obj.half;
-            world.colliders.insert_with_parent(
-                ColliderBuilder::cuboid(x, y, z)
-                    .mass(obj.mass)
-                    .friction(0.7),
-                body,
-                &mut world.bodies,
-            );
-            bodies.push(body);
-        }
+        let bodies: Vec<_> = definition
+            .objects
+            .iter()
+            .map(|obj| insert_object(world, obj))
+            .collect();
         let core = &definition.foundation;
         let [x, y, z] = core.half;
         let local = Vector::from(core.center) - Vector::from(definition.objects[0].center);
@@ -71,6 +76,27 @@ impl Skyline {
             events: Vec::with_capacity(1),
             fall_sensor,
         })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn add_test_crate(
+        &mut self,
+        world: &mut PhysicsWorld,
+        center: [f32; 3],
+    ) -> RigidBodyHandle {
+        let mut obj = self
+            .definition
+            .objects
+            .iter()
+            .find(|obj| obj.kind == ArenaKind::Crate)
+            .unwrap()
+            .clone();
+        obj.id = u16::try_from(self.bodies.len() + 1).unwrap();
+        obj.center = center;
+        let body = insert_object(world, &obj);
+        self.bodies.push(body);
+        self.definition.objects.push(obj);
+        body
     }
 
     fn panel_deadlines(&self) -> [(u16, u64); 2] {
