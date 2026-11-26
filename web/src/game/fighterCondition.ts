@@ -1,3 +1,4 @@
+export const lowStamina = 25;
 export const fighterPhases = ['active','knocked_out','recovering','eliminated'] as const;
 export type FighterPhase = typeof fighterPhases[number];
 

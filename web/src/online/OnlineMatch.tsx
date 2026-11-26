@@ -37,7 +37,7 @@ export default function OnlineMatch({feed, content, exit, rematch}: {feed: Match
     });
     return () => { cancelAnimationFrame(frame); clearTimeout(timer); stop?.(); };
   }, [feed, content]);
-  useMatchSound(match, status === 'live' || status === 'estimating', match.conditions, match.impacts);
+  useMatchSound(match, status === 'live' || status === 'estimating', match.conditions, match);
   const names = feed.fighters.map(f => f.name);
   const spectator = canSpectate(match, feed.own);
   const winner = meleeResult(match, names);

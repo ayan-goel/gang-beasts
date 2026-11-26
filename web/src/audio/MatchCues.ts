@@ -1,3 +1,5 @@
+import { changedGrip, type GripAudioState } from './gripCues';
+import type { GripCue, GripKind } from './gripSound';
 import type { Impact, ImpactSource } from './impactSound';
 import type { MatchView } from '../rendering/SkylineView';
 import type { FighterPhase } from '../game/fighterCondition';
@@ -5,7 +7,7 @@ import type { FighterPhase } from '../game/fighterCondition';
 type Hazard = MatchView['hazard'];
 export type AudibleHazard = Exclude<Hazard, 'quiet'>;
 export type ConditionCue = 'knocked_out' | 'recovering';
-export interface Cues { warning?: AudibleHazard; condition?: ConditionCue; impact?: Impact }
+export interface Cues { warning?: AudibleHazard; condition?: ConditionCue; impact?: Impact; grip?: GripCue }
 const stages: readonly Hazard[] = ['quiet', 'west_warning', 'east_warning', 'gust_warning', 'gust'];
 
 export class MatchCues {
@@ -17,9 +19,12 @@ export class MatchCues {
   private sources: readonly ImpactSource[] = [];
   private lastImpact: number[] = [];
 
+  private grips?: GripAudioState;
+  private lastGrip: Partial<Record<GripKind, number>> = {};
+
   reset() { this.epoch = undefined; }
 
-  observe(epoch: string, hazard: Hazard, phases: readonly FighterPhase[], now: number, sources: readonly ImpactSource[] = []): Cues {
+  observe(epoch: string, hazard: Hazard, phases: readonly FighterPhase[], now: number, sources: readonly ImpactSource[] = [], grips?: GripAudioState): Cues {
     const stage = stages.indexOf(hazard);
     const cues: Cues = {};
     // A full snapshot after a rendering or network gap describes the present, not a new event.
@@ -41,9 +46,18 @@ export class MatchCues {
           cues.impact = {damage, pan:source.pan, distance:source.distance};
         }
       }
+      if (this.grips && grips && !cues.condition && !cues.warning && !cues.impact) {
+        const grip = changedGrip(this.grips, grips, phases, sources);
+        if (grip && now - (this.lastGrip[grip.kind] ?? -Infinity) >= 150) {
+          cues.grip = grip;
+          this.lastGrip[grip.kind] = now;
+        }
+      }
     } else {
+      this.lastGrip = {};
       this.lastImpact = [];
     }
+    this.grips = grips;
     this.sources = sources;
     this.stage = epoch === this.epoch ? Math.max(this.stage, stage) : stage;
     this.epoch = epoch;

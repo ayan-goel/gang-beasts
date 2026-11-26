@@ -30,6 +30,7 @@ export interface DuelState {
   paused: boolean;
   hits: [number, number];
   grips: [string[], string[]];
+  gripTargets: [[number,number],[number,number]];
   fixedLedge: [boolean, boolean];
   stamina: [number, number];
   latest?: DuelHit;
@@ -86,21 +87,27 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     unbind = bindMovementInput(canvas, inputs[0]!, inputs[1]!);
     const readGrips = (owner: Player) => {
       let onLedge = false;
+      const targets: [number,number] = [0,0];
       const labels = handGripLabels(side => {
         const region = duel.grip_region(owner, side);
-        if (region !== undefined) return fighterGripName(owner === 0 ? 'Blue' : 'Coral', definition.bodies[region]!.part);
+        if (region !== undefined) {
+          targets[side] = 1 + (1 - owner) * 16 + region;
+          return fighterGripName(owner === 0 ? 'Blue' : 'Coral', definition.bodies[region]!.part);
+        }
         if (!map || !match) return undefined;
         const target = duel.arena_grip(owner, side);
+        if (target !== undefined) targets[side] = 65536 + target;
         onLedge ||= fixedLedge(target, match.hazard);
         return arenaGripName(map, target);
       });
-      return {labels, onLedge};
+      return {labels, onLedge, targets};
     };
     const snapshot = () => {
       const first = readGrips(0), second = readGrips(1);
       const conditions: [FighterCondition, FighterCondition] = [JSON.parse(duel.condition_json(0)), JSON.parse(duel.condition_json(1))];
       publish({
         match, tick: duel.tick().toString(), hits: [...hits], latest, paused,
+        gripTargets: [first.targets, second.targets],
         grips: [first.labels, second.labels], fixedLedge: [first.onLedge, second.onLedge],
         stamina: [duel.stamina(0), duel.stamina(1)],
         conditions, impacts: renderer.impactSources(conditions.map(f => f.health)),

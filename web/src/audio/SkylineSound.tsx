@@ -1,3 +1,5 @@
+import { playGrip } from './gripSound';
+import type { GripAudioState } from './gripCues';
 import { playImpact, type ImpactSource } from './impactSound';
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { MatchView } from '../rendering/SkylineView';
@@ -26,6 +28,8 @@ class SoundOutput {
   play(cues: Cues) {
     if (this.muted || this.context?.state !== 'running' || document.hidden) return;
     if (cues.warning || cues.condition || cues.impact) this.voices.impact?.();
+    this.voices.grip?.();
+    if (cues.grip) this.voices.grip = playGrip(this.context, cues.grip);
     if (cues.impact) this.voices.impact = playImpact(this.context, cues.impact);
     for (const category of ['warning','condition'] as const) {
       const cue = cues[category];
@@ -82,7 +86,7 @@ export function MuteButton() {
     onClick={settings.toggle}>{settings.muted ? 'Sound off' : 'Sound on'}</button>;
 }
 
-export function useMatchSound(match: MatchView | undefined, active: boolean, phases: readonly FighterPhase[], sources?: readonly ImpactSource[]) {
+export function useMatchSound(match: MatchView | undefined, active: boolean, phases: readonly FighterPhase[], audio?: GripAudioState & {impacts?: readonly ImpactSource[]}) {
   const output = useContext(AudioSettings)?.output;
   const cursor = useRef(new MatchCues());
   useEffect(() => {
@@ -96,7 +100,7 @@ export function useMatchSound(match: MatchView | undefined, active: boolean, pha
       output?.silence();
       return;
     }
-    const cues = cursor.current.observe(match.epoch, match.hazard, phases, performance.now(), sources);
-    if (cues.warning || cues.condition || cues.impact) output?.play(cues);
-  }, [match, active, output, phases, sources]);
+    const cues = cursor.current.observe(match.epoch, match.hazard, phases, performance.now(), audio?.impacts, audio);
+    if (cues.warning || cues.condition || cues.impact || cues.grip) output?.play(cues);
+  }, [match, active, output, phases, audio]);
 }

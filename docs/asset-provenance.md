@@ -10,6 +10,7 @@
 | Main menu rooftop throw | [Original WebP still](../web/src/menu/rooftop-throw.webp) | Two repository Roof Crew fighters in the Skyline simulation, captured ten fixed ticks after releasing a lift at the east edge with a presentation camera. [Menu capture](slices/16k-game-entry.md) |
 | Skyline lobby image | [WebP capture](../web/src/lobby/skyline.webp) of the project’s own rendered Skyline arena | The room page presents the map without loading the game renderer |
 | Walkway and wind warnings | [Original oscillator scores and envelopes](../web/src/audio/matchTone.ts) | Four runtime-synthesized global cues. [Pulse timings and peak level](slices/17c-hazard-audio.md#original-cues) |
+| Grip acquisition, strain and release | [Original filtered oscillator sweeps](../web/src/audio/gripSound.ts) | Three camera-relative cues generated at runtime. [Peak levels and duration](slices/17f-grip-audio.md) |
 | Combat impact | [Original synthesized thud](../web/src/audio/impactSound.ts) | A seeded noise transient and downward pitch sweep, generated once per audio context. [Spatialization and level limits](slices/17e-strike-audio.md) |
 | Knockout and get-up announcements | [Original condition tone definitions](../web/src/audio/matchTone.ts) | One descending knockout tone and two rising get-up pulses. [Timing and peak level](slices/17d-fighter-condition.md#sound) |
 

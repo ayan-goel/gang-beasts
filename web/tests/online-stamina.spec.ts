@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { gripPitches, observeWarningAudio } from './support/warningAudio';
 import { decodeSnapshot } from '../src/net/snapshot';
 import { approachOpponent, gripMatch } from './support/gripMatch';
 
@@ -23,6 +24,7 @@ test('owner and opponent see a tiring grip, its release and stamina recovery', a
   await gripMatch(host, browser, async (guest, start) => {
     const pages = [host, guest];
     const records = pages.map(observeFatigue);
+    await Promise.all(pages.map(observeWarningAudio));
     await start();
     await host.keyboard.down('KeyJ');
     await Promise.all(pages.map(async page => {
@@ -37,6 +39,7 @@ test('owner and opponent see a tiring grip, its release and stamina recovery', a
     }));
     await expect.poll(() => records.every(r => r.refilled)).toBe(true);
     expect(records.every(r => !r.reattached)).toBe(true);
+    for (const page of pages) expect(await gripPitches(page)).toEqual([320,145,180]);
     await host.keyboard.up('KeyJ');
   });
 });

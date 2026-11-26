@@ -1,6 +1,7 @@
-export interface ImpactPosition { pan: number; distance: number }
-export interface ImpactSource extends ImpactPosition { health: number }
-export interface Impact extends ImpactPosition { damage: number }
+import { distanceGain, type CameraPosition } from './spatialMix';
+
+export interface ImpactSource extends CameraPosition { health: number }
+export interface Impact extends CameraPosition { damage: number }
 
 const buffers = new WeakMap<BaseAudioContext, AudioBuffer>();
 
@@ -29,7 +30,7 @@ export function playImpact(context: BaseAudioContext, impact: Impact) {
   const strength = Math.min(1, impact.damage / 35);
   voice.buffer = contactBuffer(context);
   voice.playbackRate.value = 1.1 - 0.2 * strength;
-  gain.gain.value = (0.07 + 0.09 * strength) * Math.min(1, 8 / Math.max(1,impact.distance));
+  gain.gain.value = (0.07 + 0.09 * strength) * distanceGain(impact.distance);
   pan.pan.value = impact.pan;
   voice.connect(gain).connect(pan).connect(context.destination);
   const disconnect = () => { voice.disconnect(); gain.disconnect(); pan.disconnect(); };
