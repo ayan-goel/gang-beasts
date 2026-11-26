@@ -3,6 +3,7 @@
 [Technical specification](../TECHNICAL_SPEC.md) is the canonical product and architecture contract. These documents record implementation choices and evidence; they do not redefine acceptance.
 
 - [Snapshot delivery](slices/19c-snapshot-delivery.md) covers worker notifications, slow readers and measured eight-client cadence.
+- [Regional headbutt feedback](slices/15k-headbutt-feedback.md) measures a standing Q press through native acceptance and the first drawn head rotation.
 - [Regional punch feedback](slices/15j-punch-feedback.md) measures each hand from keyboard or mouse input to the first drawn punching motion.
 - [Snapshot presentation clock](slices/15i-snapshot-clock.md) explains how delivery timing sets the render buffer.
 - [Regional jump feedback](slices/15h-jump-feedback.md) measures keydown to the first visible rise of the local fighter.

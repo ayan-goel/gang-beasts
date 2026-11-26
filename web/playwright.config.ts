@@ -3,8 +3,10 @@ import { defineConfig } from '@playwright/test';
 const tls = Boolean(process.env.BRAWLER_TLS_CERT && process.env.BRAWLER_TLS_KEY);
 const site = (tls ? 'https' : 'http') + '://127.0.0.1:5180';
 const server = 'http://127.0.0.1:5181';
-const webCommand = process.env.BRAWLER_CHECK_REGIONAL_JUMP === '1' || process.env.BRAWLER_CHECK_REGIONAL_PUNCH === '1'
-  ? 'npm run build && npm run preview' : 'npm run dev';
+const releaseMeasurement = [
+  'BRAWLER_CHECK_REGIONAL_JUMP', 'BRAWLER_CHECK_REGIONAL_PUNCH', 'BRAWLER_CHECK_REGIONAL_HEADBUTT',
+].some(flag => process.env[flag] === '1');
+const webCommand = releaseMeasurement ? 'npm run build && npm run preview' : 'npm run dev';
 
 export default defineConfig({
   testDir: './tests',

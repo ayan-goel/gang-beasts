@@ -16,7 +16,7 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, c
   const button = (name: Parameters<InputSampler['setButton']>[0], down: boolean) => {
     try { sampler.setButton(name, down); } catch { sampler.neutralize(); }
   };
-  const press = (name: 'jump' | 'leftHand' | 'rightHand', held: boolean) => {
+  const press = (name: 'jump' | 'leftHand' | 'rightHand' | 'headbutt', held: boolean) => {
     button(name,held);
     if (held && performance.now() <= actionSendUntil && !document.hidden) {
       actionSendUntil = -Infinity;
@@ -29,7 +29,7 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, c
     clearJumpInput: () => button('jump',false),
     setHand: (side,held) => press(side === 0 ? 'leftHand' : 'rightHand',held),
     clearHands: () => { button('leftHand',false); button('rightHand',false); },
-    setHeadbutt: held => button('headbutt',held),
+    setHeadbutt: held => press('headbutt',held),
     setLift: held => button('lift',held),
   }, () => playing() && document.activeElement === canvas);
   const unbind = bindMovementInput(canvas,movement);
@@ -59,7 +59,7 @@ export function bindRemoteControls(canvas: HTMLCanvasElement, feed: MatchFeed, c
       return;
     }
     active = true;
-    // Jump and both hands share one immediate send per fresh publication. Chorded edges stay in the sampler.
+    // Jump, hand and headbutt presses share one immediate send per fresh publication. Chorded edges stay in the sampler.
     actionSendUntil = performance.now() + 100;
     // Coalesce queued publications after a stall. Fresh network frames provide the input cadence.
     if (performance.now() - lastSent >= 25) transmit();

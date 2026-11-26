@@ -104,6 +104,31 @@ it('expedites either hand on a fresh snapshot and preserves a simultaneous secon
   } finally { dispose(); }
 });
 
+it('sends a fresh headbutt immediately and preserves the next hand press and release', () => {
+  const {canvas,frames,publish,down,dispose} = playerControls();
+  const mask = (offset: number) => new DataView(frames.at(-1)!.buffer).getUint16(offset,true);
+  try {
+    publish(1n,1);
+    const before = frames.length;
+    down('KeyQ');
+    expect(frames).toHaveLength(before + 1);
+    expect(mask(14)).toBe(32);
+    canvas.dispatchEvent(Object.assign(new Event('keyup'),{code:'KeyQ'}));
+    down('KeyJ');
+    expect(frames).toHaveLength(before + 1);
+    vi.advanceTimersByTime(34);
+    publish(1n,1);
+    expect([mask(12),mask(14),mask(16)]).toEqual([4,4,32]);
+    vi.advanceTimersByTime(101);
+    const stalled = frames.length;
+    down('KeyQ');
+    expect(frames).toHaveLength(stalled);
+    publish(2n,0);
+    publish(2n,1);
+    expect(mask(12) | mask(14)).toBe(0);
+  } finally { dispose(); }
+});
+
 it('lets a spectator turn the view without sending fighter inputs and releases its key listener', () => {
   const canvas = Object.assign(new EventTarget(), {setAttribute() {}});
   vi.stubGlobal('document', {hidden:false});
