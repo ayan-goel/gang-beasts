@@ -1686,7 +1686,7 @@ Retain all 18 original completion checks, with explicit evidence expectations:
 
 - [ ] **Browser entry:** Opens directly in supported desktop browsers; critical load fits the defined download budget or a documented approved revision.
 - [x] **Friend joining:** Two to eight players join a private room link/code without accounts; ninth player is handled safely. [Browser lobby evidence](docs/slices/16b-browser-lobby.md#verification)
-- [ ] **Active ragdolls:** Characters use the physical rig and motors; body/joint/mass checks pass.
+- [x] **Active ragdolls:** Characters use the physical rig and motors; body/joint/mass checks pass. [Gameplay rig, solver effort and browser verification](docs/verification/match-rig.md)
 - [ ] **Locomotion:** Walking, running, jumping and recovery are controllable in human playtests.
 - [x] **Independent hands:** Either hand can punch/grab while the other performs a different permitted action. [Physical strikes under a maintained grip and two-client hand states](docs/slices/09e-online-hand-actions.md#verification)
 - [x] **Lifts/throws:** Opponents can be physically lifted/thrown with momentum and counterplay. [Airborne online release, physical counter-grip and rooftop ring-out](docs/slices/10d-skyline-throws.md#verification)

@@ -320,3 +320,7 @@ mod headbutt_tests;
 #[cfg(test)]
 #[path = "punch_aim_tests.rs"]
 mod punch_aim_tests;
+
+#[cfg(test)]
+#[path = "match_rig_tests.rs"]
+mod match_rig_tests;

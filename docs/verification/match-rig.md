@@ -1,0 +1,9 @@
+# Active ragdolls in playable Skyline
+
+The two-fighter and eight-fighter match constructors both create 15 distinct dynamic Rapier bodies and 14 anatomical joints per fighter. The actual body masses in kilograms are 4, 10 and 6 for head, chest and pelvis, followed by paired masses of 1.5, 1, 0.5, 3.5, 2.5 and 1 for upper arms, forearms, hands, thighs, shins and feet. They sum to 40 kg per fighter and 320 kg of fighters in a full room.
+
+The native [match regression](../../crates/engine/src/character/match_rig_tests.rs) reads the live body and joint sets, checks every joint endpoint against the authored parent and child, and rejects shared handles across fighters. It advances the normal countdown, stands for 60 playing ticks, then supplies walking input for 60 more. Every non-wrist anatomical joint on every fighter registered a finite, nonzero angular motor impulse during that interval. Both wrists stayed fixed and unactuated. The full room contained 120 distinct character bodies and 112 distinct anatomical joints.
+
+In Chromium, the [playable local match](../../web/tests/gameplay-rig.spec.ts) drew two separate skinned fighters. Both per-frame WASM pose buffers contained the expected fifteen masses and finite state. A held movement key displaced the first fighter’s pelvis by more than 0.6 m. In a separate [eight-client match](../../web/tests/online-roster.spec.ts), the host renderer drew eight skeletons, the eighth player ran off the roof using the keyboard and all eight clients observed the elimination. These checks establish the §33 rig criterion. Locomotion feel has a separate human playtest gate.
+
+Verified with Rust 1.88.0, Rapier 0.26.1 and matching native and WASM fingerprints `58f614835f343e435536a7dbf678ac3c51b4ea387d9057ab3eccff3926339f4b`. The release workspace passed 307 tests. Strict Clippy, formatting, the production web build and both targeted Chromium scenarios passed.
