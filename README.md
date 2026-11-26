@@ -1,12 +1,12 @@
-# Physics brawler
+# gang bbeasts
 
-A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline Melee is playable locally with two people on one keyboard. Two to eight friends can also play from separate browser sessions in a private room.
+A browser multiplayer physics brawler built around a shared Rust/Rapier simulation and Three.js presentation. Skyline, the Studio 08 broadcast rooftop, is playable locally with two people on one keyboard. Two to eight friends can also play from separate browser sessions in a private room.
 
 The [technical specification](TECHNICAL_SPEC.md) is canonical. See the [documentation index](docs/README.md) for implementation order, decisions, and acceptance evidence.
 
 Deploy the game from GitHub using [Vercel and Railway](docs/deployment.md).
 
-## Play Skyline Melee
+## Play Skyline
 
 Start the browser project using the setup below and open the printed address. Choose **Host a room**, **Join a room**, or **Local match** from the main menu. Local play also opens directly at `/play/`. The match is first to three rooftop ring-outs. A countdown starts each round, and rematch is available after the winning round. Coral uses WASD and J/K, Blue uses the arrow keys and comma/period. The start and pause screens show the full bindings.
 

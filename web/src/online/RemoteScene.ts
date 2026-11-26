@@ -10,7 +10,7 @@ import type { Snapshot } from '../net/snapshot';
 import type { MatchFeed } from './MatchFeed';
 import { followedFighter, type CameraChoice } from './spectatorCamera';
 
-const colors = ['#f38e66','#64b7dd','#e8bd59','#7dd3b1','#bd9ae6','#e69eb9','#bbd17e','#a7b4c9'];
+const colors = ['#ff5047','#24aeeb','#ffbd24','#45d894','#a77aee','#f982b6','#aacd39','#98a6cd'];
 const phases = ['countdown','playing','round_results','match_results'] as const;
 
 type RemoteMatch = MatchView & MatchAudioState & { conditions: FighterPhase[]; gripTargets: [number,number][]; stamina: number[]};

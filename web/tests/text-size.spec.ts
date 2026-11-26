@@ -20,6 +20,7 @@ test('a keyboard text choice carries from the main menu into a narrow local matc
   const setting = page.getByRole('combobox', {name:'Text size', exact:true});
   const link = page.getByRole('link', {name:'Host a room'});
   const baseline = await fontSize(link);
+  const rootSize = await fontSize(page.locator('html'));
   await setting.focus({timeout:4000});
   await setting.press('2');
   await setting.press('Tab');
@@ -63,7 +64,7 @@ test('a keyboard text choice carries from the main menu into a narrow local matc
   await setting.selectOption('125');
   await page.goto('/playground/');
   await expect(setting).toHaveValue('125');
-  await expect.poll(() => fontSize(page.locator('html'))).toBeCloseTo(baseline*1.25, 1);
+  await expect.poll(() => fontSize(page.locator('html'))).toBeCloseTo(rootSize*1.25, 1);
   await page.reload();
   await expect(setting).toHaveValue('125');
 });

@@ -48,7 +48,7 @@ def export():
     root = names.index('pelvis')
     nodes.append({'name': 'RoofCrew', 'mesh': 0, 'skin': 0})
     doc = {
-        'asset': {'version': '2.0', 'generator': 'Skyline Melee original Roof Crew model'},
+        'asset': {'version': '2.0', 'generator': 'gang bbeasts studio bean'},
         'scene': 0, 'scenes': [{'nodes': [root, len(names)]}], 'nodes': nodes,
         'bufferViews': [], 'accessors': [],
     }
@@ -82,9 +82,9 @@ def export():
     }
     index_accessor = accessor([(i,) for i in indices], 'H', 'SCALAR', ELEMENT_ARRAY_BUFFER)
     primitive = {'attributes': attributes, 'indices': index_accessor, 'material': 0}
-    doc['meshes'] = [{'name': 'Crew suit', 'primitives': [primitive]}]
+    doc['meshes'] = [{'name': 'Studio bean', 'primitives': [primitive]}]
     doc['materials'] = [{
-        'name': 'Crew paint', 'pbrMetallicRoughness': {'metallicFactor': 0, 'roughnessFactor': .78},
+        'name': 'Vinyl and wrist ink', 'pbrMetallicRoughness': {'metallicFactor': 0, 'roughnessFactor': .47},
     }]
     inverses = [translation([-v for v in anchors[name]]) for name in names]
     doc['skins'] = [{

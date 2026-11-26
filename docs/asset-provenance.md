@@ -4,10 +4,12 @@
 | --- | --- | --- |
 | Skyline footprint, spawn layout, crates, ventilation units, breakaway walkways and schedule | [Original map manifest](../assets/maps/skyline/map.json) | Shared collision and gameplay data |
 | Rooftop trim, vent grilles, crate bands, exterior buildings and materials | [Original procedural scene](../web/src/rendering/SkylineView.ts) | Geometry generated locally at scene creation |
-| Roof Crew skinned work suit, helmet, headlamp, goggles, gloves and boots | [Original mesh authoring source](../tools/fighter/model.py) and [exported GLB](../assets/fighters/roof-crew.glb) | Local and online Skyline fighters. Skin weights and joint pivots follow the physical rig |
+| Broadcast bean fighters, raised eyes, mitten hands and coded wristbands | [Original mesh authoring source](../tools/fighter/model.py) and [exported GLB](../assets/fighters/roof-crew.glb) | Local and online Skyline fighters. Skin weights and joint pivots follow the physical rig |
 | Coral and Blue diagnostic fighter geometry | [Rig dimensions](../config/character.json) and [procedural view](../web/src/rendering/RagdollView.ts) | Physics playground inspection and sparring |
 | Match interface and rooftop mark | [Game screen](../web/src/app/SkylineGame.tsx) and [styles](../web/src/app/skyline.css) | Local start, scoreboard, pause and rematch |
-| Main menu rooftop throw | [Original WebP still](../web/src/menu/rooftop-throw.webp) | Two repository Roof Crew fighters in the Skyline simulation, captured ten fixed ticks after releasing a lift at the east edge with a presentation camera. [Menu capture](slices/16k-game-entry.md) |
+| Main menu rooftop illustration | [Original generated poster](../web/src/menu/skyline-scramble.webp) | Screenprinted cover art. [Image-generation prompt and references](slices/20a-gang-bbeasts-art.md) |
+| Arena paint and panoramic city | [Roof painter](../tools/skyline/roof_print.py), [sky painter](../tools/skyline/station_sky.py) and [district geometry](../web/src/rendering/StationDistrict.ts) | Seam lines, masonry, marquee, outlined test card and distant roofs |
+| Bricolage Grotesque Latin variable | [Original font project](https://github.com/ateliertriay/bricolage), [redistributed license](../web/public/BRICOLAGE-OFL.txt) | Self-hosted display and interface typography |
 | Skyline lobby image | [WebP capture](../web/src/lobby/skyline.webp) of the project’s own rendered Skyline arena | The room page presents the map without loading the game renderer |
 | Walkway and wind warnings | [Original oscillator scores and envelopes](../web/src/audio/matchTone.ts) | Four runtime-synthesized global cues. [Pulse timings and peak level](slices/17c-hazard-audio.md#original-cues) |
 | Grip acquisition, strain and release | [Original filtered oscillator sweeps](../web/src/audio/gripSound.ts) | Three camera-relative cues generated at runtime. [Peak levels and duration](slices/17f-grip-audio.md) |
@@ -20,4 +22,4 @@
 | Round countdown and results | [Original sine sweeps and envelopes](../web/src/audio/matchTone.ts) | Five centered cues for countdown changes, the start of play, round wins, draws and match wins. [Pitch and level](slices/17h-round-audio.md) |
 | Skyline arena music | [Original eight-bar score and synthesizer](../web/src/audio/arenaScore.ts) | Looped instrumental for active local and private rounds. [Source levels and mix](slices/17i-arena-mix.md#measurements) |
 
-These entries use geometry, colors and layouts authored in this repository. Three.js supplies the MIT-licensed rendering library and geometry primitives. The local presentation uses system-installed fonts. The fighter model uses original repository geometry and colors. Other core effects and final audiovisual acceptance remain open.
+These entries use geometry, colors and layouts authored in this repository. Three.js supplies the MIT-licensed rendering library and geometry primitives. The fighter model uses original repository geometry and colors. Other core effects and final audiovisual acceptance remain open.

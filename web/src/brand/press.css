@@ -1,0 +1,34 @@
+@font-face {
+  font-family: Bricolage;
+  src: url('./bricolage-latin.woff2') format('woff2');
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  --press-ink: #351d37;
+  --press-paper: #fff0c8;
+  --press-lemon: #ffda64;
+  --press-red: #fa574a;
+  --display-face: Bricolage, system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes settle-panel {
+    from { opacity: .6; translate: 0 .35rem; }
+    to { opacity: 1; translate: 0 0; }
+  }
+
+  .match-menu-dialog[open], .skyline-menu, .room-panel {
+    animation: settle-panel 160ms ease-out;
+  }
+
+  .skyline-start, .match-menu-return, .room-primary {
+    transition: translate 120ms ease-out, box-shadow 120ms ease-out;
+  }
+
+  :is(.skyline-start, .match-menu-return, .room-primary):enabled:active {
+    translate: 2px 2px;
+    box-shadow: none;
+  }
+}

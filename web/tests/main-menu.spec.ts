@@ -10,9 +10,9 @@ function pageLoad(page: Page) {
 
 test('direct game URLs reach their screens with or without a trailing slash', async ({request}) => {
   for (const [path, title] of [
-    ['/play', 'Skyline Melee · Local multiplayer'],
-    ['/rooms', 'Private rooms · Skyline Melee'],
-    ['/playground', 'Physics Brawler · Playground'],
+    ['/play', 'gang bbeasts · Local multiplayer'],
+    ['/rooms', 'Private rooms · gang bbeasts'],
+    ['/playground', 'gang bbeasts · Playground'],
   ]) {
     for (const suffix of ['', '/', '/index.html']) {
       const response = await request.get(path + suffix + '?action=join');
@@ -51,7 +51,7 @@ test('the main menu opens without a simulation or room session and reaches local
     if (pathname.endsWith('.wasm') || pathname.startsWith('/api/')) heavy.push(pathname);
   });
   await page.goto('/');
-  await expect(page.getByRole('heading', {level:1, name:'Skyline Melee'})).toBeVisible({timeout:3000});
+  await expect(page.getByRole('heading', {level:1, name:'gang bbeasts'})).toBeVisible({timeout:3000});
   await expect(page.getByRole('link', {name:'Host a room'})).toBeVisible();
   await expect(page.getByRole('link', {name:'Join a room'})).toBeVisible();
   expect(heavy).toEqual([]);

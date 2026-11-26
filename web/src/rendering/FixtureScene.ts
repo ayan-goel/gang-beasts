@@ -1,3 +1,5 @@
+import stationSkyUrl from './art/station-sky.webp';
+import deckPrintUrl from './art/studio-deck.webp';
 import { recentBreakawayMount } from '../audio/breakawaySound';
 import type { SkylineContent } from '../lobby/content';
 import { createSceneRenderer } from './createSceneRenderer';
@@ -51,6 +53,8 @@ export class FixtureScene {
   private readonly unsubscribeGraphics?: () => void;
   private readonly opponents: (RagdollView | FighterSkin)[] = [];
   private skyline?: SkylineView;
+  private deckPrint?: THREE.Texture;
+  private stationSky?: THREE.Texture;
   readonly groupCamera?: GroupCamera;
   private readonly practice?: PracticeTargetView;
   private readonly rig?: RagdollView | FighterSkin;
@@ -76,7 +80,7 @@ export class FixtureScene {
           this.contactNormals = new ContactNormals();
           this.scene.add(this.contactNormals);
         }
-        if (this.model) this.rig = new FighterSkin(this.model, definition, options.color ?? '#f58465', options.kit ?? 0);
+        if (this.model) this.rig = new FighterSkin(this.model, definition, options.color ?? '#ff5047', options.kit ?? 0);
         else {
           this.rig = new RagdollView(definition, options.color);
           this.joints = new JointOverlay(definition.joints.length);
@@ -97,13 +101,20 @@ export class FixtureScene {
       this.cube.castShadow = true;
       this.scene.add(this.cube);
       if (map) {
-        this.skyline = new SkylineView(map);
+        this.deckPrint = new THREE.TextureLoader().load(deckPrintUrl);
+        this.deckPrint.colorSpace = THREE.SRGBColorSpace;
+        this.deckPrint.anisotropy = Math.min(4,this.renderer.capabilities.getMaxAnisotropy());
+        this.skyline = new SkylineView(map, this.deckPrint);
         if (!definition) throw new Error('Skyline framing requires fighter geometry');
         this.groupCamera = new GroupCamera(definition.bodies, this.rig instanceof FighterSkin ? this.rig.radii : undefined, this.skyline.obstacles);
         this.unsubscribeMotion = observeCameraMotion(reduced => { this.groupCamera!.reducedMotion = reduced; });
         this.scene.add(this.skyline.root);
-        this.renderer.setClearColor(0xb8cfce);
-        this.scene.fog = new THREE.FogExp2(0xb8cfce,0.013);
+        this.stationSky = new THREE.TextureLoader().load(stationSkyUrl);
+        this.stationSky.colorSpace = THREE.SRGBColorSpace;
+        this.stationSky.mapping = THREE.EquirectangularReflectionMapping;
+        this.scene.background = this.stationSky;
+        this.renderer.setClearColor(0xffc6a3);
+        this.scene.fog = new THREE.FogExp2(0xffc6a3,0.015);
       } else this.scene.add(fixtureTerrain(terrainBoxes));
       this.colliders.frustumCulled = false;
       this.colliders.renderOrder = 1;
@@ -113,9 +124,9 @@ export class FixtureScene {
         grid.position.y = 0.005;
         this.scene.add(grid);
       }
-      this.scene.add(new THREE.HemisphereLight('#e1f4ff', '#38463b', 2.3));
-      const sun = new THREE.DirectionalLight('#fff0d9', 3);
-      sun.position.set(-5, 12, 6);
+      this.scene.add(new THREE.HemisphereLight(map ? '#e7f8ff' : '#e1f4ff',map ? '#b38c96' : '#38463b',map ? 1.8 : 2.3));
+      const sun = new THREE.DirectionalLight(map ? '#ffebc9' : '#fff0d9',map ? 2.7 : 3);
+      sun.position.set(-6, map ? 8 : 12, 6);
       sun.castShadow = true;
       sun.shadow.camera.left = -9;
       sun.shadow.camera.right = 9;
@@ -173,7 +184,7 @@ export class FixtureScene {
     this.resize();
   }
 
-  addOpponent(definition: RigDefinition, color = '#559ed8', kit = 1): void {
+  addOpponent(definition: RigDefinition, color = '#24aeeb', kit = 1): void {
     const opponent = this.model ? new FighterSkin(this.model, definition, color, kit) : new RagdollView(definition, color);
     this.opponents.push(opponent);
     this.scene.add(opponent.root);
@@ -279,6 +290,8 @@ export class FixtureScene {
       }
       if (object instanceof THREE.DirectionalLight) object.shadow.dispose();
     });
+    this.deckPrint?.dispose();
+    this.stationSky?.dispose();
     this.renderer.dispose();
     // Scene changes construct another renderer. Release this context explicitly
     // so repeated inspection cannot exhaust the browser's active-context limit.

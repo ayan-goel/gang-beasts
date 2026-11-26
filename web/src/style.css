@@ -1,11 +1,12 @@
+@import './brand/press.css';
 :root {
   color-scheme: dark;
-  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-  --surface: #10222c;
-  --text: #eff4ef;
-  --muted: #adc1c6;
-  --accent: #f6ae7a;
-  --line: #304650;
+  font-family: Bricolage, ui-sans-serif, system-ui, sans-serif;
+  --surface: #342338;
+  --text: #fff4dd;
+  --muted: #dac5c7;
+  --accent: #ffd786;
+  --line: #60475b;
   color: var(--text);
   background: var(--surface);
   font-synthesis: none;
@@ -60,7 +61,7 @@ dd { margin: 0; font-family: ui-monospace, monospace; }
   .badge { display: none; }
 }
 
-.movement-controls { position: absolute; z-index: 2; bottom: 1rem; left: 1rem; width: min(26rem, calc(100% - 2rem)); padding: 0.7rem; border: 1px solid var(--line); border-radius: 0.4rem; background: #10222cee; }
+.movement-controls { position: absolute; z-index: 2; bottom: 1rem; left: 1rem; width: min(26rem, calc(100% - 2rem)); padding: 0.7rem; border: 1px solid var(--line); border-radius: 0.4rem; background: #342338ee; }
 .movement-pad { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 0.4rem; margin-top: 0.5rem; }
 .movement-pad button { touch-action: none; user-select: none; font-size: 1.1rem; min-height: 44px; padding: 0.4rem; }
 .movement-pad label { padding: 0 0.3rem; }
@@ -78,3 +79,7 @@ dd { margin: 0; font-family: ui-monospace, monospace; }
 .simulation-startup [role=alert] { padding: 0; }
 .simulation-startup button { width: auto; margin-right: 1rem; }
 .simulation-startup a { color: var(--text); }
+
+header .play-link { font-family:var(--display-face);font-weight:750; }
+header .eyebrow { letter-spacing:-.05em;text-transform:none;font-size:1.1rem; }
+.workspace .scene-label { padding:.65rem 1rem;background:#351d37e8;border-left:4px solid #ffda64;border-radius:.4rem; }

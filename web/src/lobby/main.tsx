@@ -35,7 +35,7 @@ function PrivateRooms() {
     return () => { active = false; };
   }, [attempt, requested]);
   return <main className="rooms">
-    <header><a className="brand" href="/" aria-label="Main menu"><span aria-hidden="true">▰</span> Skyline Melee</a>
+    <header><a className="brand" href="/" aria-label="Main menu"><span aria-hidden="true">••</span> gang bbeasts</a>
       <DisplaySettings /><MuteButton /><a href="/play/">Local match ↗</a></header>
     <div className="room-layout">
       <div className="room-console">{!ready ? <section className="room-panel"><h1>Private rooms</h1>
@@ -49,7 +49,7 @@ function PrivateRooms() {
           }} />
         </> : <RoomForm invite={invite} joinByCode={new URLSearchParams(location.search).get('action') === 'join'} onEnter={enterRoom} />}</div>
       <figure><img src={arena} alt="Skyline’s rooftop arena with crates and breakaway walkways" />
-        <figcaption><small>Arena</small><strong>Skyline</strong><span>Melee · First to three</span></figcaption></figure>
+        <figcaption><small>Studio 08 · Arena</small><strong>Skyline</strong><span>Melee · First to three</span></figcaption></figure>
     </div>
   </main>;
 }

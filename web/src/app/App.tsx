@@ -57,8 +57,8 @@ export function App() {
   };
   return <>
     <header>
-      <div><p className="eyebrow">Physics Brawler</p><h1>Development playground</h1></div>
-      <a className="play-link" href="/play/">Play Skyline Melee →</a>
+      <div><p className="eyebrow">gang bbeasts</p><h1>Development playground</h1></div>
+      <a className="play-link" href="/play/">Play gang bbeasts →</a>
     </header>
     <div className="workspace">
       <section className="viewport" aria-label="Physics scene">

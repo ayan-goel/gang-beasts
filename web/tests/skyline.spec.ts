@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('Skyline starts a local match, scores a physical ring-out and starts the next round', async ({ page }, testInfo) => {
   await page.goto('/play');
-  await expect(page.getByRole('heading', { name: 'Skyline Melee' })).toBeVisible({ timeout: 2000 });
+  await expect(page.getByRole('heading', { name: 'gang bbeasts' })).toBeVisible({ timeout: 2000 });
   await expect(page.getByRole('button', { name: 'Start match' })).toBeEnabled();
   await page.screenshot({ path: testInfo.outputPath('skyline-menu.png') });
   await page.getByRole('button', { name: 'Start match' }).click();

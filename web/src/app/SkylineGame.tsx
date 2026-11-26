@@ -59,17 +59,17 @@ export function SkylineGame() {
   </div>;
   return <main className="skyline-shell">
     <header className="skyline-header">
-      <a className="roof-brand" href="/" aria-label="Main menu"><span aria-hidden="true" className="roof-mark">▰</span> Skyline Melee</a>
+      <a className="roof-brand" href="/" aria-label="Main menu"><span aria-hidden="true" className="roof-mark">••</span> gang bbeasts</a>
       <span>Local multiplayer</span><DisplaySettings /><MuteButton /><a href="/rooms/">Private rooms</a><a href="/playground/">Physics playground ↗</a>
     </header>
     {started && !complete && state?.paused && <MatchMenu local resume={start}>{controls}</MatchMenu>}
     <div className={showIntro ? 'skyline-layout has-menu' : 'skyline-layout'}>
       {showIntro && <section className="skyline-menu">
         <div><p className="skyline-kicker">{complete ? 'Match results' : 'Two players · One keyboard'}</p>
-          <h1>{complete ? winner : 'Skyline Melee'}</h1>
+          <h1>{complete ? winner : 'gang bbeasts'}</h1>
           <p>Stay on the rooftop. The last fighter standing takes the round. First to three wins.</p></div>
-        {controls}
         <button className="skyline-start" disabled={!match} onClick={start}>{complete ? 'Rematch' : 'Start match'} <span aria-hidden="true">→</span></button>
+        <details className="local-controls"><summary>Keyboard controls</summary>{controls}</details>
         {error && <div><p role="alert">{error.message}</p><button onClick={() => setAttempt(n => n + 1)}>{error.retry}</button></div>}
       </section>}
       <section className="skyline-stage" aria-label="Skyline arena">

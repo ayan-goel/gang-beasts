@@ -1043,7 +1043,7 @@ Elimination cancels input, motors and all affected gameplay grips. It is permane
 
 Open site → create private room → share link/code → friends join → choose name/color → ready → host starts → play rounds → results → rematch. No required account, installation, command line or exposed implementation settings.
 
-The site root opens the [Skyline Melee main menu](docs/slices/16k-game-entry.md). Hosting or joining opens the private-room form. Local match opens `/play/`, and the simulation inspector is available at `/playground/`. The menu uses static HTML and an original in-game still, so visitors can choose a destination before loading a simulation or opening a room session.
+The site root opens the [gang bbeasts main menu](docs/slices/20a-gang-bbeasts-art.md). Hosting or joining opens the private-room form. Local match opens `/play/`, and the simulation inspector is available at `/playground/`. The menu uses static HTML and an original illustrated poster, so visitors can choose a destination before loading a simulation or opening a room session.
 
 Private readiness cancels outstanding physics and fighter downloads when its 12-second attempt expires or the seat leaves. Local physics and fighter loading offer an in-page retry after the same interval while allowing a slow transfer to finish. [Startup recovery](docs/slices/16n-asset-retry.md)
 
@@ -1124,7 +1124,7 @@ Map each physical body world transform through a fixed body-to-bone offset, then
 
 Use one original rounded skinned mesh per character, shared geometry/material variants, expressive faces and optional cosmetic squash. A skeleton can have additional visual bones, but their procedural movement cannot alter authoritative collisions. Three.js supplies skinned-mesh/skeleton facilities; our physical mapping is custom. [Three.js documentation](https://threejs.org/docs/)
 
-Skyline renders the [Roof Crew fighter](docs/slices/17b-skinned-fighters.md) from a shared original GLB. Each local or online player has an independent skeleton and kit palette. Diagnostic scenes retain individual collider meshes.
+Skyline renders the [broadcast bean fighter](docs/slices/20a-gang-bbeasts-art.md) from a shared original GLB. Each local or online player has an independent skeleton and kit palette. Diagnostic scenes retain individual collider meshes.
 
 ### 20.3 Art direction
 

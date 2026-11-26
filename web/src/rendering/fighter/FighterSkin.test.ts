@@ -76,7 +76,7 @@ it('skins an original shared mesh independently to each fighter across full rota
   first.dispose(); second.dispose();
 });
 
-it('paints eight distinct helmet patterns when every kit uses the same suit color', async () => {
+it('paints eight distinct wristband patterns when every kit uses the same suit color', async () => {
   const model = await load();
   const skin = new FighterSkin(model, rig, '#999999', 0);
   const uv = skin.mesh.geometry.getAttribute('uv');
@@ -112,5 +112,19 @@ it('repaints a prepared suit and its occluded silhouette without replacing the s
   expect((outline.material as MeshBasicMaterial).color.getHex()).toBe(0xe69eb9);
   expected.map.dispose();
   expected.dispose();
+  skin.dispose();
+});
+
+it('gives the bean a broad head and low belly at gameplay scale', async () => {
+  const skin = new FighterSkin(await load(), rig, '#ff533f', 0);
+  const {position, skinIndex} = skin.mesh.geometry.attributes;
+  let headWidth = 0, bellyBottom = Infinity;
+  for (let i = 0; i < position!.count; i++) {
+    const part = rig.bodies[skinIndex!.getX(i)]!.part;
+    if (part === 'head') headWidth = Math.max(headWidth, Math.abs(position!.getX(i)) * 2);
+    if (part === 'pelvis') bellyBottom = Math.min(bellyBottom, position!.getY(i));
+  }
+  expect(headWidth).toBeGreaterThan(.53);
+  expect(bellyBottom).toBeLessThan(.51);
   skin.dispose();
 });

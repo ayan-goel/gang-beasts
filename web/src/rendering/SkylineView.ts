@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { CameraObstacles } from './CameraObstacles';
+import { dressDistrict } from './StationDistrict';
 import { SkylineDetails } from './SkylineDetails';
 
 type Kind = 'deck' | 'vent' | 'crate' | 'panel';
@@ -14,7 +15,7 @@ export interface MatchView {
   hazard: 'quiet' | 'west_warning' | 'east_warning' | 'gust_warning' | 'gust';
 }
 
-const palette = { deck: 0x586f79, vent: 0xb1bfad, crate: 0xe1a568, panel: 0xdbad56 };
+const palette = { deck: 0x729a91, vent: 0x338b84, crate: 0xea7548, panel: 0xe4ac55 };
 const box = (width: number, height: number, depth: number, color: number) => {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), new THREE.MeshStandardMaterial({ color, roughness: 0.78 }));
   mesh.castShadow = true; mesh.receiveShadow = true;
@@ -25,7 +26,7 @@ export class SkylineView {
   readonly root = new THREE.Group();
   private readonly objects: THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>[];
   private readonly panels: { id: number; material: THREE.MeshStandardMaterial }[] = [];
-  constructor(map: SkylineMap) {
+  constructor(map: SkylineMap, deckPrint?: THREE.Texture) {
     this.obstacles.fixed(map.foundation.center,map.foundation.half);
     this.objects = map.objects.map(({ kind, half: [x, y, z], center, id }) => {
       const mesh = box(2 * x, 2 * y, 2 * z, palette[kind]);
@@ -34,6 +35,15 @@ export class SkylineView {
       mesh.position.set(...center); this.root.add(mesh);
       const details = new SkylineDetails();
       if (kind === 'deck') {
+        if (deckPrint) {
+          mesh.material.map = deckPrint;
+          mesh.material.color.setHex(0xffffff);
+          const uv = mesh.geometry.attributes.uv!;
+          // The roof print occupies the upper face only; the fascia samples plain painted sheet.
+          for (let i = 0; i < uv.count; i++) {
+            if (mesh.geometry.attributes.normal!.getY(i) < .99) uv.setXY(i,.32,.32);
+          }
+        }
         for (const side of [-1, 1]) {
           details.add([2 * x, 0.08, 0.08], [0, -0.1, side * z], 0xe6ded1);
           details.add([0.08, 0.08, 2 * z], [side * x, -0.1, 0], 0xe6ded1);
@@ -43,30 +53,43 @@ export class SkylineView {
         // arena are scenery and never supply gameplay collision or grip targets.
         const core = map.foundation;
         details.add([2 * core.half[0], 2 * core.half[1], 2 * core.half[2]],
-          [core.center[0] - center[0], core.center[1] - center[1], core.center[2] - center[2]], 0x354654);
-        for (let i = 0; i < 5; i++) details.add([2 * core.half[0] + 0.04, 0.18, 2 * core.half[2] + 0.04], [0, -2 - i * 3.2, 0], 0x75898b);
+          [core.center[0] - center[0], core.center[1] - center[1], core.center[2] - center[2]], 0xb96e5f);
+        for (let i = 0; i < 5; i++) details.add([2 * core.half[0] + 0.04, 0.18, 2 * core.half[2] + 0.04], [0, -2 - i * 3.2, 0], 0x60445a);
+        for (let row=0;row<6;row++) for (let bay=-4;bay<=4;bay++) {
+          for (const side of [-1,1]) {
+            details.add([1.15,1,.07],[bay*1.96,-2.85-row*2.55,side*core.half[2]],0x55495b);
+            details.add([.07,1,1.15],[side*core.half[0],-2.85-row*2.55,bay*1.96],0x55495b);
+          }
+        }
       } else if (kind === 'vent') {
-        for (let i = -3; i <= 3; i++) details.add([0.14, 0.025, 1.05], [i * 0.29, y, 0], 0x465960);
-        details.add([2 * x + 0.035, 0.08, 2 * z + 0.035], [0, -y + 0.08, 0], 0x596b6e);
+        details.add([2*x+.025,.08,2*z+.025],[0,-y+.1,0],0x45535d);
+        for (const cx of [-.57,.57]) {
+          details.drum(.52,.55,.075,[cx,y,0],0xe4c794,24);
+          details.drum(.47,.47,.045,[cx,y+.052,0],0x3c4e59,24);
+          for (let blade=0;blade<6;blade++) {
+            const angle=blade*Math.PI/3;
+            details.add([.34,.016,.115],[cx+.21*Math.cos(angle),y+.082,.21*Math.sin(angle)],0x76a19a,-angle+.35);
+          }
+          details.drum(.11,.13,.045,[cx,y+.1,0],0xe4b474);
+        }
+        for (const side of [-1,1]) for (let i=-4;i<=4;i++)
+          details.add([.12,.53,.035],[i*.23,.04,side*z],0x42696a);
       } else if (kind === 'crate') {
-        for (const side of [-1, 1]) details.add([0.1, 2 * y + 0.012, 2 * z + 0.012], [side * x * 0.53, 0, 0], 0x74584b);
+        for (const side of [-1,1]) {
+          details.add([2*x+.025,.07,2*z+.025],[0,side*(y-.045),0],0x614955);
+          details.add([.083,2*y,2*z+.026],[side*x*.73,0,0],0xffcc84);
+          for (const face of [-1,1]) details.add([.14,.12,.034],[side*x*.72,y*.48,face*z],0x584754);
+        }
+        details.add([.31,.08,.04],[0,.12,z],0x473e4c);
       } else {
-        for (let i = -3; i <= 3; i++) details.add([1.5, 0.016, 0.14], [0, y, i], 0x65533e);
+        for (let i=-7;i<=7;i++) details.add([1.52,.016,.09],[0,y,i*.5],0x6e5650,-.24);
+        for (const side of [-1,1]) details.add([.12,.035,2*z],[side*(x-.08),y,0],0xffdb8a);
         this.panels.push({ id, material: mesh.material });
       }
       details.attach(mesh);
       return mesh;
     });
-    const buildings = [[-25, -22, 7, 21], [-12, -31, 6, 16], [0, -38, 8, 24], [14, -30, 6, 19], [29, -25, 8, 28], [-31, -4, 6, 18], [34, -4, 6, 15], [-34, 15, 9, 22], [33, 22, 8, 16], [-20, 35, 7, 20]];
-    const exterior = new SkylineDetails();
-    for (const [x, z, w, h] of buildings as [number, number, number, number][]) {
-      this.obstacles.fixed([x,-24+h/2,z],[w/2,h/2,w/2]);
-      this.obstacles.fixed([x,-24+h+.75,z],[w*.19,.75,w*.19]);
-      exterior.add([w, h, w], [x, -24 + h / 2, z], 0x647c8a);
-      for (let row = 1; row < h / 2; row += 2) exterior.add([w + 0.05, 0.28, w + 0.05], [x, -24 + h - row * 1.6, z], 0x849da3);
-      exterior.add([w * 0.38, 1.5, w * 0.38], [x, -24 + h + 0.75, z], 0x718997);
-    }
-    exterior.attach(this.root);
+    dressDistrict(this.root, this.obstacles);
   }
   update(poses: Float32Array, hazard: MatchView['hazard']) {
     if (poses.length !== this.objects.length * 8) throw new Error('Invalid Skyline pose buffer');
