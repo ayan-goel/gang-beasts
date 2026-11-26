@@ -55,9 +55,11 @@ impl Duel {
                 .is_some_and(|(_, b, _)| b == landing.body)
         });
         pull.crossing |= height > 0.2;
+        // Shallow torso contact can tip back off the lip as the hands release.
+        // Keep the grip until the pelvis has room for the grounded get-up.
         if pull.crossing
             && height > 0.12
-            && depth > 0.22
+            && depth > 0.38
             && fighter.weight_on(&self.world, landing.body)
         {
             for h in [Hand::Left, Hand::Right] {

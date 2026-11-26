@@ -67,7 +67,7 @@ Browser integration tests start their own local server if needed. They compare a
 
 ## Playground controls
 
-Choose **Physics playground** from the main menu or open `/playground/` directly.
+Choose **Physics playground** from the main menu or open `/playground/` directly. For a repeatable west walkway rescue, choose **Ledge rescue** or open `/playground/?scene=ledge`. Hold J and K to catch, then hold Space to pull up.
 
 Choose **Passive ragdoll** to inspect the fifteen-body rig paused at tick zero. Select a limb for readings and impulses, enable joint frames/colliders, then resume to observe its unpowered fall. Joint limits and anchor separation are available in the inspector. Scene switching starts a fresh world with default tuning. Choose **Standing ragdoll** for the supported standing preset. Toggle character control, inspect support and per-joint effort/velocity targets, or shove the selected body with a 10 N·s +X impulse. Pale parent joint axes show the bind-pose target; saturated child axes show actual orientation. Reset and physics tuning preserve the control toggle. Scene changes discard unsubmitted tuning drafts. Ragdoll recording is not implemented; recording controls apply to the cuboid scene.
 

@@ -12,6 +12,7 @@
 - [Disconnects during a grip](verification/disconnected-grips.md) covers stale hands, incoming and outgoing grips, forfeits and neutral control after recovery.
 - [Game entry](slices/16k-game-entry.md) records the public menu, cold download and direct routes.
 - [Spectator camera](slices/12h-spectator-camera.md) covers following survivors, switching back to the group and returning to play.
+- [Ledge rescue practice](slices/10f-ledge-practice.md) covers the playable west walkway retry and the twenty-timing recovery test.
 - [Ledge rescue](slices/10e-ledge-rescue.md) covers fall-arrest timing, the pull-up controls and the west walkway in a private match.
 - [Skyline throws](slices/10d-skyline-throws.md) covers lift controls, release momentum, counter-grips and an east-edge ring-out.
 - [Stamina feedback](slices/09f-stamina-feedback.md) covers the local and online meters, grip exhaustion and recovery.

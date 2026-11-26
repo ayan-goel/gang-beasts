@@ -1,3 +1,4 @@
+import type { LedgePractice } from './LedgePractice';
 import type { ImpactSource } from '../audio/impactSound';
 import { arenaGripName, fighterGripName, handGripLabels } from './gripLabels';
 import { fixedLedge } from './ledgeHint';
@@ -36,9 +37,9 @@ export interface DuelState {
   latest?: DuelHit;
 }
 
-export function startDuel(container: HTMLElement, publish: (snapshot: DuelState) => void, model?: Object3D) {
+export function startDuel(container: HTMLElement, publish: (snapshot: DuelState) => void, model?: Object3D, practice?: LedgePractice) {
   const skyline = model !== undefined;
-  const duel = skyline ? LocalDuel.skyline_match(configuration) : new LocalDuel(configuration);
+  const duel = practice?.duel ?? (skyline ? LocalDuel.skyline_match(configuration) : new LocalDuel(configuration));
   const clock = new FixedClock();
   let frame = 0;
   let scene: FixtureScene | undefined;
@@ -84,7 +85,7 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
       clearHands: () => duel.clear_hands(id),
     }, () => !paused && (!match || match.phase === 'playing'));
     const inputs = [playerInput(0), playerInput(1)];
-    unbind = bindMovementInput(canvas, inputs[0]!, inputs[1]!);
+    unbind = bindMovementInput(canvas, inputs[0]!, practice ? undefined : inputs[1]!);
     const readGrips = (owner: Player) => {
       let onLedge = false;
       const targets: [number,number] = [0,0];
@@ -116,7 +117,8 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
     const render = (dt = 0) => {
       const first = duel.body_states(0), second = duel.body_states(1);
       if (match) {
-        const turned = renderer.renderSkyline([first, second], duel.arena_poses(), match, dt);
+        practice?.observe(first, match);
+        const turned = renderer.renderSkyline([first, second], duel.arena_poses(), match, dt, undefined, practice ? 0 : undefined);
         if (turned) for (const id of [0,1] as const) {
           const [x,z,run] = inputs[id]!.command;
           if (x || z) move(id,x,z,run);
@@ -147,6 +149,10 @@ export function startDuel(container: HTMLElement, publish: (snapshot: DuelState)
         match = next;
       }
       render((now - previous) / 1000);
+      if (practice?.finished && !paused) {
+        paused = true;
+        inputs.forEach(input => input.clear());
+      }
       previous = now;
       if (now - displayed >= 100 || latest !== previousHit) { snapshot(); displayed = now; }
       frame = requestAnimationFrame(animate);

@@ -13,7 +13,7 @@ pub(super) fn drive(
 ) {
     let hip = &world.bodies[bodies[BodyPart::Pelvis.index()]];
     let (depth, height) = if crossing {
-        (0.62, 0.18)
+        (0.78, 0.18)
     } else {
         (-0.32, 0.45)
     };
