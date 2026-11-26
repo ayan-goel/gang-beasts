@@ -25,3 +25,19 @@ export function observeMatch(page: Page) {
   });
   return history;
 }
+
+export function observeEighthFighter(page: Page) {
+  const trace = {frames:0, tick:0, closed:false, eliminated:false};
+  page.on('websocket', socket => {
+    if (new URL(socket.url()).pathname !== '/ws') return;
+    socket.on('close', () => { trace.closed = true; });
+    socket.on('framereceived', ({payload}) => {
+      if (!Buffer.isBuffer(payload) || payload[0] !== 2) return;
+      trace.frames++;
+      trace.tick = payload.readUInt32LE(4);
+      const gameplay = 20 + payload.readUInt16LE(16) * 32;
+      if (payload[gameplay+3] === 8 && payload[gameplay+24*8+1] === 3) trace.eliminated = true;
+    });
+  });
+  return trace;
+}

@@ -3,7 +3,7 @@ import { writeFile } from 'node:fs/promises';
 import { verifyOnlineRematch } from './support/rematchScenario';
 import { verifyDisconnectGrace } from './support/disconnectScenario';
 import { releaseRoom } from './support/releaseRoom';
-import { observeMatch } from './support/onlineTrace';
+import { observeMatch, observeEighthFighter } from './support/onlineTrace';
 
 test('only the host can start and both ready browsers see the live rooftop and round', async ({page, browser}) => {
   const hostTrace = observeMatch(page);
@@ -114,7 +114,7 @@ test('the arena reports a stalled stream and resumes after ordered snapshots arr
 test('eight ready browsers share the rooftop and the eighth player can run off it', async ({browser}) => {
   const contexts: BrowserContext[] = [];
   const pages: Page[] = [];
-  const eliminated = new Set<number>();
+  const traces: ReturnType<typeof observeEighthFighter>[] = [];
   let invite = '/rooms/';
   try {
     for (let slot = 0; slot < 8; slot++) {
@@ -122,11 +122,7 @@ test('eight ready browsers share the rooftop and the eighth player can run off i
       contexts.push(context);
       const player = await context.newPage();
       pages.push(player);
-      player.on('websocket', socket => socket.on('framereceived', ({payload}) => {
-        if (!Buffer.isBuffer(payload) || payload[0] !== 2) return;
-        const gameplay = 20 + payload.readUInt16LE(16) * 32;
-        if (payload[gameplay+3] === 8 && payload[gameplay+24*8+1] === 3) eliminated.add(slot);
-      }));
+      traces.push(observeEighthFighter(player));
       await player.goto(invite);
       await player.getByLabel('Player name').fill('Fighter ' + (slot+1));
       await player.getByRole('button',{name:slot === 0 ? 'Create room' : 'Join room',exact:true}).click();
@@ -150,13 +146,22 @@ test('eight ready browsers share the rooftop and the eighth player can run off i
     // From the eighth spawn the south edge is clear. Running east can hit the fixed rooftop vent.
     await eighth.keyboard.down('KeyS');
     try {
-      await expect.poll(() => eliminated.size, {timeout:30000}).toBe(8);
+      await expect.poll(() => traces.map(trace => trace.eliminated), {timeout:30000}).toEqual(Array(8).fill(true));
     } finally {
       await eighth.keyboard.up('KeyS');
       await eighth.keyboard.up('ShiftLeft');
     }
     for (const player of pages) await expect(player.getByLabel('Fighter 8 eliminated')).toHaveText('Out');
     await expect(host.getByLabel('Round phase')).toHaveText('Playing');
+  } catch (error) {
+    const clients = await Promise.all(pages.map(async (p,slot) => ({
+      fighter:slot+1, ...traces[slot],
+      screen:await p.locator('main').innerText({timeout:2000}).catch(() => 'Page unavailable'),
+    })));
+    const path = test.info().outputPath('roster-delivery.json');
+    await writeFile(path, JSON.stringify(clients));
+    await test.info().attach('roster-delivery', {path,contentType:'application/json'});
+    throw error;
   } finally {
     try {
       if (invite !== '/rooms/') await releaseRoom(invite,contexts);

@@ -40,7 +40,8 @@ export async function verifyDisconnectGrace({page: host, browser}: {page: Page; 
     await host.goto(invite);
     await host.getByLabel('Player name').fill('Mint again');
     await host.getByRole('button',{name:'Join room', exact:true}).click();
-    await expect(host.getByRole('heading',{name:'Spectating Skyline'})).toBeVisible();
+    await expect.poll(() => assignments, {timeout:15_000}).toEqual([0,0,255]);
+    await expect(host.getByRole('heading',{name:'Spectating Skyline'})).toBeVisible({timeout:15_000});
     await expect(host.getByLabel('Mint eliminated')).toHaveText('Out');
 
     await blue.getByRole('button',{name:'Leave room'}).click();
