@@ -42,6 +42,14 @@ export async function bootstrap(): Promise<{room:string | null; completed?:strin
   if (!object(data) || data.active !== true || !(data.room === null || isCode(data.room))) throw new Error('Invalid session response.');
   return {room:data.room, completed:isCode(data.completed) ? data.completed : undefined};
 }
+export async function takenColors(code: string, signal: AbortSignal): Promise<number[]> {
+  const data = await request('rooms/' + code, undefined, signal);
+  if (!object(data) || data.code !== code || !Array.isArray(data.takenColors) || !data.takenColors.every(slot)) {
+    throw new Error('Color availability is unavailable.');
+  }
+  return data.takenColors;
+}
+
 export async function enter(name: string, color: number | undefined, code: string | null, capacity: number, requestId: string, wins = 3): Promise<string> {
   const data = code ? await request('rooms/' + encodeURIComponent(code) + '/join', { name, color })
     : await request('rooms', { name, color, capacity, requestId, wins });

@@ -11,7 +11,7 @@
 | Main menu rooftop illustration | [Original generated poster](../web/src/menu/skyline-scramble.webp) | Screenprinted cover art. [Image-generation prompt and references](slices/20a-gang-bbeasts-art.md) |
 | Arena paint and panoramic city | [Roof painter](../tools/skyline/roof_print.py), [sky painter](../tools/skyline/station_sky.py) and [district geometry](../web/src/rendering/StationDistrict.ts) | Seam lines, masonry, marquee, outlined test card and distant roofs |
 | Bricolage Grotesque Latin variable | [Original font project](https://github.com/ateliertriay/bricolage), [redistributed license](../web/public/BRICOLAGE-OFL.txt) | Self-hosted display and interface typography |
-| Skyline lobby image | [WebP capture](../web/src/lobby/skyline.webp) of the project’s own rendered Skyline arena | The room page presents the map without loading the game renderer |
+| Lobby arena previews | [WebP captures](../web/src/lobby/previews) of all 22 arenas rendered in the game | The room page can show each map without starting the game renderer |
 | Walkway and wind warnings | [Original oscillator scores and envelopes](../web/src/audio/matchTone.ts) | Four runtime-synthesized global cues. [Pulse timings and peak level](slices/17c-hazard-audio.md#original-cues) |
 | Grip acquisition, strain and release | [Original filtered oscillator sweeps](../web/src/audio/gripSound.ts) | Three camera-relative cues generated at runtime. [Peak levels and duration](slices/17f-grip-audio.md) |
 | Sudden-death crosswind | [Original filtered noise and envelope](../web/src/audio/crosswindSound.ts) | Continuous wind during the active gust. [Level and loop measurements](slices/17l-crosswind.md) |

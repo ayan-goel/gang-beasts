@@ -1,6 +1,6 @@
 .rooms:has(.online-match) .room-layout,
 .rooms:has(.online-match) .room-console { display:block;padding:0; }
-.rooms:has(.online-match) figure { display:none; }
+.rooms:has(.online-match) .arena-gallery { display:none; }
 .online-match { position:fixed;inset:0;overflow:hidden;background:#40253f; }
 .online-match .online-scene { position:absolute;inset:0; }
 .online-scene canvas { width:100%;height:100%;display:block;outline:none; }

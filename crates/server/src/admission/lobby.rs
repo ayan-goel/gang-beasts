@@ -77,6 +77,13 @@ impl Lobby {
             && self.original_color == color
     }
     pub fn metadata(&self) -> PublicRoom {
+        // Invitees need color availability before joining. Keep seat identities in the member-only roster.
+        let taken_colors: Vec<_> = self
+            .members
+            .iter()
+            .flatten()
+            .map(|seat| seat.color)
+            .collect();
         PublicRoom {
             code: self.code.clone(),
             phase: if self.game.is_some() {
@@ -86,7 +93,8 @@ impl Lobby {
             },
             capacity: self.capacity,
             wins: self.wins,
-            players: self.members.iter().flatten().count(),
+            players: taken_colors.len(),
+            taken_colors,
         }
     }
     pub fn release_seats(&mut self, slots: u8, now: Instant) {

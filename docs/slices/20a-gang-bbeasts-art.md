@@ -20,7 +20,7 @@ The character mesh uses a larger head, a low belly and limbs that taper into sho
 
 Studio 08 uses original geometry for rooftop fans, carryable equipment cases, warning paint, apartment windows, water tanks, aerials and marquee bulbs. Static decoration is batched, while moveable props and breakaway parts carry their own trim when they move. The two wrapping and deck textures can be recreated with Python and Pillow. [District](../../web/src/rendering/StationDistrict.ts) · [Roof paint](../../tools/skyline/roof_print.py) · [Sky panorama](../../tools/skyline/station_sky.py)
 
-The title screen, room forms, local start screen, match menus and scoreboard share warm paper, dark plum ink and Bricolage Grotesque. Code entry and game controls remain live HTML. The title illustration and room preview are separate assets so neither screen needs a running GPU game to display its artwork. [Menu](../../web/index.html) · [Room preview](../../web/src/lobby/skyline.webp) · [Typeface license](../../web/public/BRICOLAGE-OFL.txt)
+The title screen, room forms, local start screen, match menus and scoreboard share warm paper, dark plum ink and Bricolage Grotesque. Code entry and game controls remain live HTML. The title illustration and room preview are separate assets so neither screen needs a running GPU game to display its artwork. [Menu](../../web/index.html) · [Room preview](../../web/src/lobby/previews/skyline.webp) · [Typeface license](../../web/public/BRICOLAGE-OFL.txt)
 
 ## Title illustration
 

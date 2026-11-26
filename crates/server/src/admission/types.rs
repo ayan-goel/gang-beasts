@@ -83,6 +83,8 @@ pub(super) struct PublicRoom {
     pub capacity: u8,
     pub wins: u8,
     pub players: usize,
+    #[serde(rename = "takenColors")]
+    pub taken_colors: Vec<u8>,
 }
 #[derive(Serialize)]
 pub(super) struct Seat {

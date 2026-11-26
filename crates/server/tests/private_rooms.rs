@@ -89,6 +89,16 @@ async fn creates_retry_safely_and_admits_only_the_requested_number_of_friends() 
     );
     let path = format!("/api/rooms/{code}");
     let join = format!("{path}/join");
+    let (status, conflict, _) = request(
+        &app,
+        &join,
+        Some(json!({"name":"Blue","color":0})),
+        &guest,
+        ORIGIN,
+    )
+    .await;
+    assert_eq!(status, StatusCode::CONFLICT);
+    assert_eq!(conflict["error"]["code"], "color_taken");
     let (s, member, _) = request(&app, &join, Some(json!({"name":"Blue"})), &guest, ORIGIN).await;
     assert_eq!(s, StatusCode::OK);
     assert_eq!(member["slot"], 1);
@@ -107,7 +117,7 @@ async fn creates_retry_safely_and_admits_only_the_requested_number_of_friends() 
     let (_, metadata, _) = request(&app, &path, None, "", ORIGIN).await;
     assert_eq!(
         metadata,
-        json!({"code":code,"capacity":2,"players":2,"phase":"lobby","wins":3})
+        json!({"code":code,"capacity":2,"players":2,"phase":"lobby","wins":3,"takenColors":[0,1]})
     );
 }
 

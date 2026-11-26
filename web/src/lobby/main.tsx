@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { bootstrap, errorText, isCode } from './api';
 import { RoomForm } from './RoomForm';
 import { RosterPanel } from './RosterPanel';
-import arena from './skyline.webp';
+import { ArenaGallery } from './ArenaGallery';
 import './rooms.css';
 
 function PrivateRooms() {
@@ -35,7 +35,7 @@ function PrivateRooms() {
   }, [attempt, requested]);
   return <main className="rooms">
     <div className="room-layout">
-      <div className="room-console">{!ready ? <section className="room-panel"><h1>Private rooms</h1>
+      <div className="room-console" key={room ?? 'admission'}>{!ready ? <section className="room-panel"><h1>Private rooms</h1>
         {error ? <><p role="alert">{error}</p><button className="room-primary" onClick={() => setAttempt(a => a + 1)}>Retry connection</button></>
           : <p role="status">Connecting to the room service…</p>}</section>
         : room ? <>
@@ -45,8 +45,7 @@ function PrivateRooms() {
             setRoom(null);
           }} />
         </> : <RoomForm invite={invite} joinByCode={new URLSearchParams(location.search).get('action') === 'join'} onEnter={enterRoom} />}</div>
-      <figure><img src={arena} alt="Skyline’s rooftop arena with crates and breakaway walkways" />
-        <figcaption><small>Studio 08 · Arena</small><strong>Skyline</strong><span>Melee · Shuffled arenas</span></figcaption></figure>
+      <ArenaGallery />
     </div>
   </main>;
 }
