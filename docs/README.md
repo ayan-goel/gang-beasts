@@ -3,6 +3,7 @@
 [Technical specification](../TECHNICAL_SPEC.md) is the canonical product and architecture contract. These documents record implementation choices and evidence; they do not redefine acceptance.
 
 - [Snapshot delivery](slices/19c-snapshot-delivery.md) covers worker notifications, slow readers and measured eight-client cadence.
+- [Graphics presets](slices/19e-graphics-presets.md) covers live resolution and shadow changes in local and private matches.
 - [Compact match snapshots](slices/19b-compact-snapshots.md) records the rotation codec, compatibility tests and eight-player traffic.
 - [Eight-player room performance](verification/eight-player-room.md) records native tick times, the combat workload and per-player snapshot traffic.
 - [Skyline occlusion](slices/12f-skyline-occlusion.md) covers the view of a fighter behind the roof or a moving prop.

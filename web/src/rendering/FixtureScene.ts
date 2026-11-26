@@ -1,4 +1,6 @@
 import { graphicsDriver, skylineQuality } from './skylineQuality';
+import { applySkylineQuality } from './applySkylineQuality';
+import { graphicsPreference, subscribeGraphics } from './graphicsPreference';
 import { FighterSkin } from './fighter/FighterSkin';
 import { ContactNormals } from './ContactNormals';
 import { GroupCamera } from './GroupCamera';
@@ -34,6 +36,7 @@ export class FixtureScene {
     new THREE.MeshStandardMaterial({ color: '#f58465', roughness: 0.65 }),
   );
   private readonly resizeObserver?: ResizeObserver;
+  private readonly unsubscribeGraphics?: () => void;
   private readonly opponents: (RagdollView | FighterSkin)[] = [];
   private skyline?: SkylineView;
   readonly groupCamera?: GroupCamera;
@@ -50,10 +53,7 @@ export class FixtureScene {
     this.followRig = options.followRig ?? false;
     try {
       const driver = map ? graphicsDriver(this.renderer.getContext()) : '';
-      const quality = skylineQuality(driver, window.devicePixelRatio);
-      this.renderer.setPixelRatio(quality.pixelRatio);
       this.renderer.shadowMap.enabled = true;
-      this.renderer.shadowMap.type = quality.basic ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
       this.renderer.setClearColor('#182c38');
       this.renderer.domElement.setAttribute('aria-label', 'Live physics fixture on a floating platform');
       container.append(this.renderer.domElement);
@@ -104,14 +104,17 @@ export class FixtureScene {
       const sun = new THREE.DirectionalLight('#fff0d9', 3);
       sun.position.set(-5, 12, 6);
       sun.castShadow = true;
-      sun.shadow.mapSize.setScalar(quality.shadowSize);
       sun.shadow.camera.left = -9;
       sun.shadow.camera.right = 9;
       sun.shadow.camera.top = 9;
       sun.shadow.camera.bottom = -9;
       sun.shadow.normalBias = 0.03;
       this.scene.add(sun);
-      this.resizeObserver = new ResizeObserver(() => this.resize());
+      const applyQuality = () => applySkylineQuality(this.renderer, this.scene, sun,
+        skylineQuality(driver, window.devicePixelRatio, map ? graphicsPreference() : 'medium'));
+      applyQuality();
+      if (map) this.unsubscribeGraphics = subscribeGraphics(applyQuality);
+      this.resizeObserver = new ResizeObserver(() => { applyQuality(); this.resize(); });
       this.resizeObserver.observe(container);
       this.resize();
     } catch (error) {
@@ -197,6 +200,7 @@ export class FixtureScene {
 
   dispose(): void {
     this.resizeObserver?.disconnect();
+    this.unsubscribeGraphics?.();
     for (const fighter of [this.rig, ...this.opponents]) {
       if (fighter instanceof FighterSkin) {
         // Geometry is shared by the cached GLB and every live instance.

@@ -98,6 +98,7 @@ Each numbered slice uses failing behavioral tests, minimal implementation, appro
 | 19b — compact snapshots | Advertise compact rotations per connection | Independent fixtures, mixed clients and repeated eight-fighter measurements |
 | 19c — snapshot delivery | Wake match connections when their room publishes | Slow-reader coalescing, immediate initial state and repeated eight-client delivery windows |
 | 19d — reset endurance | Exercise 100 consecutive round rebuilds in populated native rooms | Physical ring-outs, active grips, hazard retirement, restored spawns and input epochs |
+| 19e — graphics presets | Change Skyline resolution and shadows during play | Live GPU allocation, persistent preference, software fallback and independent clients |
 | 19 | Performance and endurance | Declared hardware measurements, 60-minute soak, 100 resets, eight-player stress |
 | 20 | Deployment and release audit | CI, container, compatibility manifest, real two-client smoke and all §33 gates |
 

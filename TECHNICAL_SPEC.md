@@ -1146,6 +1146,8 @@ Budget draw calls, triangles, texture memory and shadow casters per map after me
 
 Effective resolution combines CSS dimensions, capped pixel ratio and render scale; document this to avoid accidental double supersampling. Server physics and collision shapes do not depend on client graphics settings. Support reduced motion and disabling camera shake independently of quality.
 
+Skyline’s **Graphics** selector in local play and private rooms applies resolution and shadow changes during a round. Auto selects Low for a recognized software renderer and Medium otherwise. Low, Medium and High use 512, 1024 and 2048 pixel directional shadow maps respectively. The choice persists for the browser origin and propagates to its open game tabs. [Implementation and verification](docs/slices/19e-graphics-presets.md)
+
 ## 21. Audio system
 
 ### 21.1 Categories
